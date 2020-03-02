@@ -25,7 +25,7 @@ def generate_cvrp_instance(size=50, capacity=40, number_of_depots=1):
                 'isDepot' : i < number_of_depots})
             for i in range(number_of_depots + size)]
 
-    instance = nx.Graph()
+    instance = nx.DiGraph()
     instance.add_nodes_from(nodes)
 
     return instance
@@ -48,7 +48,7 @@ def draw_instance(instance, show_demands=False):
     nx.draw(instance, position, nodelist=depots, node_size=50, node_color='red', node_shape='d')
     nx.draw(instance, position, nodelist=[i for i in range(len(depots), number_of_nodes)], node_size=50, node_color='blue', node_shape='o')
     plt.show()
-#
-# if '__name__' == '__main__':
-#     for i in range(3):
-#         draw_instance(generate_cvrp_instance(50,40,3))
+
+if __name__ == '__main__':
+    for i in range(3):
+        draw_instance(generate_cvrp_instance(50,40,3))

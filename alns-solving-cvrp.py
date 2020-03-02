@@ -4,12 +4,16 @@ from alns.criteria import HillClimbing
 import copy
 
 import numpy.random as rnd
-import numpy.linalg as euclideanDistance
 
 import networkx as nx
 import matplotlib.pyplot as plt
 
 from generate_instances import draw_instance, generate_cvrp_instance
+from compute_distances import compute_single_route_distance
+from removal_heuristics import random_removal
+from repair_heuristics import greedy_insertion
+
+SEED = 2020
 
 SIZE = 5
 CAPACITY = 40
@@ -60,6 +64,8 @@ class cvrpState(State):
             self.capacity = parameters['capacity']
         else:
             demands = nx.get_node_attributes(instance, 'demand')
+            # The first demand is the demand of the first depot
+            # Its value is - capacity by definition
             self.capacity = - demands[0]
 
     def copy(self):
@@ -68,32 +74,16 @@ class cvrpState(State):
     def objective(self):
         """
         WE ASSUME ALL EDGES ARE UNIQUE, NO DUPLICATES
-        WE ASSUME EACH NODE HAS EXACTLY ONE OUTGOING NODE EXCEPT FOR THE DEPOTS
+        WE ASSUME EACH NODE HAS EXACTLY ONE SUCCESSOR (NEXT) NODE EXCEPT FOR THE DEPOTS
         """
         distance = 0
         # Start from all the depots
         for depot in range(self.number_of_depots):
-            neighbors = self.instance.adj[depot]
+            neighbors = self.instance.neighbors(depot)
 
             # Take each neighbor of the depot and follow the path
             for first_client in neighbors:
-
-                # Distance between depot and first client
-                distance += euclideanDistance.norm(self.instance.nodes[depot]['coordinates'] - self.instance.nodes[first_client]['coordinates'])
-
-                # self.instance.adj[n] returns a dict containing all the neighbors of node n, with the keys acting as nodes
-                # we keep only the first key because we assume it is the only neighbor
-                outgoing_node = next(iter(self.instance.adj[first_client]))
-
-                # distance between first client and second client
-                distance += euclideanDistance.norm(self.instance.nodes[first_client]['coordinates'] - self.instance.nodes[outgoing_node]['coordinates'])
-
-                # If the second client isn't a depot, we follow the path
-                # Else, we get to the next path
-                while not self.instance.nodes[outgoing_node]['isDepot']:
-                    second_outgoing_node = next(iter(self.instance.adj[outgoing_node]))
-                    distance += euclideanDistance.norm(self.instance.nodes[outgoing_node]['coordinates'] - self.instance.nodes[second_outgoing_node]['coordinates'])
-                    outgoing_node = second_outgoing_node
+                distance += compute_single_route_distance(self, depot, first_client)
 
         return distance
 
@@ -132,9 +122,22 @@ def generate_initial_solution(cvrp_state):
 
     return cvrp_state
 
-state = cvrpState(cvrp_instance, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS, capacity=CAPACITY)
-state.draw()
-initial_solution = generate_initial_solution(state)
+void_state = cvrpState(cvrp_instance, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS, capacity=CAPACITY)
+void_state.draw()
+initial_solution = generate_initial_solution(void_state)
 initial_solution.draw()
 initial_distance = initial_solution.objective()
 print("Initial distance is ",initial_distance)
+random_state = rnd.RandomState(SEED)
+
+alns = ALNS(random_state)
+alns.add_destroy_operator(random_removal)
+alns.add_repair_operator(greedy_insertion)
+
+criterion = HillClimbing()
+
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, collect_stats=False)
+
+solution = result.best_state
+print("Optimal distance is ", solution.objective())
+solution.draw()

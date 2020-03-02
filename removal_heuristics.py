@@ -1,3 +1,5 @@
+import numpy as np
+
 degree_of_destruction = 0.2
 
 def number_of_edges_to_remove(state):
@@ -6,9 +8,22 @@ def number_of_edges_to_remove(state):
 def random_removal(current_state, random_state):
     destroyed = current_state.copy()
 
-    # We choose nodes and destroy the existing edge
-    nodes_to_destroy = random_state.choice(destroyed.instance.number_of_nodes(), numberOfEdgesToRemove(current_state), replace=False)
+    # We create a list containing the indexes of the client nodes
+    # Their indexes start after ther indexes of the depots by construction
+    list_of_nodes = np.arange(destroyed.size) + destroyed.number_of_depots
+    # We choose the clients we want to remove from the instance
+    nodes_to_destroy = random_state.choice(list_of_nodes, number_of_edges_to_remove(current_state), replace=False)
+
+    # The removal of a node N_i consists in removing the edge (N_i-1, N_i) and (N_i, N_i+1)
+    # and adding the edge (N_i-1, N_i+1)
     for node in nodes_to_destroy:
-        detroyed.instance.remove_edge(node, next(iter(destroyed.instance.adj[node])))
+        # We find the neighboring nodes
+        next_node = next(destroyed.instance.neighbors(node))
+        previous_node = next(destroyed.instance.predecessors(node))
+        destroyed.instance.remove_edge(previous_node, node)
+        destroyed.instance.remove_edge(node, next_node)
+        # Avoiding useless routes
+        if (next_node != previous_node):
+            destroyed.instance.add_edge(previous_node, next_node)
 
     return destroyed
