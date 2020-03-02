@@ -15,7 +15,7 @@ from repair_heuristics import greedy_insertion
 
 SEED = 2020
 
-SIZE = 5
+SIZE = 40
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
@@ -136,8 +136,11 @@ alns.add_repair_operator(greedy_insertion)
 
 criterion = HillClimbing()
 
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, collect_stats=False)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=20000, collect_stats=True)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
 solution.draw()
+
+result.plot_objectives()
+plt.show()
