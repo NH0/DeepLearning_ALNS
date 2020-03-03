@@ -15,7 +15,7 @@ from repair_heuristics import greedy_insertion
 
 SEED = 2020
 
-SIZE = 40
+SIZE = 50
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
