@@ -9,6 +9,14 @@ def compute_adjacency_matrix(state):
     for i in range(number_of_nodes):
         for j in range(i, number_of_nodes):
             adjacency_matrix[i][j] = euclideanDistance.norm(state.instance.nodes[i]['coordinates'] - state.instance.nodes[j]['coordinates'])
+
+    # Normalization in [0,1]
+    max_distance = np.amax(adjacency_matrix)
+    min_distance = np.amin(adjacency_matrix)
+
+    for i in range(number_of_nodes):
+        for j in range(i, number_of_nodes):
+            adjacency_matrix[i][j] = (adjacency_matrix[i][j] - min_distance) / (max_distance - min_distance)
             adjacency_matrix[j][i] = adjacency_matrix[i][j]
 
     return adjacency_matrix
