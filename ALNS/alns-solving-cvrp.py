@@ -130,7 +130,6 @@ initial_solution = generate_initial_solution(void_state)
 initial_solution.draw()
 initial_distance = initial_solution.objective()
 print("Initial distance is ",initial_distance)
-print("adjency :", initial_solution.distances)
 random_state = rnd.RandomState(SEED)
 
 alns = ALNS(random_state)

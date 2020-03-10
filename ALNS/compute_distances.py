@@ -16,20 +16,20 @@ def compute_adjacency_matrix(state):
 def compute_single_route_distance(state, start_depot, first_client):
     distance = 0
     # Distance between depot and first client
-    distance += euclideanDistance.norm(state.instance.nodes[start_depot]['coordinates'] - state.instance.nodes[first_client]['coordinates'])
+    distance += state.distances[start_depot][first_client]
 
     # state.instance.neighbors[n] returns an iterators over the successors of the node
     # we keep only the first neighbor because we assume their is only one
     next_node = next(state.instance.neighbors(first_client))
 
     # distance between first client and second client
-    distance += euclideanDistance.norm(state.instance.nodes[first_client]['coordinates'] - state.instance.nodes[next_node]['coordinates'])
+    distance += state.distances[first_client][next_node]
 
     # If the second client isn't a depot, we follow the path
     # Else, we get to the next path
     while not state.instance.nodes[next_node]['isDepot']:
         second_next_node = next(state.instance.neighbors(next_node))
-        distance += euclideanDistance.norm(state.instance.nodes[next_node]['coordinates'] - state.instance.nodes[second_next_node]['coordinates'])
+        distance += state.distances[next_node][second_next_node]
         next_node = second_next_node
 
     return distance
@@ -46,9 +46,9 @@ def compute_route_demand(state, start_depot, first_client):
     return demand
 
 def compute_defined_insertion_cost(state, previous_node, next_node, node_to_insert):
-    return ( euclideanDistance.norm(state.instance.nodes[previous_node]['coordinates'] - state.instance.nodes[node_to_insert]['coordinates'])
-           + euclideanDistance.norm(state.instance.nodes[node_to_insert]['coordinates'] - state.instance.nodes[next_node]['coordinates'])
-           - euclideanDistance.norm(state.instance.nodes[previous_node]['coordinates'] - state.instance.nodes[next_node]['coordinates']) )
+    return ( state.distances[previous_node][node_to_insert]
+           + state.distances[node_to_insert][next_node]
+           - state.distances[previous_node][next_node] )
 
 def compute_route_best_insertion_cost(state, start_depot, first_client, node_to_insert):
     if (compute_route_demand(state, start_depot, first_client) + state.instance.nodes[node_to_insert]['demand'] > state.capacity):
