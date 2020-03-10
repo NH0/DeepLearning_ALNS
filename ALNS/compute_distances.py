@@ -1,4 +1,17 @@
 import numpy.linalg as euclideanDistance
+import numpy as np
+
+def compute_adjacency_matrix(state):
+    number_of_nodes = state.size + state.number_of_depots
+
+    adjacency_matrix = np.zeros((number_of_nodes, number_of_nodes))
+
+    for i in range(number_of_nodes):
+        for j in range(i, number_of_nodes):
+            adjacency_matrix[i][j] = euclideanDistance.norm(state.instance.nodes[i]['coordinates'] - state.instance.nodes[j]['coordinates'])
+            adjacency_matrix[j][i] = adjacency_matrix[i][j]
+
+    return adjacency_matrix
 
 def compute_single_route_distance(state, start_depot, first_client):
     distance = 0
