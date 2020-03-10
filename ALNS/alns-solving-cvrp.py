@@ -9,13 +9,13 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from generate_instances import draw_instance, generate_cvrp_instance
-from compute_distances import compute_single_route_distance
-from removal_heuristics import random_removal
+from compute_distances import compute_single_route_distance, compute_adjacency_matrix
+from removal_heuristics import removal_heuristic
 from repair_heuristics import greedy_insertion
 
 SEED = 2020
 
-SIZE = 50
+SIZE = 10
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
@@ -67,6 +67,8 @@ class cvrpState(State):
             # The first demand is the demand of the first depot
             # Its value is - capacity by definition
             self.capacity = - demands[0]
+
+        self.distances = compute_adjacency_matrix(self)
 
     def copy(self):
         return copy.deepcopy(self)
@@ -128,15 +130,16 @@ initial_solution = generate_initial_solution(void_state)
 initial_solution.draw()
 initial_distance = initial_solution.objective()
 print("Initial distance is ",initial_distance)
+print("adjency :", initial_solution.distances)
 random_state = rnd.RandomState(SEED)
 
 alns = ALNS(random_state)
-alns.add_destroy_operator(random_removal)
+alns.add_destroy_operator(removal_heuristic)
 alns.add_repair_operator(greedy_insertion)
 
 criterion = HillClimbing()
 
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=20000, collect_stats=True)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=100, collect_stats=True)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
