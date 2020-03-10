@@ -3,7 +3,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-def generate_cvrp_instance(size=50, capacity=40, number_of_depots=1):
+
+def generate_cvrp_instance(size=50, capacity=40, number_of_depots=1, SEED=2020):
     """
     Generates an instance of the Capacitated Vehicule Routing Problem.
     Parameters :
@@ -11,6 +12,7 @@ def generate_cvrp_instance(size=50, capacity=40, number_of_depots=1):
     capacity: the maximum amount of goods each vehicule can transport at a time
     number_of_depots: the number of depot where delivery vehicules can obtain the goods to be delivered
     """
+    np.random.seed(SEED)
 
     # The first elements are the depots, the following the clients
     random_nodes_coordinates = np.random.uniform(0, 1, (number_of_depots + size, 2))
