@@ -2,6 +2,21 @@ import numpy as np
 
 degree_of_destruction = 0.2
 
+def is_served_by_same_vehicle(state, node, second_node):
+    successor = next(state.instance.neighbors(node))
+    while (not(state.instance.nodes[successor]['isDepot'])):
+        if (successor == second_node):
+            return 1
+        successor = next(state.instance.neighbors(successor))
+
+    predecessor = next(destroyed.instance.predecessors(node))
+    while (not(state.instance.nodes[predecessor]['isDepot'])):
+        if (predecessor == second_node):
+            return 1
+        predecessor = next(destroyed.instance.predecessors(predecessor))
+
+    return 0
+
 def number_of_edges_to_remove(state):
     return int(state.instance.number_of_edges() * degree_of_destruction)
 

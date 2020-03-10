@@ -138,7 +138,7 @@ alns.add_repair_operator(greedy_insertion)
 
 criterion = HillClimbing()
 
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=100, collect_stats=True)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=1000, collect_stats=True)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
