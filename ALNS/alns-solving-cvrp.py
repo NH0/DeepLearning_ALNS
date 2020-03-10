@@ -19,7 +19,7 @@ SIZE = 10
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
-cvrp_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS)
+cvrp_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
 # draw_instance(cvrp_instance)
 # generate_initial_solution(cvrp_instance)
 # draw_instance(cvrp_instance)
