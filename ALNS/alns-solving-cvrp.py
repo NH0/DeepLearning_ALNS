@@ -20,6 +20,8 @@ CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
 cvrp_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
+# for i in range(SIZE):
+#     print(cvrp_instance.nodes[i])
 # draw_instance(cvrp_instance)
 # generate_initial_solution(cvrp_instance)
 # draw_instance(cvrp_instance)
@@ -105,7 +107,7 @@ class cvrpState(State):
             demands = nx.get_node_attributes(self.instance, 'demand')
             nx.draw(self.instance, position, nodelist=[i + self.number_of_depots for i in range(self.size)], labels=demands, node_size=50, node_color='blue', node_shape='o')
         else:
-            nx.draw(self.instance, position, nodelist=[i + self.number_of_depots for i in range(self.size)], node_size=50, node_color='blue', node_shape='o')
+            nx.draw(self.instance, position, nodelist=[i + self.number_of_depots for i in range(self.size)], with_labels=True, node_size=50, node_color='blue', node_shape='o')
 
         nx.draw(self.instance, position, nodelist=depots, node_size=50, node_color='red', node_shape='d')
         plt.show()
@@ -138,11 +140,11 @@ alns.add_repair_operator(greedy_insertion)
 
 criterion = HillClimbing()
 
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=1000, collect_stats=True)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=100, collect_stats=False)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
 solution.draw()
 
-result.plot_objectives()
+# result.plot_objectives()
 plt.show()
