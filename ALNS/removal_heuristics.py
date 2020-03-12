@@ -69,12 +69,12 @@ def select_related_nodes(state, random_state):
 
     return selected_nodes
 
+
 def removal_heuristic(state, random_state):
     destroyed = state.copy()
 
     # We choose the clients we want to remove from the instance
     nodes_to_destroy = select_related_nodes(state, random_state)
-    print(nodes_to_destroy)
 
     # The removal of a node N_i consists in removing the edge (N_i-1, N_i) and (N_i, N_i+1)
     # and adding the edge (N_i-1, N_i+1)
