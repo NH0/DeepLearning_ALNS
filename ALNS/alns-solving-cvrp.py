@@ -4,6 +4,7 @@ from alns.criteria import HillClimbing
 import copy
 
 import numpy.random as rnd
+import numpy as np
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -119,14 +120,35 @@ class CvrpState(State):
 
 def generate_initial_solution(cvrp_state):
     """
-    Generates a solution where the delivery vehicules returns to the depot after each client.
+    Generates a solution where the delivery vehicles returns to the depot after each client.
     Parameters :
     cvrp_state : the instance of the CVRP state that is to be solved
     """
     cvrp_state.instance = nx.create_empty_copy(cvrp_state.instance)
+    edges = []
 
-    edges = [(0, i + cvrp_state.number_of_depots) for i in range(cvrp_state.size)] + [
-        (i + cvrp_state.number_of_depots, 0) for i in range(cvrp_state.size)]
+    unvisited_nodes = [i + cvrp_state.number_of_depots for i in range(cvrp_state.size)]
+    is_unvisited = [False if i < cvrp_state.number_of_depots else True
+                    for i in range(cvrp_state.size + cvrp_state.number_of_depots)]
+    first_node = 0
+
+    while len(unvisited_nodes) > 0:
+        route_demand = 0
+        while True:
+            if len(unvisited_nodes) > 0:
+                closest_node = sorted(unvisited_nodes, key=lambda node: cvrp_state.distances[first_node][node])[0]
+            else:
+                break
+            if route_demand + cvrp_state.instance.nodes[closest_node]['demand'] < cvrp_state.capacity:
+                edges.append((first_node, closest_node))
+                unvisited_nodes.remove(closest_node)
+                is_unvisited[closest_node] = False
+                route_demand += cvrp_state.instance.nodes[closest_node]['demand']
+            else:
+                break
+            first_node = closest_node
+        edges.append((first_node, 0))
+        first_node = 0
 
     cvrp_state.instance.add_edges_from(edges)
 
@@ -136,7 +158,7 @@ def generate_initial_solution(cvrp_state):
 void_state = CvrpState(cvrp_instance, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS, capacity=CAPACITY)
 # void_state.draw()
 initial_solution = generate_initial_solution(void_state)
-# initial_solution.draw()
+initial_solution.draw()
 initial_distance = initial_solution.objective()
 print("Initial distance is ", initial_distance)
 random_state = rnd.RandomState(SEED)
