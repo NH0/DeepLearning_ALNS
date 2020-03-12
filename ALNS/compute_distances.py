@@ -23,6 +23,15 @@ def compute_adjacency_matrix(state):
 
     return adjacency_matrix
 
+
+def compute_closest_depot(state, node):
+    closest = 0
+    for depot in range(state.number_of_depots):
+        if state.distances[depot][node] < state.distances[closest][node]:
+            closest = depot
+    return closest
+
+
 def compute_single_route_distance(state, start_depot, first_client):
     distance = 0
     # Distance between depot and first client
@@ -98,4 +107,20 @@ def compute_minimum_cost_position(state, node_to_insert):
             if cost < minimum_cost:
                 minimum_cost = cost
                 minimum_cost_nodes = nodes
-    return (minimum_cost, minimum_cost_nodes)
+    if minimum_cost == float("inf"):
+        closest_depot = compute_closest_depot(state, node_to_insert)
+        return 2 * state.distances[closest_depot][node_to_insert], (0, 0)
+    return minimum_cost, minimum_cost_nodes
+
+
+def print_routes_demands(state):
+    """
+
+    Parameters
+    ----------
+    state : ALNS.alns-solving-cvrp.CvrpState
+    """
+    for depot in range(state.number_of_depots):
+        for first_node in state.instance.neighbors(depot):
+            print(
+                "Route starting with {0} has a cost of {1}".format(first_node, compute_route_demand(state, first_node)))

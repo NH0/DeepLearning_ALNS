@@ -19,6 +19,7 @@ def greedy_insertion(current_state, random_state):
         unvisited_nodes.remove(best_node)
         inserted.instance.add_edge(best_position[0], best_node)
         inserted.instance.add_edge(best_node, best_position[1])
-        inserted.instance.remove_edge(best_position[0], best_position[1])
+        if best_position[0] != best_position[1]:
+            inserted.instance.remove_edge(best_position[0], best_position[1])
 
     return inserted
