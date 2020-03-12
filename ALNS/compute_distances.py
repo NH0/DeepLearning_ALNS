@@ -90,7 +90,7 @@ def compute_route_best_insertion_cost(state, start_depot, first_client, node_to_
             best_insertion_cost = insertion_cost
             best_insertion_nodes = (previous_node, next_node)
 
-        if not state.instance.nodes[next_node]['isDepot']:
+        if state.instance.nodes[next_node]['isDepot']:
             break
         previous_node = next_node
         next_node = next(state.instance.neighbors(previous_node))
