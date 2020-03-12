@@ -1,6 +1,7 @@
 import numpy.linalg as euclideanDistance
 import numpy as np
 
+
 def compute_adjacency_matrix(state):
     number_of_nodes = state.size + state.number_of_depots
 
@@ -8,7 +9,8 @@ def compute_adjacency_matrix(state):
 
     for i in range(number_of_nodes):
         for j in range(i, number_of_nodes):
-            adjacency_matrix[i][j] = euclideanDistance.norm(state.instance.nodes[i]['coordinates'] - state.instance.nodes[j]['coordinates'])
+            adjacency_matrix[i][j] = euclideanDistance.norm(
+                state.instance.nodes[i]['coordinates'] - state.instance.nodes[j]['coordinates'])
 
     # Normalization in [0,1]
     max_distance = np.amax(adjacency_matrix)
@@ -42,25 +44,29 @@ def compute_single_route_distance(state, start_depot, first_client):
 
     return distance
 
-def compute_route_demand(state, start_depot, first_client):
+
+def compute_route_demand(state, first_client):
     demand = state.instance.nodes[first_client]['demand']
 
     next_node = next(state.instance.neighbors(first_client))
 
     while not state.instance.nodes[next_node]['isDepot']:
-        demand = state.instance.nodes[next_node]['demand']
+        demand += state.instance.nodes[next_node]['demand']
         next_node = next(state.instance.neighbors(next_node))
 
     return demand
 
+
 def compute_defined_insertion_cost(state, previous_node, next_node, node_to_insert):
-    return ( state.distances[previous_node][node_to_insert]
-           + state.distances[node_to_insert][next_node]
-           - state.distances[previous_node][next_node] )
+    return (state.distances[previous_node][node_to_insert]
+            + state.distances[node_to_insert][next_node]
+            - state.distances[previous_node][next_node])
+
 
 def compute_route_best_insertion_cost(state, start_depot, first_client, node_to_insert):
-    if (compute_route_demand(state, start_depot, first_client) + state.instance.nodes[node_to_insert]['demand'] > state.capacity):
-        return (float("inf"), (-1,-1))
+    if (compute_route_demand(state, first_client)
+            + state.instance.nodes[node_to_insert]['demand'] > state.capacity):
+        return float("inf"), (-1, -1)
 
     best_insertion_cost = compute_defined_insertion_cost(state, start_depot, first_client, node_to_insert)
     best_insertion_nodes = (start_depot, first_client)
@@ -71,7 +77,7 @@ def compute_route_best_insertion_cost(state, start_depot, first_client, node_to_
 
     while True:
         insertion_cost = compute_defined_insertion_cost(state, previous_node, next_node, node_to_insert)
-        if (insertion_cost < best_insertion_cost):
+        if insertion_cost < best_insertion_cost:
             best_insertion_cost = insertion_cost
             best_insertion_nodes = (previous_node, next_node)
 
@@ -80,7 +86,8 @@ def compute_route_best_insertion_cost(state, start_depot, first_client, node_to_
         previous_node = next_node
         next_node = next(state.instance.neighbors(previous_node))
 
-    return (best_insertion_cost, best_insertion_nodes)
+    return best_insertion_cost, best_insertion_nodes
+
 
 def compute_minimum_cost_position(state, node_to_insert):
     minimum_cost = float("inf")
@@ -88,7 +95,7 @@ def compute_minimum_cost_position(state, node_to_insert):
     for depot in range(state.number_of_depots):
         for first_client in state.instance.neighbors(depot):
             cost, nodes = compute_route_best_insertion_cost(state, depot, first_client, node_to_insert)
-            if (cost < minimum_cost):
+            if cost < minimum_cost:
                 minimum_cost = cost
                 minimum_cost_nodes = nodes
     return (minimum_cost, minimum_cost_nodes)

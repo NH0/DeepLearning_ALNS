@@ -3,24 +3,26 @@ import numpy as np
 degree_of_destruction = 0.2
 DETERMINISM = 10
 
+
 def is_served_by_same_vehicle(state, node, second_node):
     successor = next(state.instance.neighbors(node))
-    while (not(state.instance.nodes[successor]['isDepot'])):
-        if (successor == second_node):
+    while not (state.instance.nodes[successor]['isDepot']):
+        if successor == second_node:
             return 1
         successor = next(state.instance.neighbors(successor))
 
     predecessor = next(state.instance.predecessors(node))
-    while (not(state.instance.nodes[predecessor]['isDepot'])):
-        if (predecessor == second_node):
+    while not (state.instance.nodes[predecessor]['isDepot']):
+        if predecessor == second_node:
             return 1
         predecessor = next(state.instance.predecessors(predecessor))
 
     return 0
 
-def compute_relatedness(state, node, second_node):
 
+def compute_relatedness(state, node, second_node):
     return 1 / (state.distances[node][second_node] + is_served_by_same_vehicle(state, node, second_node))
+
 
 def rank_nodes_using_relatedness(state, list_of_nodes, node):
     relatedness_values = {}
@@ -31,19 +33,22 @@ def rank_nodes_using_relatedness(state, list_of_nodes, node):
 
     return ranked_nodes
 
+
 def compute_number_of_clients_to_remove(state):
     return int(state.size * degree_of_destruction)
 
+
 def select_random_nodes(state, random_state):
     # We create a list containing the indexes of the client nodes
-    # Their indexes start after ther indexes of the depots by construction
+    # Their indexes start after their indexes of the depots by construction
     list_of_nodes = np.arange(state.size) + state.number_of_depots
 
     return random_state.choice(list_of_nodes, compute_number_of_clients_to_remove(state), replace=False)
 
+
 def select_related_nodes(state, random_state):
     # We create a list containing the indexes of the client nodes
-    # Their indexes start after ther indexes of the depots by construction
+    # Their indexes start after their indexes of the depots by construction
     list_of_nodes = [i + state.number_of_depots for i in range(state.size)]
 
     selected_nodes = []
@@ -53,7 +58,7 @@ def select_related_nodes(state, random_state):
 
     number_of_clients_to_remove = compute_number_of_clients_to_remove(state)
 
-    for i in range (number_of_clients_to_remove - 1):
+    for i in range(number_of_clients_to_remove - 1):
         random_deleted_node = random_state.choice(selected_nodes, size=None, replace=False)
         sorted_list_of_nodes = rank_nodes_using_relatedness(state, list_of_nodes, random_deleted_node)
         random_number = random_state.random()
@@ -80,7 +85,7 @@ def removal_heuristic(state, random_state):
         destroyed.instance.remove_edge(previous_node, node)
         destroyed.instance.remove_edge(node, next_node)
         # Avoiding useless routes
-        if (next_node != previous_node):
+        if next_node != previous_node:
             destroyed.instance.add_edge(previous_node, next_node)
 
     return destroyed
