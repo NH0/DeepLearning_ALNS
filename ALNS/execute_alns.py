@@ -12,6 +12,7 @@ from ALNS.generate_instances import generate_cvrp_instance
 from ALNS.compute_distances import compute_single_route_distance, compute_adjacency_matrix, print_routes_demands
 from ALNS.removal_heuristics import removal_heuristic
 from ALNS.repair_heuristics import greedy_insertion
+from ALNS.saving_data import save_alns_solution_stats
 
 SEED = 2020
 
@@ -176,7 +177,7 @@ alns.add_repair_operator(greedy_insertion)
 criterion = HillClimbing()
 
 # Solve the cvrp using ALNS
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=10000, collect_stats=False)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=100, collect_stats=True)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
@@ -185,3 +186,5 @@ solution.draw()
 
 # result.plot_objectives()
 plt.show()
+
+save_alns_solution_stats(result.statistics.objectives)
