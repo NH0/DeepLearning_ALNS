@@ -1,10 +1,12 @@
+from typing import Tuple
+
 import numpy.linalg as euclidean_distance
 import numpy as np
 
-from ALNS.execute_alns import CvrpState
+BestInsertion = Tuple[float, Tuple[int, int]]
 
 
-def compute_adjacency_matrix(state: CvrpState) -> np.ndarray:
+def compute_adjacency_matrix(state) -> np.ndarray:
     """
     Computes the adjacency matrix of a given graph using the euclidean distance.
     Parameters
@@ -36,7 +38,7 @@ def compute_adjacency_matrix(state: CvrpState) -> np.ndarray:
     return adjacency_matrix
 
 
-def compute_closest_depot(state: CvrpState, node: int) -> int:
+def compute_closest_depot(state, node: int) -> int:
     """
     Given a node, finds the closest depot to the node.
     Parameters
@@ -55,7 +57,7 @@ def compute_closest_depot(state: CvrpState, node: int) -> int:
     return closest
 
 
-def compute_single_route_distance(state: CvrpState, start_depot: int, first_client: int) -> float:
+def compute_single_route_distance(state, start_depot: int, first_client: int) -> float:
     """
     Given a route characterized by the depot it is linked to and the first client it visits, compute the distance of
     the route.
@@ -90,7 +92,7 @@ def compute_single_route_distance(state: CvrpState, start_depot: int, first_clie
     return distance
 
 
-def compute_route_demand(state: CvrpState, first_client: int) -> float:
+def compute_route_demand(state, first_client: int) -> float:
     """
     Given a route characterized by the first client it visits, we compute the total demand of the route.
     That is the sum of the demands of the clients visited during the route.
@@ -114,7 +116,7 @@ def compute_route_demand(state: CvrpState, first_client: int) -> float:
     return demand
 
 
-def compute_defined_insertion_cost(state: CvrpState, previous_node: int, next_node: int, node_to_insert: int) -> float:
+def compute_defined_insertion_cost(state, previous_node: int, next_node: int, node_to_insert: int) -> float:
     """
     Compute the cost of inserted a node between two connected nodes.
     Parameters
@@ -133,8 +135,7 @@ def compute_defined_insertion_cost(state: CvrpState, previous_node: int, next_no
             - state.distances[previous_node][next_node])
 
 
-def compute_route_best_insertion_cost(state: CvrpState, start_depot: int, first_client: int, node_to_insert: int) \
-        -> (float, (int, int)):
+def compute_route_best_insertion_cost(state, start_depot: int, first_client: int, node_to_insert: int) -> BestInsertion:
     """
     Compute the best place to insert a given node in a given route.
     The route is uniquely defined by the depot it is linked to and the first visited client.
@@ -147,7 +148,7 @@ def compute_route_best_insertion_cost(state: CvrpState, start_depot: int, first_
 
     Returns
     -------
-    (float, (int, int)) representing the best insertion possible in the route with
+    Tuple[float, Tuple[int, int]] representing the best insertion possible in the route with
         (cost of insertion, (previous node, successor node))
     """
     # If a route cannot accept the demand then infinite cost
@@ -177,7 +178,7 @@ def compute_route_best_insertion_cost(state: CvrpState, start_depot: int, first_
     return best_insertion_cost, best_insertion_nodes
 
 
-def compute_minimum_cost_position(state: CvrpState, node_to_insert: int) -> (float, (int, int)):
+def compute_minimum_cost_position(state, node_to_insert: int) -> BestInsertion:
     """
     Compute the best edge to insert a node into.
     Parameters
@@ -187,7 +188,7 @@ def compute_minimum_cost_position(state: CvrpState, node_to_insert: int) -> (flo
 
     Returns
     -------
-    (float, (int, int)) representing the best insertion possible in the solution with
+    Tuple[float, Tuple[int, int]] representing the best insertion possible in the solution with
         (cost of insertion, (previous node, successor node))
     """
     minimum_cost = float("inf")
@@ -208,7 +209,7 @@ def compute_minimum_cost_position(state: CvrpState, node_to_insert: int) -> (flo
     return minimum_cost, minimum_cost_nodes
 
 
-def print_routes_demands(state: CvrpState) -> None:
+def print_routes_demands(state) -> None:
     """
     Print the total demands for each route in the instance.
     Parameters
