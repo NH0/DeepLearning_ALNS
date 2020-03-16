@@ -16,13 +16,12 @@ from ALNS.saving_data import save_alns_solution_stats
 
 SEED = 2020
 
-SIZE = 40
+SIZE = 30
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
-ITERATIONS = 10
-
-cvrp_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
+ITERATIONS = 10000
+COLLECT_STATISTICS = True
 
 
 # for i in range(SIZE):
@@ -39,11 +38,14 @@ class CvrpState(State):
                     the nodes have the following attributes : coordinates, a pair of coordinates
                                                               demand, the demand of the client
                                                               isDepot, characterizing the depots
+     - collect_alns_statistics : boolean defining whether to save or not the destroyed nodes at each iteration
      - size : the number of clients
      - capacity: the maximum amount of goods each vehicule can transport at a time
      - number_of_depots: the number of depot where delivery vehicules can obtain the goods to be delivered
      - distances: the adjacency matrix between all nodes
     """
+
+    statistics = []
 
     def __init__(self, instance, collect_alns_statistics, **parameters):
         self.instance = instance
@@ -79,7 +81,6 @@ class CvrpState(State):
         self.distances = compute_adjacency_matrix(self)
 
         self.collect_alns_statistics = collect_alns_statistics
-        self.statistics = []
 
     def copy(self):
         return copy.deepcopy(self)
@@ -167,40 +168,48 @@ def generate_initial_solution(cvrp_state):
     return cvrp_state
 
 
-# Create an empty state
-void_state = CvrpState(cvrp_instance, collect_alns_statistics=True, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS,
-                       capacity=CAPACITY)
-# void_state.draw()
-initial_solution = generate_initial_solution(void_state)
-initial_solution.draw()
-initial_distance = initial_solution.objective()
-print("Initial distance is ", initial_distance)
+def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
+                         iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, **kwargs):
+    cvrp_instance = generate_cvrp_instance(size, capacity, number_of_depots, seed)
+    # Create an empty state
+    void_state = CvrpState(cvrp_instance, collect_alns_statistics=collect_statistics, size=size,
+                           number_of_depots=number_of_depots,
+                           capacity=capacity)
+    # void_state.draw()
+    initial_solution = generate_initial_solution(void_state)
+    # initial_solution.draw()
+    # initial_distance = initial_solution.objective()
+    # print("Initial distance is ", initial_distance)
 
-# Initialize ALNS
-random_state = rnd.RandomState(SEED)
-alns = ALNS(random_state)
-alns.add_destroy_operator(removal_heuristic)
-alns.add_repair_operator(greedy_insertion)
-criterion = HillClimbing()
+    # Initialize ALNS
+    random_state = rnd.RandomState(SEED)
+    alns = ALNS(random_state)
+    alns.add_destroy_operator(removal_heuristic)
+    alns.add_repair_operator(greedy_insertion)
+    criterion = HillClimbing()
 
-# Solve the cvrp using ALNS
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=ITERATIONS, collect_stats=True)
+    # Solve the cvrp using ALNS
+    result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=iterations,
+                          collect_stats=collect_statistics)
+    solution = result.best_state
 
-solution = result.best_state
-print("Optimal distance is ", solution.objective())
-print_routes_demands(solution)
-solution.draw()
+    # print("Optimal distance is ", solution.objective())
+    # print_routes_demands(solution)
+    # solution.draw()
+    # # result.plot_objectives()
+    # plt.show()
 
-# result.plot_objectives()
-plt.show()
-if solution.collect_alns_statistics:
-    solution_data = {'Size': solution.size,
-                     'Number_of_depots': solution.number_of_depots,
-                     'Capacity': solution.capacity,
-                     'Seed': SEED}
-    solution_statistics = [{'destroyed_nodes': solution.statistics[i],
-                            'objective_difference': result.statistics.objectives[i + 1]
-                                                    - result.statistics.objectives[i]}
-                           for i in range(ITERATIONS)]
-    solution_data['Statistics'] = solution_statistics
-    save_alns_solution_stats(solution_data)
+    if solution.collect_alns_statistics:
+        solution_data = {'Size': solution.size,
+                         'Number_of_depots': solution.number_of_depots,
+                         'Capacity': solution.capacity,
+                         'Seed': seed}
+        solution_statistics = [{'destroyed_nodes': solution.statistics[i],
+                                'objective_difference': result.statistics.objectives[i + 1]
+                                                        - result.statistics.objectives[i]}
+                               for i in range(ITERATIONS)]
+        solution_data['Statistics'] = solution_statistics
+        if 'file_path' in kwargs:
+            save_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
+        else:
+            save_alns_solution_stats(solution_data)
