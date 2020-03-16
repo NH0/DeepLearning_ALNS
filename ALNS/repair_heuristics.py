@@ -11,7 +11,7 @@ def greedy_insertion(current_state, random_state):
         best_node_cost, best_position = compute_minimum_cost_position(inserted, best_node)
         for node in unvisited_nodes[1:]:
             node_cost, position = compute_minimum_cost_position(inserted, node)
-            if node_cost < best_node:
+            if node_cost < best_node_cost:
                 best_node = node
                 best_node_cost = node_cost
                 best_position = position
