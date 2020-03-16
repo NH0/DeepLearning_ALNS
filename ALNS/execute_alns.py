@@ -20,6 +20,8 @@ SIZE = 40
 CAPACITY = 40
 NUMBER_OF_DEPOTS = 1
 
+ITERATIONS = 10
+
 cvrp_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
 
 
@@ -43,7 +45,7 @@ class CvrpState(State):
      - distances: the adjacency matrix between all nodes
     """
 
-    def __init__(self, instance, **parameters):
+    def __init__(self, instance, collect_alns_statistics, **parameters):
         self.instance = instance
 
         if 'number_of_depots' in parameters:
@@ -75,6 +77,9 @@ class CvrpState(State):
             self.capacity = - demands[0]
 
         self.distances = compute_adjacency_matrix(self)
+
+        self.collect_alns_statistics = collect_alns_statistics
+        self.statistics = []
 
     def copy(self):
         return copy.deepcopy(self)
@@ -161,8 +166,10 @@ def generate_initial_solution(cvrp_state):
 
     return cvrp_state
 
+
 # Create an empty state
-void_state = CvrpState(cvrp_instance, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS, capacity=CAPACITY)
+void_state = CvrpState(cvrp_instance, collect_alns_statistics=True, size=SIZE, number_of_depots=NUMBER_OF_DEPOTS,
+                       capacity=CAPACITY)
 # void_state.draw()
 initial_solution = generate_initial_solution(void_state)
 initial_solution.draw()
@@ -177,7 +184,7 @@ alns.add_repair_operator(greedy_insertion)
 criterion = HillClimbing()
 
 # Solve the cvrp using ALNS
-result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=100, collect_stats=True)
+result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=ITERATIONS, collect_stats=True)
 
 solution = result.best_state
 print("Optimal distance is ", solution.objective())
@@ -186,5 +193,14 @@ solution.draw()
 
 # result.plot_objectives()
 plt.show()
-
-save_alns_solution_stats(result.statistics.objectives)
+if solution.collect_alns_statistics:
+    solution_data = {'Size': solution.size,
+                     'Number_of_depots': solution.number_of_depots,
+                     'Capacity': solution.capacity,
+                     'Seed': SEED}
+    solution_statistics = [{'destroyed_nodes': solution.statistics[i],
+                            'objective_difference': result.statistics.objectives[i + 1]
+                                                    - result.statistics.objectives[i]}
+                           for i in range(ITERATIONS)]
+    solution_data['Statistics'] = solution_statistics
+    save_alns_solution_stats(solution_data)
