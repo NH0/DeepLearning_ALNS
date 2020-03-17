@@ -182,7 +182,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     # print("Initial distance is ", initial_distance)
 
     # Initialize ALNS
-    random_state = rnd.RandomState(SEED)
+    random_state = rnd.RandomState(seed)
     alns = ALNS(random_state)
     alns.add_destroy_operator(removal_heuristic)
     alns.add_repair_operator(greedy_insertion)
@@ -207,7 +207,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
         solution_statistics = [{'destroyed_nodes': solution.statistics[i],
                                 'objective_difference': result.statistics.objectives[i + 1]
                                                         - result.statistics.objectives[i]}
-                               for i in range(ITERATIONS)]
+                               for i in range(iterations)]
         solution_data['Statistics'] = solution_statistics
         if 'file_path' in kwargs:
             save_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
