@@ -1,3 +1,4 @@
+import sys
 import pickle
 
 
@@ -14,7 +15,9 @@ def retrieve_alns_stats(file):
                 print('\n---------\nError : Could not retrieve the data.\n---------')
                 exit(1)
 
-    print(statistics)
 
-
-retrieve_alns_stats("/tmp/data.pickle")
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        retrieve_alns_stats(sys.argv[1])
+    else:
+        print("Usage : python retrieve_data.py data_file")
