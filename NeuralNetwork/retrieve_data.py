@@ -12,7 +12,7 @@ def retrieve_alns_stats(file):
             except EOFError:
                 break
             except pickle.UnpicklingError:
-                print('\n---------\nError : Could not retrieve the data.\n---------')
+                print('\n---------\nError : Could not retrieve the data in {0}.\n---------'.format(file))
                 exit(1)
 
 
