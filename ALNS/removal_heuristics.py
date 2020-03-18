@@ -1,7 +1,9 @@
 import numpy as np
 
-degree_of_destruction = 0.2
-DETERMINISM = 10
+import ALNS.settings as settings
+
+degree_of_destruction = settings.DEGREE_OF_DESTRUCTION
+DETERMINISM = settings.DETERMINISM
 
 
 def is_served_by_same_vehicle(state, node, second_node):

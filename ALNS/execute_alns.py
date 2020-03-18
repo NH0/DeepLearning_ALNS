@@ -14,14 +14,18 @@ from ALNS.removal_heuristics import removal_heuristic
 from ALNS.repair_heuristics import greedy_insertion
 from ALNS.saving_data import save_alns_solution_stats
 
-SEED = 2020
+import ALNS.settings as settings
 
-SIZE = 30
-CAPACITY = 40
-NUMBER_OF_DEPOTS = 1
+SEED = settings.SEED
 
-ITERATIONS = 10
-COLLECT_STATISTICS = True
+SIZE = settings.SIZE
+CAPACITY = settings.CAPACITY
+NUMBER_OF_DEPOTS = settings.NUMBER_OF_DEPOTS
+
+ITERATIONS = settings.NUMBER_OF_DEPOTS
+WEIGHTS = settings.WEIGHTS
+OPERATOR_DECAY = settings.OPERATOR_DECAY
+COLLECT_STATISTICS = settings.COLLECT_STATISTICS
 
 
 # for i in range(SIZE):
@@ -170,6 +174,9 @@ def generate_initial_solution(cvrp_state):
 
 def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
                          iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, **kwargs):
+    weights = WEIGHTS
+    operator_decay = OPERATOR_DECAY
+
     cvrp_instance = generate_cvrp_instance(size, capacity, number_of_depots, seed)
     # Create an empty state
     void_state = CvrpState(cvrp_instance, collect_alns_statistics=collect_statistics, size=size,
@@ -188,8 +195,13 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     alns.add_repair_operator(greedy_insertion)
     criterion = HillClimbing()
 
+    if 'weights' in kwargs:
+        weights = kwargs['weights']
+    if 'operator_decay' in kwargs:
+        operator_decay = kwargs['operator_decay']
+
     # Solve the cvrp using ALNS
-    result = alns.iterate(initial_solution, [3, 2, 1, 0.5], 0.8, criterion, iterations=iterations,
+    result = alns.iterate(initial_solution, weights, operator_decay, criterion, iterations=iterations,
                           collect_stats=collect_statistics)
     solution = result.best_state
 

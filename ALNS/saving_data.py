@@ -1,10 +1,13 @@
 import pickle
 
-FILE_PATH = "../data/alns_stats.pickle"
+import ALNS.settings as settings
+
+FILE_PATH = settings.FILE_NAME
+FILE_MODE = settings.FILE_MODE
 
 
 def save_alns_solution_stats(result, file_path=FILE_PATH) -> None:
-    with open(file_path, 'ab') as file_alns_stats:
+    with open(file_path, FILE_MODE) as file_alns_stats:
         try:
             pickle.dump(result, file_alns_stats)
             print('Successfully saved the data in {0}'.format(file_path))

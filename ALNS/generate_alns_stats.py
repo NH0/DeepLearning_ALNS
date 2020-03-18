@@ -1,19 +1,20 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.getcwd())
 
-import numpy as np
 from ALNS.execute_alns import solve_cvrp_with_alns
+import ALNS.settings as settings
 
-SIZE = 50
-CAPACITY = 40
-NUMBER_OF_DEPOTS = 1
+SIZE = settings.SIZE
+CAPACITY = settings.CAPACITY
+NUMBER_OF_DEPOTS = settings.NUMBER_OF_DEPOTS
 
-ITERATIONS = 30000
-COLLECT_STATISTICS = True
+ITERATIONS = settings.ITERATIONS
+COLLECT_STATISTICS = settings.COLLECT_STATISTICS
 
-NUMBER_OF_INSTANCES = 1
+NUMBER_OF_INSTANCES = settings.NUMBER_OF_INSTANCES
 
 
 def generate_stats(file_path, number_of_stats=NUMBER_OF_INSTANCES):
