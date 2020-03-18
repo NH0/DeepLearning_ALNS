@@ -18,10 +18,15 @@ NUMBER_OF_INSTANCES = settings.NUMBER_OF_INSTANCES
 
 
 def generate_stats(file_path, number_of_stats=NUMBER_OF_INSTANCES):
+    if number_of_stats == 1:
+        solve_cvrp_with_alns(size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
+                             iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, file_path=file_path)
+        return 0
     for i in range(number_of_stats):
         seed = np.random.randint(0, 2 ** 32 - 1)
         solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
                              iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, file_path=file_path)
+    return 0
 
 
 if __name__ == '__main__':

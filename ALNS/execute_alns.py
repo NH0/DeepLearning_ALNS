@@ -1,9 +1,10 @@
 from alns import ALNS, State
-from alns.criteria import HillClimbing
+from alns.criteria import SimulatedAnnealing
 
 import copy
 
 import numpy.random as rnd
+from numpy import log
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -172,33 +173,48 @@ def generate_initial_solution(cvrp_state):
     return cvrp_state
 
 
+def compute_initial_temperature(initial_solution_cost, start_temperature_control):
+    return - initial_solution_cost * start_temperature_control / log(0.5)
+
+
 def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
                          iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, **kwargs):
     weights = WEIGHTS
     operator_decay = OPERATOR_DECAY
+    start_temperature_control = settings.START_TEMPERATURE_CONTROL
+    cooling_rate = settings.COOLING_RATE
+    end_temperature = settings.END_TEMPERATURE
+
+    if 'weights' in kwargs:
+        weights = kwargs['weights']
+    if 'operator_decay' in kwargs:
+        operator_decay = kwargs['operator_decay']
+    if 'start_temperature_control' in kwargs:
+        start_temperature_control = kwargs['start_temperature_control']
+    if 'cooling_rate' in kwargs:
+        cooling_rate = kwargs['cooling_rate']
+    if 'end_temperature' in kwargs:
+        end_temperature = kwargs['end_temperature']
 
     cvrp_instance = generate_cvrp_instance(size, capacity, number_of_depots, seed)
     # Create an empty state
     void_state = CvrpState(cvrp_instance, collect_alns_statistics=collect_statistics, size=size,
                            number_of_depots=number_of_depots,
                            capacity=capacity)
-    # void_state.draw()
     initial_solution = generate_initial_solution(void_state)
-    # initial_solution.draw()
-    # initial_distance = initial_solution.objective()
-    # print("Initial distance is ", initial_distance)
+    initial_distance = initial_solution.objective()
 
     # Initialize ALNS
     random_state = rnd.RandomState(seed)
     alns = ALNS(random_state)
     alns.add_destroy_operator(removal_heuristic)
     alns.add_repair_operator(greedy_insertion)
-    criterion = HillClimbing()
 
-    if 'weights' in kwargs:
-        weights = kwargs['weights']
-    if 'operator_decay' in kwargs:
-        operator_decay = kwargs['operator_decay']
+    initial_temperature = compute_initial_temperature(initial_distance, start_temperature_control)
+    print(initial_temperature)
+    criterion = SimulatedAnnealing(initial_temperature,
+                                   end_temperature,
+                                   cooling_rate)
 
     # Solve the cvrp using ALNS
     result = alns.iterate(initial_solution, weights, operator_decay, criterion, iterations=iterations,

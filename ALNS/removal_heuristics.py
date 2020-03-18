@@ -37,15 +37,16 @@ def rank_nodes_using_relatedness(state, list_of_nodes, node):
 
 
 def compute_number_of_clients_to_remove(state):
-    return int(state.size * degree_of_destruction)
+    number_of_clients_to_remove = np.random.randint(min(state.size, 4), min(state.size * degree_of_destruction, 100))
+    return number_of_clients_to_remove
 
 
-def select_random_nodes(state, random_state):
-    # We create a list containing the indexes of the client nodes
-    # Their indexes start after their indexes of the depots by construction
-    list_of_nodes = np.arange(state.size) + state.number_of_depots
-
-    return random_state.choice(list_of_nodes, compute_number_of_clients_to_remove(state), replace=False)
+# def select_random_nodes(state, random_state):
+#     # We create a list containing the indexes of the client nodes
+#     # Their indexes start after their indexes of the depots by construction
+#     list_of_nodes = np.arange(state.size) + state.number_of_depots
+#
+#     return random_state.choice(list_of_nodes, compute_number_of_clients_to_remove(state), replace=False)
 
 
 def select_related_nodes(state, random_state):
