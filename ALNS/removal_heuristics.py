@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 
 import ALNS.settings as settings
 
@@ -37,7 +38,7 @@ def rank_nodes_using_relatedness(state, list_of_nodes, node):
 
 
 def compute_number_of_clients_to_remove(state):
-    number_of_clients_to_remove = np.random.randint(min(state.size, 4), min(state.size * degree_of_destruction, 100))
+    number_of_clients_to_remove = np.random.randint(min(state.size, 1), min(state.size * degree_of_destruction, 100))
     return number_of_clients_to_remove
 
 
@@ -77,10 +78,6 @@ def removal_heuristic(state, random_state):
     # We choose the clients we want to remove from the instance
     nodes_to_destroy = select_related_nodes(state, random_state)
 
-    # We collect the value of the objective function in case we want stats
-    if state.collect_alns_statistics:
-        state.statistics.append(nodes_to_destroy)
-
     destroyed = state.copy()
     # The removal of a node N_i consists in removing the edge (N_i-1, N_i) and (N_i, N_i+1)
     # and adding the edge (N_i-1, N_i+1)
@@ -93,5 +90,11 @@ def removal_heuristic(state, random_state):
         # Avoiding useless routes
         if next_node != previous_node:
             destroyed.instance.add_edge(previous_node, next_node)
+
+    # We collect the value of the objective function and the existing edges in case we want stats
+    if state.collect_alns_statistics:
+        state.statistics['destroyed_nodes'].append(nodes_to_destroy)
+        list_of_edges = nx.to_edgelist(destroyed.instance)
+        state.statistics['list_of_edges'].append(list_of_edges)
 
     return destroyed
