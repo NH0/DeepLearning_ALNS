@@ -8,7 +8,7 @@ from ALNS.generate_instances import generate_cvrp_instance
 from ALNS.removal_heuristics import removal_heuristic
 from ALNS.repair_heuristics import greedy_insertion
 from ALNS.saving_data import save_alns_solution_stats
-from ALNS.alns import CvrpState, generate_initial_solution
+from ALNS.alns_state import CvrpState, generate_initial_solution
 
 import ALNS.settings as settings
 
@@ -22,13 +22,6 @@ ITERATIONS = settings.NUMBER_OF_DEPOTS
 WEIGHTS = settings.WEIGHTS
 OPERATOR_DECAY = settings.OPERATOR_DECAY
 COLLECT_STATISTICS = settings.COLLECT_STATISTICS
-
-
-# for i in range(SIZE):
-#     print(cvrp_instance.nodes[i])
-# draw_instance(cvrp_instance)
-# generate_initial_solution(cvrp_instance)
-# draw_instance(cvrp_instance)
 
 
 def compute_initial_temperature(initial_solution_cost, start_temperature_control):

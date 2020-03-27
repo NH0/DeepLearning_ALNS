@@ -2,7 +2,7 @@ import pickle
 
 import ALNS.settings as settings
 
-FILE_PATH = settings.FILE_NAME
+FILE_PATH = settings.FILE_PATH
 FILE_MODE = settings.FILE_MODE
 
 
