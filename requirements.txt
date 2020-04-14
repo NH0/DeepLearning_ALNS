@@ -1,3 +1,5 @@
+torch
+dgl
 alns==1.2.3
 astroid==2.3.3
 autopep8==1.5

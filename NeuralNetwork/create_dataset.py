@@ -52,7 +52,7 @@ def create_dataset(file):
             for node in removal_iteration['destroyed_nodes']:
                 one_input = [[[0, 0] if i != node else [1, 0] for i in range(number_of_nodes)]]
                 one_input = one_input + removal_state
-                one_input = reshape(one_input, (number_of_nodes * (number_of_nodes + 1), 2))
+                one_input = reshape(one_input, 2 * (number_of_nodes * (number_of_nodes + 1)))
                 consecutive_inputs.append(one_input)
 
             x_vector.append(consecutive_inputs)
@@ -63,6 +63,5 @@ def create_dataset(file):
 if __name__ == '__main__':
     if len(argv) == 2:
         x_vector, y_vector = create_dataset(argv[1])
-        pprint(x_vector[0])
     else:
         print("Usage : python create_dataset.py data_file")

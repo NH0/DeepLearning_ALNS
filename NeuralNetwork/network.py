@@ -1,6 +1,11 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import sys
+
+from NeuralNetwork.create_dataset import create_dataset
+
+HIDDEN_SIZE = 512
 
 if torch.cuda.is_available():
     print("yes")
@@ -25,10 +30,14 @@ if torch.cuda.is_available():
 #         output = self.Wy(next_h)
 #         return output, next_h
 
-
-rnn = nn.RNN(3, 5)
-x = torch.tensor([[[30,1,2], [43,5,2], [38,1,0], [7, 3, 0], [3, 0, 0], [48, 2, 2]]], dtype=torch.float)
-h = torch.zeros(1, 6, 5)
-print(x.size())
-output, next_h = rnn(x, h)
-print(output, next_h)
+if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        x, y = create_dataset(sys.argv[1])
+        input_size = len(x[0][0])
+        sequence_length = len(x[0])
+        rnn = nn.RNN(input_size, HIDDEN_SIZE)
+        h = torch.randn(1, sequence_length, HIDDEN_SIZE)
+        x_input = torch.tensor(x[0])
+        x_input = torch.reshape(x_input, (sequence_length, sequence_length, input_size))
+        output, next_h = rnn(x_input, h)
+        print(output, next_h)
