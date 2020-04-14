@@ -16,8 +16,8 @@ class CvrpState(State):
                                                               isDepot, characterizing the depots
      - collect_alns_statistics : boolean defining whether to save or not the destroyed nodes at each iteration
      - size : the number of clients
-     - capacity: the maximum amount of goods each vehicule can transport at a time
-     - number_of_depots: the number of depot where delivery vehicules can obtain the goods to be delivered
+     - capacity: the maximum amount of goods each vehicle can transport at a time
+     - number_of_depots: the number of depot where delivery vehicles can obtain the goods to be delivered
      - distances: the adjacency matrix between all nodes
     """
 
