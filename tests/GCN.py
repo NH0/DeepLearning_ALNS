@@ -24,7 +24,8 @@ class GCN(nn.Module):
         super(GCN, self).__init__()
         self.convolution1 = GraphConv(input_features, hidden_size)
         self.convolution2 = GraphConv(hidden_size, hidden_size)
-        self.convolution3 = GraphConv(hidden_size, output_feature)
+        self.convolution3 = GraphConv(hidden_size, hidden_size)
+        self.convolution4 = GraphConv(hidden_size, output_feature)
 
     def forward(self, graph, inputs):
         h = self.convolution1(graph, inputs)
@@ -32,6 +33,10 @@ class GCN(nn.Module):
         h = self.convolution2(graph, h)
         h = torch.relu(h)
         h = self.convolution3(graph, h)
+        h = torch.relu(h)
+        h = self.convolution4(graph, h)
+        # Produce output of shape (input_size, output_features) instead of (input_size, 3, output_features)
+        h = torch.max(h, 1)[0]
         return h
 
 
