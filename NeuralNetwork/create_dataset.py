@@ -21,6 +21,8 @@ def retrieve_alns_stats(file):
             except pickle.UnpicklingError:
                 print('\n---------\nError : Could not retrieve the data in {0}.\n---------'.format(file))
                 exit(1)
+        if len(statistics) == 1:
+            return statistics[0]
         return statistics
 
 
@@ -62,6 +64,6 @@ def create_dataset(file):
 
 if __name__ == '__main__':
     if len(argv) == 2:
-        x_vector, y_vector = create_dataset(argv[1])
+        stats = retrieve_alns_stats(argv[1])
     else:
-        print("Usage : python create_dataset.py data_file")
+        print("Usage : python {0} data_file".format(argv[0]))

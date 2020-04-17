@@ -62,7 +62,6 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     alns.add_repair_operator(greedy_insertion)
 
     initial_temperature = compute_initial_temperature(initial_distance, start_temperature_control)
-    print(initial_temperature)
     criterion = SimulatedAnnealing(initial_temperature,
                                    end_temperature,
                                    cooling_rate)

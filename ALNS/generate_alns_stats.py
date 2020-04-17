@@ -39,4 +39,4 @@ if __name__ == '__main__':
     elif len(sys.argv) == 3:
         generate_stats(sys.argv[1], int(sys.argv[2]))
     else:
-        print("Usage : generate_stats.py file_path [number_of_instances]")
+        print("Usage : {0} file_path [number_of_instances]".format(sys.argv[0]))
