@@ -42,17 +42,19 @@ class GCN(nn.Module):
         return h
 
 
-def evaluate(network, graph, inputs, degrees_tensor, train_mask):
+def evaluate(network, inputs, degrees_tensor, train_mask):
     test_mask = ~train_mask
     network.eval()
     with torch.no_grad():
-        logits = network(graph, inputs)
-        logits = logits[test_mask]
-        degrees = degrees_tensor[test_mask]
-        _, indices = torch.max(logits, dim=1)
-        print(indices, degrees)
-        correct = torch.sum(indices == degrees)
-        return correct.item() / len(degrees)
+        correct = 0
+        for graph, input_data in inputs:
+            logits = network(graph, input_data)
+            logits = logits[test_mask]
+            degrees = degrees_tensor[test_mask]
+            _, indices = torch.max(logits, dim=1)
+            print(indices, degrees)
+            correct += torch.sum(indices == degrees).item()
+        return correct / len(degrees)
 
 
 def generate_karate_club_graph():
@@ -110,13 +112,20 @@ def generate_cvrp_graph(nx_graph):
     return dgl_graph, degrees
 
 
-def generate_inputs(dgl_graph):
-    number_of_nodes = dgl_graph.number_of_nodes()
+def generate_inputs(list_of_dgl_graphs):
+    # All graphs must have the same number of node
+    # They actually represent the same CVRP problem with different solution
+    # The data is the CVRP state at different iterations of the ALNS heuristic
+    number_of_nodes = list_of_dgl_graphs[0].number_of_nodes()
 
     node_embedding = nn.Embedding(number_of_nodes, EMBEDDING_SIZE)
-    dgl_graph.ndata['embedding'] = node_embedding.weight
 
-    inputs = torch.stack([node_embedding.weight, dgl_graph.ndata['demand'], dgl_graph.ndata['isDepot']], dim=1)
+    inputs_data = []
+    for graph in list_of_dgl_graphs:
+        graph.ndata['embedding'] = node_embedding.weight
+        inputs_data.append(torch.stack([node_embedding.weight, graph.ndata['demand'], graph.ndata['isDepot']], dim=1))
+    inputs = list(zip(list_of_dgl_graphs, inputs_data))
+
     train_mask = torch.tensor([1 if np.random.randint(0, 4) > 0 else 0 for i in range(number_of_nodes)]).bool()
 
     return inputs, train_mask, node_embedding
@@ -134,25 +143,26 @@ def main():
     cvrp_state = create_cvrp_state()
     dgl_graph, degrees = generate_cvrp_graph(cvrp_state.instance)
     # dgl_graph, degrees = generate_karate_club_graph()
-    inputs, train_mask, node_embedding = generate_inputs(dgl_graph)
+    inputs, train_mask, node_embedding = generate_inputs([dgl_graph])
     degrees_tensor, labels = generate_labels(degrees)
 
     optimizer = torch.optim.Adam(itertools.chain(myGCN.parameters(), node_embedding.parameters()), lr=0.0005)
     loss_function = nn.MSELoss()
 
     for epoch in range(MAX_EPOCH + 1):
-        logits = myGCN(dgl_graph, inputs)
-        logp = F.softmax(logits, 1)
-        loss = loss_function(logp[train_mask], labels[train_mask])
+        for graph, input_data in inputs:
+            logits = myGCN(graph, input_data)
+            logp = F.softmax(logits, 1)
+            loss = loss_function(logp[train_mask], labels[train_mask])
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
         if epoch % 1000 == 0:
             random_logit = torch.tensor([[np.random.rand() for i in range(OUTPUT_SIZE)] for degree in degrees])
             random_loss = loss_function(F.log_softmax(random_logit, 1)[train_mask], labels[train_mask])
-            accuracy = evaluate(myGCN, dgl_graph, inputs, degrees_tensor, train_mask)
+            accuracy = evaluate(myGCN, inputs, degrees_tensor, train_mask)
             print(
                 'Epoch %d, loss %.4f, random loss %.4f, accuracy %.4f' % (epoch, loss.item(), random_loss.item(), accuracy))
 
