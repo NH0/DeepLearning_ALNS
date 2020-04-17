@@ -1,18 +1,24 @@
 #!/home/thib/Documents/Travail/CIRRELT/pythonLNS-env/bin/python
 import itertools
+import dgl
+import torch
+import os
 
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import networkx as nx
-import dgl
-import torch
 
 from dgl.nn.pytorch import GraphConv
 
-from ALNS.alns_state import CvrpState, generate_initial_solution
+from ALNS.alns_state import CvrpState
 from ALNS.generate_instances import generate_cvrp_instance
+from NeuralNetwork.create_dataset import retrieve_alns_stats
+
+STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
+ALNS_ITERATION_STATISTICS_FILE = '1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18determ.pickle'
+ALNS_ITERATION_STATISTICS_PATH = STATISTICS_DATA_PATH + ALNS_ITERATION_STATISTICS_FILE
 
 EMBEDDING_SIZE = 15
 OUTPUT_SIZE = 3
@@ -52,7 +58,6 @@ def evaluate(network, inputs, degrees_tensor, train_mask):
             logits = logits[test_mask]
             degrees = degrees_tensor[test_mask]
             _, indices = torch.max(logits, dim=1)
-            print(indices, degrees)
             correct += torch.sum(indices == degrees).item()
         return correct / len(degrees)
 
@@ -82,10 +87,11 @@ def make_complete_graph(initial_state):
         initial_state.instance.add_edge(u, v, weight=initial_state.distances[u][v])
 
 
-def create_cvrp_state():
-    cvrp_instance = generate_cvrp_instance()
+def create_cvrp_state(size, number_of_depots, capacity, seed):
+    cvrp_instance = generate_cvrp_instance(size=size, capacity=capacity, number_of_depots=number_of_depots, seed=seed)
     # Create an empty state
-    initial_state = CvrpState(cvrp_instance, collect_alns_statistics=False, seed=123456)
+    initial_state = CvrpState(cvrp_instance, size=size, capacity=capacity, number_of_depots=number_of_depots,
+                              collect_alns_statistics=False, seed=seed)
     # initial_solution = generate_initial_solution(initial_state)
     make_complete_graph(initial_state)
 
@@ -108,11 +114,11 @@ def generate_cvrp_graph(nx_graph):
     dgl_graph.edata['weight'] = torch.tensor(
         [nx_graph.edges[u, v]['weight'] for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
     )
-
+    # delete degrees from return value
     return dgl_graph, degrees
 
 
-def generate_inputs(list_of_dgl_graphs):
+def generate_inputs(list_of_dgl_graphs, alns_iteration_statistics):
     # All graphs must have the same number of node
     # They actually represent the same CVRP problem with different solution
     # The data is the CVRP state at different iterations of the ALNS heuristic
@@ -139,19 +145,32 @@ def generate_labels(degrees):
 
 
 def main():
-    myGCN = GCN(EMBEDDING_SIZE, HIDDEN_SIZE, OUTPUT_SIZE)
-    cvrp_state = create_cvrp_state()
-    dgl_graph, degrees = generate_cvrp_graph(cvrp_state.instance)
+    graph_convolutional_network = GCN(EMBEDDING_SIZE, HIDDEN_SIZE, OUTPUT_SIZE)
+    # Warning : can be a list of dictionaries, here considered to be a single dictionary
+    alns_iteration_statistics = retrieve_alns_stats(ALNS_ITERATION_STATISTICS_PATH)
+    if type(alns_iteration_statistics) != dict:
+        print("Error, the stats file contains different CVRP instances.")
+        return -1
+
+    cvrp_state = create_cvrp_state(size=alns_iteration_statistics['Size'],
+                                   number_of_depots=alns_iteration_statistics['Number_of_depots'],
+                                   capacity=alns_iteration_statistics['Capacity'],
+                                   seed=alns_iteration_statistics['Seed'])
+    degrees = generate_cvrp_graph(cvrp_state.instance)[1]
     # dgl_graph, degrees = generate_karate_club_graph()
-    inputs, train_mask, node_embedding = generate_inputs([dgl_graph])
+
+    list_of_dgl_graphs = [generate_cvrp_graph(cvrp_state.instance)[0]] * len(alns_iteration_statistics['Statistics'])
+    inputs, train_mask, node_embedding = generate_inputs(list_of_dgl_graphs, alns_iteration_statistics)
     degrees_tensor, labels = generate_labels(degrees)
 
-    optimizer = torch.optim.Adam(itertools.chain(myGCN.parameters(), node_embedding.parameters()), lr=0.0005)
+    optimizer = torch.optim.Adam(itertools.chain(graph_convolutional_network.parameters(), node_embedding.parameters()),
+                                 lr=0.0005)
     loss_function = nn.MSELoss()
 
+    epoch: int
     for epoch in range(MAX_EPOCH + 1):
         for graph, input_data in inputs:
-            logits = myGCN(graph, input_data)
+            logits = graph_convolutional_network(graph, input_data)
             logp = F.softmax(logits, 1)
             loss = loss_function(logp[train_mask], labels[train_mask])
 
