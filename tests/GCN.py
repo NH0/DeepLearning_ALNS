@@ -49,6 +49,7 @@ class GCN(nn.Module):
         # Produce output of shape (hidden_size, hidden_size) instead of (hidden_size, *, hidden_size)
         h = torch.max(h, 1)[0]
         h = self.linear(h)
+        h = torch.mean(h, 0)
         return h
 
 # to be updated with the delta cost
@@ -142,7 +143,7 @@ def generate_inputs(list_of_dgl_graphs, alns_instance_statistics):
              for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
         )
         inputs_data.append(torch.stack([node_embedding.weight, graph.ndata['demand'], graph.ndata['isDepot']], dim=1))
-    inputs = list(zip(list_of_dgl_graphs, inputs_data))
+    inputs = torch.tensor(list(zip(list_of_dgl_graphs, inputs_data)))
 
     train_mask = torch.tensor([1 if np.random.randint(0, 4) > 0 else 0 for _ in range(number_of_nodes)]).bool()
 
@@ -192,10 +193,11 @@ def main():
     step += 1
     epoch: int
     for epoch in range(MAX_EPOCH + 1):
-        for graph, input_data in inputs:
+        for index, (graph, input_data) in enumerate(inputs[train_mask]):
             logits = graph_convolutional_network(graph, input_data)
-            logp = F.softmax(logits, 1)
-            loss = loss_function(logp[train_mask], labels[train_mask])
+            logp = F.softmax(logits, dim=0)
+            # loss = loss_function(logp[train_mask], labels[train_mask])
+            loss = loss_function(logp, labels[train_mask][index])
 
             optimizer.zero_grad()
             loss.backward()
