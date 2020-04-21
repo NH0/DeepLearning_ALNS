@@ -44,10 +44,11 @@ class GCN(nn.Module):
         h = self.convolution3(graph, h)
         h = torch.relu(h)
         h = self.convolution4(graph, h)
-        # Produce output of shape (hidden_size, hidden_size) instead of (hidden_size, *, hidden_size)
+        # Produce output of shape (N, hidden_size) instead of (N, *, hidden_size)
         h = torch.max(h, 1)[0]
-        h = self.linear(h)
+        # Return a tensor of shape (hidden_size)
         h = torch.mean(h, 0)
+        h = self.linear(h)
         return h
 
 
