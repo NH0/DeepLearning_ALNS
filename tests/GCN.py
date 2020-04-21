@@ -135,13 +135,17 @@ def generate_inputs(list_of_dgl_graphs, alns_instance_statistics, embedding_size
         graph.ndata['isDeleted'] = torch.tensor(
             [[1 if node in alns_instance_statistics['Statistics'][i]['destroyed_nodes'] else 0]
              + [0] * (embedding_size - 1)
-             for node in range(number_of_nodes)]
+             for node in range(number_of_nodes)],
+            dtype=torch.float
         )
         graph.edata['isSolution'] = torch.tensor(
             [1 if (u, v) in alns_instance_statistics['Statistics'][i]['list_of_edges'] else 0
              for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
         )
-        inputs_data.append(torch.stack([node_embedding.weight, graph.ndata['demand'], graph.ndata['isDepot']], dim=1))
+        inputs_data.append(torch.stack([node_embedding.weight,
+                                        graph.ndata['demand'],
+                                        graph.ndata['isDepot'],
+                                        graph.ndata['isDeleted']], dim=1))
     inputs = list(zip(list_of_dgl_graphs, inputs_data))
     inputs_train = []
     inputs_test = []
@@ -228,7 +232,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
             loss.backward()
             optimizer.step()
 
-        if epoch % 20 == 0:
+        if epoch % 5 == 0:
             # random_logit = torch.tensor([[np.random.rand() for _ in range(output_size)] for _ in degrees])
             # random_loss = loss_function(F.log_softmax(random_logit, 1)[train_mask], labels[train_mask])
             accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
