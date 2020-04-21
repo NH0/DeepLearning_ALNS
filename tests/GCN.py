@@ -56,13 +56,14 @@ def evaluate(network, inputs_test, labels, train_mask):
     network.eval()
     with torch.no_grad():
         correct = 0
-        for graph, input_data in inputs:
+        for index, (graph, input_data) in enumerate(inputs_test):
             logits = network(graph, input_data)
-            logits = logits[test_mask]
-            degrees = degrees_tensor[test_mask]
-            _, indices = torch.max(logits, dim=1)
-            correct += torch.sum(indices == degrees).item()
-        return correct / len(degrees)
+            logp = F.softmax(logits, dim=0)
+            # torch.max -> (max, argmax), so we only keep the argmax
+            predicted_class = torch.argmax(logp, dim=0).item()
+            true_class = torch.argmax(labels[test_mask][index], dim=0).item()
+            correct += predicted_class == true_class
+        return correct / len(test_mask)
 
 
 def generate_karate_club_graph(embedding_size=EMBEDDING_SIZE):
@@ -141,11 +142,21 @@ def generate_inputs(list_of_dgl_graphs, alns_instance_statistics, embedding_size
              for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
         )
         inputs_data.append(torch.stack([node_embedding.weight, graph.ndata['demand'], graph.ndata['isDepot']], dim=1))
-    inputs = torch.tensor(list(zip(list_of_dgl_graphs, inputs_data)))
+    inputs = list(zip(list_of_dgl_graphs, inputs_data))
+    inputs_train = []
+    inputs_test = []
+    train_mask = []
+    for index, single_input in enumerate(inputs):
+        if np.random.randint(0, 4) > 0:
+            inputs_train.append(single_input)
+            train_mask.append(1)
+        else:
+            inputs_test.append(single_input)
+            train_mask.append(0)
 
-    train_mask = torch.tensor([1 if np.random.randint(0, 4) > 0 else 0 for _ in range(number_of_nodes)]).bool()
+    train_mask = torch.tensor(train_mask).bool()
 
-    return inputs, train_mask, node_embedding
+    return inputs_train, inputs_test, train_mask, node_embedding
 
 
 def generate_labels(alns_instance_statistics, epsilon=EPSILON):
@@ -197,6 +208,13 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
                                  lr=0.0005)
     loss_function = nn.MSELoss()
 
+    number_of_iterations = len(alns_instance_statistics['Statistics'])
+    number_of_null_iterations = 0
+    for iteration in alns_instance_statistics['Statistics']:
+        if abs(iteration['objective_difference']) < epsilon:
+            number_of_null_iterations += 1
+    print("{0}% of null iterations".format(number_of_null_iterations / number_of_iterations * 100))
+
     print("{0} Starting training...".format(step))
     step += 1
 
@@ -213,12 +231,11 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
         if epoch % 20 == 0:
             # random_logit = torch.tensor([[np.random.rand() for _ in range(output_size)] for _ in degrees])
             # random_loss = loss_function(F.log_softmax(random_logit, 1)[train_mask], labels[train_mask])
-            # accuracy = evaluate(graph_convolutional_network, inputs, degrees_tensor, train_mask)
+            accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
             # print(
             #     'Epoch %d, loss %.4f, random loss %.4f, accuracy %.4f' % (
             #         epoch, loss.item(), random_loss.item(), accuracy))
-            print('Epoch %d, loss %.4f' % (epoch, loss.item()))
-            print(logp)
+            print('Epoch %d, loss %.4f, accuracy %.4f' % (epoch, loss.item(), accuracy))
 
 
 if __name__ == '__main__':
