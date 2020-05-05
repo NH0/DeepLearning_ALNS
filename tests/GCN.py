@@ -14,26 +14,68 @@ from NeuralNetwork.create_dataset import retrieve_alns_stats
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 ALNS_STATISTICS_FILE = '1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18determ.pickle'
 
+NODE_FEATURES = 3
+HIDDEN_DIMENSION = 32
 OUTPUT_SIZE = 3
 MAX_EPOCH = 1000
 EPSILON = 1e-5
 
+MASK_SEED = 123456
 
-class GCN(nn.Module):
-    def __init__(self, number_of_nodes, output_feature):
-        super(GCN, self).__init__()
-        self.linear = nn.Linear(number_of_nodes, output_feature)
+
+class GCNLayer(nn.Module):
+    def __init__(self, input_node_features, output_feature, in_features_name, out_features_name):
+        super(GCNLayer, self).__init__()
+
+        self.in_features_name = in_features_name
+        self.out_features_name = out_features_name
+
+        self.U = torch.empty(output_feature, input_node_features)
+        self.V = torch.empty(output_feature, input_node_features)
+        nn.init.xavier_normal_(self.U)
+        nn.init.xavier_normal_(self.V)
+
+        self.activation = nn.ReLU()
+
+    @staticmethod
+    def multiply_weight(features, weight):
+        weighted_features = torch.empty(features.shape[0], weight.shape[0])
+        for i, feat in enumerate(features):
+            weighted_features[i] = torch.mv(weight, feat)
+
+        return weighted_features
 
     def message_function(self, edges):
-        return {'n_feat': edges.dst['n_feat']}
+        return {self.in_features_name: edges.src[self.in_features_name]}
 
     def reduce_function(self, nodes):
-        return {'n_feat': nodes.data['n_feat']}
+        # Vanilla ConvNet : h_i^l+1 = ReLU(U^l x h_i^l + V^l x sum h_j^l)
+        source_nodes_features = torch.sum(nodes.mailbox[self.in_features_name], dim=1)
+        source_nodes_weight = self.multiply_weight(source_nodes_features, self.V)
+        destination_node_weight = self.multiply_weight(nodes.data[self.in_features_name], self.U)
+        new_features = self.activation(destination_node_weight + source_nodes_weight)
+
+        return {self.out_features_name: new_features}
 
     def forward(self, graph):
         graph.update_all(message_func=self.message_function, reduce_func=self.reduce_function)
-        # Return a tensor of shape (number_of_nodes)
-        h = torch.mean(graph.ndata['n_feat'], 1)
+
+        return graph
+
+
+class GCN(nn.Module):
+    def __init__(self, input_node_features, hidden_dimension, output_feature):
+        super(GCN, self).__init__()
+        self.layer = GCNLayer(input_node_features, hidden_dimension, 'n_feat', 'network_feat')
+        self.layer2 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
+        self.linear = nn.Linear(hidden_dimension, output_feature)
+
+    def forward(self, graph):
+        g = self.layer(graph)
+        g = self.layer2(g)
+
+        # Return a tensor of shape (hidden_dimension)
+        h = torch.mean(g.ndata['network_feat'], dim=0)
         h = self.linear(h)
         return h
 
@@ -74,6 +116,7 @@ def create_cvrp_state(size, number_of_depots, capacity, seed):
 def generate_cvrp_graph(nx_graph):
     dgl_graph = dgl.DGLGraph()
     dgl_graph.from_networkx(nx_graph=nx_graph)
+    dgl_graph.set_n_initializer(dgl.init.zero_initializer)
 
     return dgl_graph
 
@@ -113,6 +156,7 @@ def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics):
     inputs_train = []
     inputs_test = []
     train_mask = []
+    np.random.seed(MASK_SEED)
     for index, single_input in enumerate(inputs):
         if np.random.randint(0, 4) > 0:
             inputs_train.append(single_input)
@@ -135,8 +179,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, epsilon=EPSILON):
     return labels
 
 
-def main(alns_statistics_file=ALNS_STATISTICS_FILE,
-         output_size=OUTPUT_SIZE,
+def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIMENSION, output_size=OUTPUT_SIZE,
          max_epoch=MAX_EPOCH, epsilon=EPSILON):
     step = 1
 
@@ -156,13 +199,17 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
     print("{0} Created new cvrp state".format(step))
     step += 1
 
-    graph_convolutional_network = GCN(cvrp_state.instance.number_of_nodes(), output_size)
-    print("{0} Created GCN".format(step))
-    step += 1
-
     inputs_train, inputs_test, train_mask = generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics)
     labels = generate_labels_from_cvrp_state(alns_instance_statistics, epsilon)
+    number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
+    number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
     print("{0} Created inputs and labels".format(step))
+    step += 1
+
+    graph_convolutional_network = GCN(number_of_node_features,
+                                      hidden_dimension=hidden_dimension,
+                                      output_feature=output_size)
+    print("{0} Created GCN".format(step))
     step += 1
 
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=0.0005)
@@ -196,7 +243,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
             # print(
             #     'Epoch %d, loss %.4f, random loss %.4f, accuracy %.4f' % (
             #         epoch, loss.item(), random_loss.item(), accuracy))
-            print('Epoch %d, loss %.4f, accuracy %.4f' % (epoch, loss.item(), accuracy))
+            print('Epoch %d, loss %.6f, accuracy %.4f' % (epoch, loss.item(), accuracy))
 
 
 if __name__ == '__main__':
