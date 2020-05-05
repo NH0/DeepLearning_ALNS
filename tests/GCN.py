@@ -69,13 +69,17 @@ class GCNLayer(nn.Module):
 class GCN(nn.Module):
     def __init__(self, input_node_features, hidden_dimension, output_feature):
         super(GCN, self).__init__()
-        self.layer = GCNLayer(input_node_features, hidden_dimension, 'n_feat', 'network_feat')
-        self.layer2 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
+        self.convolution = GCNLayer(input_node_features, hidden_dimension, 'n_feat', 'network_feat')
+        self.convolution2 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
+        self.convolution3 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
+        self.convolution4 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
         self.linear = nn.Linear(hidden_dimension, output_feature)
 
     def forward(self, graph):
-        g = self.layer(graph)
-        g = self.layer2(g)
+        g = self.convolution(graph)
+        g = self.convolution2(g)
+        g = self.convolution3(g)
+        g = self.convolution4(g)
 
         # Return a tensor of shape (hidden_dimension)
         h = torch.mean(g.ndata['network_feat'], dim=0)
