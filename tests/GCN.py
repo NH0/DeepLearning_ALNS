@@ -20,6 +20,9 @@ OUTPUT_SIZE = 3
 MAX_EPOCH = 1000
 EPSILON = 1e-5
 
+INITIAL_LEARNING_RATE = 0.001
+LEARNING_RATE_DECREASE_FACTOR = 0.9
+
 MASK_SEED = 123456
 
 
@@ -180,7 +183,8 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, epsilon=EPSILON):
 
 
 def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIMENSION, output_size=OUTPUT_SIZE,
-         max_epoch=MAX_EPOCH, epsilon=EPSILON):
+         max_epoch=MAX_EPOCH, epsilon=EPSILON,
+         initial_learning_rate=INITIAL_LEARNING_RATE, learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR):
     step = 1
 
     alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
@@ -212,7 +216,8 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Created GCN".format(step))
     step += 1
 
-    optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=0.0005)
+    optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.MSELoss()
 
     number_of_iterations = len(alns_instance_statistics['Statistics'])
@@ -235,14 +240,10 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            scheduler.step(loss)
 
         if epoch % 5 == 0:
-            # random_logit = torch.tensor([[np.random.rand() for _ in range(output_size)] for _ in degrees])
-            # random_loss = loss_function(F.log_softmax(random_logit, 1)[train_mask], labels[train_mask])
             accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
-            # print(
-            #     'Epoch %d, loss %.4f, random loss %.4f, accuracy %.4f' % (
-            #         epoch, loss.item(), random_loss.item(), accuracy))
             print('Epoch %d, loss %.6f, accuracy %.4f' % (epoch, loss.item(), accuracy))
 
 
