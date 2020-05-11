@@ -338,11 +338,11 @@ def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics, 
     return inputs_train, inputs_test, train_mask
 
 
-def generate_labels_from_cvrp_state(alns_instance_statistics, epsilon=EPSILON):
+def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EPSILON):
     labels = torch.tensor([[1, 0, 0] if iteration['objective_difference'] > 0
                            else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon else [0, 0, 1]
                            for iteration in alns_instance_statistics['Statistics']],
-                          dtype=torch.float)
+                          dtype=torch.float, device=device)
 
     return labels
 
@@ -376,7 +376,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
 
     inputs_train, inputs_test, train_mask = generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics,
                                                                                   device)
-    labels = generate_labels_from_cvrp_state(alns_instance_statistics, epsilon)
+    labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
     number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
     print("{0} Created inputs and labels".format(step))
