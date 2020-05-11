@@ -308,7 +308,7 @@ def generate_graph_node_features(graph, graph_index, cvrp_state, alns_instance_s
     return graph
 
 
-def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics):
+def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics, device):
     nx_graph = cvrp_state.instance
     list_of_dgl_graphs = \
         [generate_cvrp_graph(nx_graph) for _ in range(len(alns_instance_statistics['Statistics']))]
@@ -318,6 +318,7 @@ def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics):
 
     for i, graph in enumerate(list_of_dgl_graphs):
         generate_graph_node_features(graph, i, cvrp_state, alns_instance_statistics)
+        graph.to(torch.device(device))
 
     inputs = list_of_dgl_graphs
     inputs_train = []
@@ -368,17 +369,18 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Created new cvrp state".format(step))
     step += 1
 
-    inputs_train, inputs_test, train_mask = generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics)
+    if torch.cuda.is_available():
+        device = 'cuda'
+    else:
+        device = 'cpu'
+
+    inputs_train, inputs_test, train_mask = generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics,
+                                                                                  device)
     labels = generate_labels_from_cvrp_state(alns_instance_statistics, epsilon)
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
     number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
     print("{0} Created inputs and labels".format(step))
     step += 1
-
-    if torch.cuda.is_available():
-        device = 'cuda'
-    else:
-        device = 'cpu'
 
     graph_convolutional_network = GCN(input_node_features=number_of_node_features,
                                       hidden_node_dimension=hidden_dimension,
