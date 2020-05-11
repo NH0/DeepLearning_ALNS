@@ -17,7 +17,8 @@ ALNS_STATISTICS_FILE = '1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18det
 NODE_FEATURES = 3
 HIDDEN_DIMENSION = 32
 OUTPUT_SIZE = 3
-MAX_EPOCH = 1000
+DROPOUT_PROBABILITY = 0.2
+MAX_EPOCH = 80
 EPSILON = 1e-5
 
 INITIAL_LEARNING_RATE = 0.001
@@ -26,9 +27,9 @@ LEARNING_RATE_DECREASE_FACTOR = 0.9
 MASK_SEED = 123456
 
 
-class GCNLayer(nn.Module):
+class VanillaGCNLayer(nn.Module):
     def __init__(self, input_node_features, output_feature, in_features_name, out_features_name):
-        super(GCNLayer, self).__init__()
+        super(VanillaGCNLayer, self).__init__()
 
         self.in_features_name = in_features_name
         self.out_features_name = out_features_name
@@ -66,23 +67,182 @@ class GCNLayer(nn.Module):
         return graph
 
 
-class GCN(nn.Module):
-    def __init__(self, input_node_features, hidden_dimension, output_feature):
-        super(GCN, self).__init__()
-        self.convolution = GCNLayer(input_node_features, hidden_dimension, 'n_feat', 'network_feat')
-        self.convolution2 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
-        self.convolution3 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
-        self.convolution4 = GCNLayer(hidden_dimension, hidden_dimension, 'network_feat', 'network_feat')
-        self.linear = nn.Linear(hidden_dimension, output_feature)
+class _GatedGCNLayer(nn.Module):
+    def __init__(self, input_node_features, output_node_features,
+                 input_edge_features, output_edge_features,
+                 in_node_features_name='n_feat', out_node_features_name='network_n_feat',
+                 in_edge_features_name='e_feat', out_edge_features_name='network_e_feat'):
+        super(GatedGCNLayer, self).__init__()
+
+        self.in_node_features_name = in_node_features_name
+        self.out_node_features_name = out_node_features_name
+        self.in_edge_features_name = in_edge_features_name
+        self.out_edge_features_name = out_edge_features_name
+
+        self.U = torch.empty(output_node_features, input_node_features)
+        self.V = torch.empty(output_node_features, input_node_features)
+        nn.init.xavier_normal_(self.U)
+        nn.init.xavier_normal_(self.V)
+
+        self.W1 = torch.empty(output_edge_features, input_edge_features)
+        self.W2 = torch.empty(output_edge_features, input_node_features)
+        self.W3 = torch.empty(output_edge_features, input_node_features)
+        nn.init.xavier_normal_(self.W1)
+        nn.init.xavier_normal_(self.W2)
+        nn.init.xavier_normal_(self.W3)
+
+        self.activation = nn.ReLU()
+        self.h_BN = nn.BatchNorm1d(output_node_features)
+        self.e_BN = nn.BatchNorm1d(output_edge_features)
+        self.sigmoid = nn.Sigmoid()
+
+    @staticmethod
+    def multiply_weight(features, weight):
+        weighted_features = torch.empty(features.shape[0], weight.shape[0])
+        for i, feat in enumerate(features):
+            weighted_features[i] = torch.mv(weight, feat)
+
+        return weighted_features
+
+    @staticmethod
+    def hadamard_product(matrix_a, matrix_b):
+        if matrix_a.shape != matrix_b.shape:
+            raise ArithmeticError
+        product = torch.empty(matrix_a.shape)
+        for aij, bij, productij in zip(matrix_a.flatten(), matrix_b.flatten(), product.flatten()):
+            productij.fill_(aij.item() * bij.item())
+
+        return product
+
+    def message_function(self, edges):
+        weighted_neighbor_features = self.multiply_weight(edges.src[self.in_node_features_name], self.V)
+        eta = self.sigmoid(edges.data[self.in_edge_features_name]) \
+              / (torch.sum(self.sigmoid(edges.data[self.in_edge_features_name]), dim=1) + EPSILON)
+        new_neighbor_features = self.hadamard_product(eta, weighted_neighbor_features)
+        return {self.out_node_features_name + '_temp': new_neighbor_features}
+
+    def reduce_function(self, nodes):
+        # GatedGCN : h_i^l+1 = h_i^l + ReLU(BN(U^l x h_i^l + sum eta_ij^l * (V^l x h_j^l) ))
+        # See https://arxiv.org/abs/1711.07553 and https://arxiv.org/abs/1906.01227
+        source_nodes_weight = torch.sum(nodes.mailbox[self.out_node_features_name + '_temp'], dim=1)
+        destination_node_weight = self.multiply_weight(nodes.data[self.in_node_features_name], self.U)
+        new_features = self.activation(self.h_BN(destination_node_weight + source_nodes_weight))
+
+        return {self.out_node_features_name + '_temp': new_features}
+
+    def update_edge(self, edges):
+        new_edge_features = edges.data[self.in_edge_features_name] \
+                            + self.activation(self.e_BN())
+
+        return {self.out_edge_features_name: new_edge_features}
 
     def forward(self, graph):
-        g = self.convolution(graph)
-        g = self.convolution2(g)
-        g = self.convolution3(g)
-        g = self.convolution4(g)
+        graph.update_all(message_func=self.message_function, reduce_func=self.reduce_function)
+        graph.apply_edges(func=self.update_edge)
+        graph.ndata[self.out_node_features_name] = graph.ndata.pop(self.out_node_features_name + '_temp')
+
+        return graph
+
+
+class GatedGCNLayer(nn.Module):
+    def __init__(self, input_node_features, output_node_features,
+                 input_edge_features, output_edge_features,
+                 dropout_probability):
+        super().__init__()
+
+        self.input_node_features = input_node_features
+        self.output_node_features = output_node_features
+        self.input_edge_features = input_edge_features
+        self.output_edge_features = output_edge_features
+
+        # This embeddings are used to change the dimension of the node and edge features from one layer to another
+        # Otherwise it would be impossible to add the previous feature vector to the newly computed one
+        self.embedding_node = nn.Linear(input_node_features, output_node_features, bias=False)
+        self.embedding_edge = nn.Linear(input_edge_features, output_edge_features, bias=False)
+
+        # This embedding is used to be able to add the edge feature vector to the node feature vector
+        self.embedding_eta = nn.Linear(output_edge_features, output_node_features, bias=False)
+
+        self.dropout_probability = dropout_probability
+
+        self.U = nn.Linear(input_node_features, output_node_features, bias=True)
+        self.V = nn.Linear(input_node_features, output_node_features, bias=True)
+
+        self.W1 = nn.Linear(input_edge_features, output_edge_features, bias=True)
+        self.W2 = nn.Linear(input_node_features, output_edge_features, bias=True)
+        self.W3 = nn.Linear(input_node_features, output_edge_features, bias=True)
+
+        self.activation = nn.ReLU()
+        self.h_BN = nn.BatchNorm1d(output_node_features)
+        self.e_BN = nn.BatchNorm1d(output_edge_features)
+        self.sigmoid = nn.Sigmoid()
+
+    def message_function(self, edges):
+        Vh_j = edges.src['Vh']
+        e_ij = edges.data['e'] + self.activation(self.e_BN(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h']))
+        edges.data['e'] = e_ij
+
+        return {'Vh_j': Vh_j, 'e_ij': e_ij}
+
+    def reduce_function(self, nodes):
+        Uh_i = nodes.data['Uh']
+        Vh_j = nodes.mailbox['Vh_j']
+
+        e = nodes.mailbox['e_ij']
+        sigma_ij = self.embedding_eta(self.sigmoid(e))
+
+        h = nodes.data['h'] + self.activation(self.h_BN(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
+                                                        / (torch.sum(sigma_ij, dim=1) + EPSILON)))
+
+        return {'h': h}
+
+    def forward(self, graph, h, e):
+        graph.ndata['h'] = self.embedding_node(h)
+        graph.ndata['Uh'] = self.U(h)
+        graph.ndata['Vh'] = self.V(h)
+        graph.ndata['W2h'] = self.W2(h)
+        graph.ndata['W3h'] = self.W3(h)
+
+        graph.edata['e'] = self.embedding_edge(e)
+        graph.edata['W1e'] = self.W1(e)
+
+        graph.update_all(message_func=self.message_function, reduce_func=self.reduce_function)
+        h = graph.ndata['h']
+        e = graph.edata['e']
+
+        h = torch.nn.functional.dropout(h, self.dropout_probability)
+        e = torch.nn.functional.dropout(e, self.dropout_probability)
+
+        return h, e
+
+
+class GCN(nn.Module):
+    def __init__(self, input_node_features, hidden_node_dimension,
+                 input_edge_features, hidden_edge_dimension,
+                 output_feature, dropout_probability):
+        super(GCN, self).__init__()
+        self.convolution = GatedGCNLayer(input_node_features, hidden_node_dimension,
+                                         input_edge_features, hidden_edge_dimension,
+                                         dropout_probability)
+        self.convolution2 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
+                                          hidden_edge_dimension, hidden_edge_dimension,
+                                          dropout_probability)
+        self.convolution3 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
+                                          hidden_edge_dimension, hidden_edge_dimension,
+                                          dropout_probability)
+        self.convolution4 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
+                                          hidden_edge_dimension, hidden_edge_dimension,
+                                          dropout_probability)
+        self.linear = nn.Linear(hidden_node_dimension, output_feature)
+
+    def forward(self, graph, h, e):
+        h, e = self.convolution(graph, h, e)
+        h, e = self.convolution2(graph, h, e)
+        h, e = self.convolution3(graph, h, e)
+        h, e = self.convolution4(graph, h, e)
 
         # Return a tensor of shape (hidden_dimension)
-        h = torch.mean(g.ndata['network_feat'], dim=0)
+        h = torch.mean(h, dim=0)
         h = self.linear(h)
         return h
 
@@ -93,7 +253,7 @@ def evaluate(network, inputs_test, labels, train_mask):
     with torch.no_grad():
         correct = 0
         for index, graph in enumerate(inputs_test):
-            logits = network(graph)
+            logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
             logp = F.softmax(logits, dim=0)
             # torch.max -> (max, argmax), so we only keep the argmax
             predicted_class = torch.argmax(logp, dim=0).item()
@@ -187,6 +347,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, epsilon=EPSILON):
 
 
 def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIMENSION, output_size=OUTPUT_SIZE,
+         dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH, epsilon=EPSILON,
          initial_learning_rate=INITIAL_LEARNING_RATE, learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR):
     step = 1
@@ -214,9 +375,18 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Created inputs and labels".format(step))
     step += 1
 
-    graph_convolutional_network = GCN(number_of_node_features,
-                                      hidden_dimension=hidden_dimension,
-                                      output_feature=output_size)
+    if torch.cuda.is_available():
+        device = 'cuda'
+    else:
+        device = 'cpu'
+
+    graph_convolutional_network = GCN(input_node_features=number_of_node_features,
+                                      hidden_node_dimension=hidden_dimension,
+                                      input_edge_features=number_of_edge_features,
+                                      hidden_edge_dimension=hidden_dimension,
+                                      output_feature=output_size,
+                                      dropout_probability=dropout_probability)
+    graph_convolutional_network = graph_convolutional_network.to(device)
     print("{0} Created GCN".format(step))
     step += 1
 
@@ -237,7 +407,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     for epoch in range(max_epoch + 1):
         loss = torch.tensor([1], dtype=torch.float)
         for index, graph in enumerate(inputs_train):
-            logits = graph_convolutional_network(graph)
+            logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
             logp = F.softmax(logits, dim=0)
             loss = loss_function(logp, labels[train_mask][index])
 
