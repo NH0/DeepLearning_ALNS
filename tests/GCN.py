@@ -12,7 +12,7 @@ from ALNS.generate_instances import generate_cvrp_instance
 from NeuralNetwork.create_dataset import retrieve_alns_stats
 
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
-ALNS_STATISTICS_FILE = '1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18determ.pickle'
+ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18determ.pickle'
 
 NODE_FEATURES = 3
 HIDDEN_DIMENSION = 32
