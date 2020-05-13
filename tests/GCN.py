@@ -1,4 +1,3 @@
-#!/home/thib/Documents/Travail/CIRRELT/pythonLNS-env/bin/python
 import dgl
 import torch
 import os
@@ -21,130 +20,35 @@ DROPOUT_PROBABILITY = 0.2
 MAX_EPOCH = 80
 EPSILON = 1e-5
 
-INITIAL_LEARNING_RATE = 0.001
+INITIAL_LEARNING_RATE = 0.0001
 LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
 
 
-class VanillaGCNLayer(nn.Module):
-    def __init__(self, input_node_features, output_feature, in_features_name, out_features_name):
-        super(VanillaGCNLayer, self).__init__()
-
-        self.in_features_name = in_features_name
-        self.out_features_name = out_features_name
-
-        self.U = torch.empty(output_feature, input_node_features)
-        self.V = torch.empty(output_feature, input_node_features)
-        nn.init.xavier_normal_(self.U)
-        nn.init.xavier_normal_(self.V)
-
-        self.activation = nn.ReLU()
-
-    @staticmethod
-    def multiply_weight(features, weight):
-        weighted_features = torch.empty(features.shape[0], weight.shape[0])
-        for i, feat in enumerate(features):
-            weighted_features[i] = torch.mv(weight, feat)
-
-        return weighted_features
-
-    def message_function(self, edges):
-        return {self.in_features_name: edges.src[self.in_features_name]}
-
-    def reduce_function(self, nodes):
-        # Vanilla ConvNet : h_i^l+1 = ReLU(U^l x h_i^l + V^l x sum h_j^l)
-        source_nodes_features = torch.sum(nodes.mailbox[self.in_features_name], dim=1)
-        source_nodes_weight = self.multiply_weight(source_nodes_features, self.V)
-        destination_node_weight = self.multiply_weight(nodes.data[self.in_features_name], self.U)
-        new_features = self.activation(destination_node_weight + source_nodes_weight)
-
-        return {self.out_features_name: new_features}
-
-    def forward(self, graph):
-        graph.update_all(message_func=self.message_function, reduce_func=self.reduce_function)
-
-        return graph
-
-
-class _GatedGCNLayer(nn.Module):
-    def __init__(self, input_node_features, output_node_features,
-                 input_edge_features, output_edge_features,
-                 in_node_features_name='n_feat', out_node_features_name='network_n_feat',
-                 in_edge_features_name='e_feat', out_edge_features_name='network_e_feat'):
-        super(GatedGCNLayer, self).__init__()
-
-        self.in_node_features_name = in_node_features_name
-        self.out_node_features_name = out_node_features_name
-        self.in_edge_features_name = in_edge_features_name
-        self.out_edge_features_name = out_edge_features_name
-
-        self.U = torch.empty(output_node_features, input_node_features)
-        self.V = torch.empty(output_node_features, input_node_features)
-        nn.init.xavier_normal_(self.U)
-        nn.init.xavier_normal_(self.V)
-
-        self.W1 = torch.empty(output_edge_features, input_edge_features)
-        self.W2 = torch.empty(output_edge_features, input_node_features)
-        self.W3 = torch.empty(output_edge_features, input_node_features)
-        nn.init.xavier_normal_(self.W1)
-        nn.init.xavier_normal_(self.W2)
-        nn.init.xavier_normal_(self.W3)
-
-        self.activation = nn.ReLU()
-        self.h_BN = nn.BatchNorm1d(output_node_features)
-        self.e_BN = nn.BatchNorm1d(output_edge_features)
-        self.sigmoid = nn.Sigmoid()
-
-    @staticmethod
-    def multiply_weight(features, weight):
-        weighted_features = torch.empty(features.shape[0], weight.shape[0])
-        for i, feat in enumerate(features):
-            weighted_features[i] = torch.mv(weight, feat)
-
-        return weighted_features
-
-    @staticmethod
-    def hadamard_product(matrix_a, matrix_b):
-        if matrix_a.shape != matrix_b.shape:
-            raise ArithmeticError
-        product = torch.empty(matrix_a.shape)
-        for aij, bij, productij in zip(matrix_a.flatten(), matrix_b.flatten(), product.flatten()):
-            productij.fill_(aij.item() * bij.item())
-
-        return product
-
-    def message_function(self, edges):
-        weighted_neighbor_features = self.multiply_weight(edges.src[self.in_node_features_name], self.V)
-        eta = self.sigmoid(edges.data[self.in_edge_features_name]) \
-              / (torch.sum(self.sigmoid(edges.data[self.in_edge_features_name]), dim=1) + EPSILON)
-        new_neighbor_features = self.hadamard_product(eta, weighted_neighbor_features)
-        return {self.out_node_features_name + '_temp': new_neighbor_features}
-
-    def reduce_function(self, nodes):
-        # GatedGCN : h_i^l+1 = h_i^l + ReLU(BN(U^l x h_i^l + sum eta_ij^l * (V^l x h_j^l) ))
-        # See https://arxiv.org/abs/1711.07553 and https://arxiv.org/abs/1906.01227
-        source_nodes_weight = torch.sum(nodes.mailbox[self.out_node_features_name + '_temp'], dim=1)
-        destination_node_weight = self.multiply_weight(nodes.data[self.in_node_features_name], self.U)
-        new_features = self.activation(self.h_BN(destination_node_weight + source_nodes_weight))
-
-        return {self.out_node_features_name + '_temp': new_features}
-
-    def update_edge(self, edges):
-        new_edge_features = edges.data[self.in_edge_features_name] \
-                            + self.activation(self.e_BN())
-
-        return {self.out_edge_features_name: new_edge_features}
-
-    def forward(self, graph):
-        graph.update_all(message_func=self.message_function, reduce_func=self.reduce_function)
-        graph.apply_edges(func=self.update_edge)
-        graph.ndata[self.out_node_features_name] = graph.ndata.pop(self.out_node_features_name + '_temp')
-
-        return graph
-
-
 class GatedGCNLayer(nn.Module):
+    """
+    Defines a layer of a Gated Graph Convolutional Network based on https://arxiv.org/pdf/1711.07553v2.pdf.
+
+    The equation defining the message passing is the following :
+    h = hi + ReLU(BN(U x hi + Sum(eta_ij * V x hj)))
+    where :
+    eta_ij = sigmoid(e_ij) / (Sum(sigmoid(e_ij)) + epsilon)
+    and :
+    e_ij = e_ij + ReLU(BN(W1 x e_ij + W2 x hi + W3 x hj))
+
+    BN is a Batch normalization.
+
+    In order to have different feature sizes between layers, we add a linear transformation
+    for nodes to hi :
+    h = embedding_node x hi + ReLU(BN(W1 x hi + Sum(eta_ij * W2 x hj)))
+    for edges to e_ij :
+    e_ij = embedding_edge x e_ij + ReLU(BN(W1 x e_ij + W2 x hi + W3 x hj))
+
+
+    And to allow different sizes between node features and edge features, we also add a linear transformation to eta_ij
+    h = node_embedding x hi + ReLU(BN(W1 x hi + Sum(embedding_eta x eta_ij * W2 x hj)))
+    """
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
                  dropout_probability):
@@ -156,7 +60,7 @@ class GatedGCNLayer(nn.Module):
         self.output_edge_features = output_edge_features
 
         # This embeddings are used to change the dimension of the node and edge features from one layer to another
-        # Otherwise it would be impossible to add the previous feature vector to the newly computed one
+        # Otherwise each layer would have the same number of features
         self.embedding_node = nn.Linear(input_node_features, output_node_features, bias=False)
         self.embedding_edge = nn.Linear(input_edge_features, output_edge_features, bias=False)
 
@@ -217,6 +121,13 @@ class GatedGCNLayer(nn.Module):
 
 
 class GCN(nn.Module):
+    """
+    Classifies an alns iteration for the CVRP (destruction & reconstruction).
+
+    The network predicts whether the iteration will improve, worsen or keep the total cost of the CVRP solution.
+    The network is based on Gated Graph Convolution layers followed by a Fully connected layer with and output of size
+    3 (for the 3 possible classes).
+    """
     def __init__(self, input_node_features, hidden_node_dimension,
                  input_edge_features, hidden_edge_dimension,
                  output_feature, dropout_probability):
@@ -248,14 +159,29 @@ class GCN(nn.Module):
 
 
 def evaluate(network, inputs_test, labels, train_mask):
+    """
+    Evaluate a neural network on a given test set.
+
+    Parameters
+    ----------
+    network : the network to evaluate
+    inputs_test : the test dataset, containing DGL graphs
+    labels : the expected values to be returned by the network
+    train_mask : the inverse of mask to apply on the labels to keep only the labels corresponding to the test set
+
+    Returns
+    -------
+    The proportion of right predictions
+    """
+    # Inverse the mask to have the test mask
     test_mask = ~train_mask
     network.eval()
     with torch.no_grad():
+        # Number of right predictions
         correct = 0
         for index, graph in enumerate(inputs_test):
             logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
             logp = F.softmax(logits, dim=0)
-            # torch.max -> (max, argmax), so we only keep the argmax
             predicted_class = torch.argmax(logp, dim=0).item()
             true_class = torch.argmax(labels[test_mask][index], dim=0).item()
             correct += predicted_class == true_class
@@ -263,13 +189,45 @@ def evaluate(network, inputs_test, labels, train_mask):
 
 
 def make_complete_graph(initial_state):
+    """
+    Make the instance of a CVRP state complete (each node connected to every other node).
+    Nodes aren't connected to themselves.
+    The modification is in place.
+
+    Necessary in order to have the distance information included in the graph (weight of each edge).
+
+    Parameters
+    ----------
+    initial_state : a CVRP state containing all the characteristics of the CVRP problem. Called initial because it is
+                    obtained when creating a CVRP state.
+
+    Returns
+    -------
+    None
+    """
     number_of_nodes = initial_state.instance.number_of_nodes()
+    # Create a list containing all possible edges
     edges_in_complete_graph = [(u, v) for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
     for u, v in edges_in_complete_graph:
+        # Networkx will not add the edge if it already exists
         initial_state.instance.add_edge(u, v, weight=initial_state.distances[u][v])
 
 
 def create_cvrp_state(size, number_of_depots, capacity, seed):
+    """
+    Create a CVRP state with given parameters.
+
+    Parameters
+    ----------
+    size : the number of nodes (depots and clients)
+    number_of_depots : the number of depots, for the moment consider it equal to 1
+    capacity : capacity of the delivery vehicle
+    seed : the seed used to generate the instance
+
+    Returns
+    -------
+    A CVRP state as defined in ALNS.alns_state
+    """
     cvrp_instance = generate_cvrp_instance(size=size, capacity=capacity, number_of_depots=number_of_depots, seed=seed)
     # Create an empty state
     initial_state = CvrpState(cvrp_instance, size=size, capacity=capacity, number_of_depots=number_of_depots,
@@ -281,6 +239,17 @@ def create_cvrp_state(size, number_of_depots, capacity, seed):
 
 
 def generate_cvrp_graph(nx_graph):
+    """
+    Convert a networkx graph to a DGL graph.
+
+    Parameters
+    ----------
+    nx_graph : a networkx graph
+
+    Returns
+    -------
+    dgl_graph the nx_graph converted to DGL
+    """
     dgl_graph = dgl.DGLGraph()
     dgl_graph.from_networkx(nx_graph=nx_graph)
     dgl_graph.set_n_initializer(dgl.init.zero_initializer)
@@ -288,7 +257,37 @@ def generate_cvrp_graph(nx_graph):
     return dgl_graph
 
 
-def generate_graph_node_features(graph, graph_index, cvrp_state, alns_instance_statistics):
+def generate_graph_features(graph, graph_index, cvrp_state, alns_instance_statistics):
+    """
+    Add node and edge features to a DGL graph representing a CVRP instance.
+
+    The node features are :
+    -> capacity - demand : (float) where capacity is the capacity of the delivery vehicle and demand is the demand of
+                            the node
+    -> isDepot : (boolean 0 or 1) 1 is the node is a depot
+    -> isDestroyed : (boolean 0 or 1) 1 if the node is part of the destroyed node during the current ALNS iteration
+
+    The edge features are :
+    -> weight : (float) the distance between two nodes (= the cost of using this edge in a CVRP solution)
+    -> isUsed : (boolean 0 or 1) 1 if the edge is used in the current CVRP solution
+
+    Parameters
+    ----------
+    graph : the DGL graph, representing an iteration during the ALNS execution. It doesn't contain any information yet.
+            It is simply the complete graph corresponding to the CVRP instance.
+    graph_index : the index of the graph, corresponding to the index of the iteration in the statistics. The destroyed
+                    nodes and the edges in the solution depend on this index as the solution evolves during the
+                    consecutive iterations.
+    cvrp_state : the cvrp state corresponding to the CVRP problem. It contains all the information on the CVRP problem
+                 currently studied.
+    alns_instance_statistics : the statistics saved during the execution of the ALNS algorithm. It contains the
+                               destroyed nodes, the edges of the solution and the difference in the total cost (not used
+                               in this function).
+
+    Returns
+    -------
+    None
+    """
     nx_graph = cvrp_state.instance
     number_of_nodes = nx_graph.number_of_nodes()
 
@@ -305,10 +304,27 @@ def generate_graph_node_features(graph, graph_index, cvrp_state, alns_instance_s
     graph.ndata['n_feat'] = node_features_tensor
     graph.edata['e_feat'] = edge_features_tensor
 
-    return graph
 
+def generate_train_and_test_sets_from_cvrp_state(cvrp_state, alns_instance_statistics, device):
+    """
+    Create the train and test sets.
 
-def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics, device):
+    First it generates the graphs, then it adds the features (node and edge) to each graphs and finally generates the
+    train mask for separating the train and test sets.
+
+    Parameters
+    ----------
+    cvrp_state : the cvrp state corresponding to the CVRP problem. It contains all the information on the CVRP problem
+                 currently studied.
+    alns_instance_statistics : the statistics saved during the execution of the ALNS algorithm. It contains the
+                               destroyed nodes, the edges of the solution and the difference in the total cost (not used
+                               in this function).
+    device : CPU or CUDA depending on the device used for execution
+
+    Returns
+    -------
+    train_set, test_set, train_mask
+    """
     nx_graph = cvrp_state.instance
     list_of_dgl_graphs = \
         [generate_cvrp_graph(nx_graph) for _ in range(len(alns_instance_statistics['Statistics']))]
@@ -317,28 +333,46 @@ def generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics, 
     # The data is the CVRP state at different iterations of the ALNS heuristic
 
     for i, graph in enumerate(list_of_dgl_graphs):
-        generate_graph_node_features(graph, i, cvrp_state, alns_instance_statistics)
+        generate_graph_features(graph, i, cvrp_state, alns_instance_statistics)
         graph.to(torch.device(device))
 
     inputs = list_of_dgl_graphs
-    inputs_train = []
-    inputs_test = []
+    train_set = []
+    test_set = []
     train_mask = []
     np.random.seed(MASK_SEED)
     for index, single_input in enumerate(inputs):
         if np.random.randint(0, 4) > 0:
-            inputs_train.append(single_input)
+            train_set.append(single_input)
             train_mask.append(1)
         else:
-            inputs_test.append(single_input)
+            test_set.append(single_input)
             train_mask.append(0)
 
     train_mask = torch.tensor(train_mask).bool()
 
-    return inputs_train, inputs_test, train_mask
+    return train_set, test_set, train_mask
 
 
 def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EPSILON):
+    """
+    Generate the labels for each ALNS iteration. The labels can be one in 3 values :
+    - (1,0,0) : if the iteration worsens the current cost
+    - (0,1,0) : if the iteration doesn't change the current cost
+    - (0,0,1) : if the iteration improves the current cost
+
+    Parameters
+    ----------
+    alns_instance_statistics : the statistics saved during the execution of the ALNS algorithm. It contains the
+                               destroyed nodes, the edges of the solution and the difference in the total
+                               cost (objective_difference).
+    device : CPU or CUDA depending on the device used for execution
+    epsilon : small value to avoid comparing floats to 0.0
+
+    Returns
+    -------
+    labels
+    """
     labels = torch.tensor([[1, 0, 0] if iteration['objective_difference'] > 0
                            else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon else [0, 0, 1]
                            for iteration in alns_instance_statistics['Statistics']],
@@ -353,6 +387,9 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
          initial_learning_rate=INITIAL_LEARNING_RATE, learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR):
     step = 1
 
+    """
+    Retrieve the statistics saved during the ALNS execution.
+    """
     alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
     # Warning : can be a list of dictionaries, here considered to be a single dictionary
     alns_instance_statistics = retrieve_alns_stats(alns_statistics_path)
@@ -362,6 +399,9 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Retrieved alns statistics".format(step))
     step += 1
 
+    """
+    Create the CVRP state using the given parameters.
+    """
     cvrp_state = create_cvrp_state(size=alns_instance_statistics['Size'],
                                    number_of_depots=alns_instance_statistics['Number_of_depots'],
                                    capacity=alns_instance_statistics['Capacity'],
@@ -369,19 +409,28 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Created new cvrp state".format(step))
     step += 1
 
+    """
+    Use GPU if available.
+    """
     if torch.cuda.is_available():
         device = 'cuda'
     else:
         device = 'cpu'
 
-    inputs_train, inputs_test, train_mask = generate_input_graphs_from_cvrp_state(cvrp_state, alns_instance_statistics,
-                                                                                  device)
+    """
+    Create the train and test sets.
+    """
+    inputs_train, inputs_test, train_mask = generate_train_and_test_sets_from_cvrp_state(cvrp_state, alns_instance_statistics,
+                                                                                         device)
     labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
     number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
     print("{0} Created inputs and labels".format(step))
     step += 1
 
+    """
+    Create the gated graph convolutional network
+    """
     graph_convolutional_network = GCN(input_node_features=number_of_node_features,
                                       hidden_node_dimension=hidden_dimension,
                                       input_edge_features=number_of_edge_features,
@@ -392,20 +441,31 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     print("{0} Created GCN".format(step))
     step += 1
 
+    """
+    Define the optimizer, the learning rate scheduler and the loss function.
+    We use the Adam optimizer and a MSE loss.
+    """
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.MSELoss()
 
+    """
+    Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
+    """
     number_of_iterations = len(alns_instance_statistics['Statistics'])
     number_of_null_iterations = 0
     for iteration in alns_instance_statistics['Statistics']:
         if abs(iteration['objective_difference']) < epsilon:
             number_of_null_iterations += 1
     print("{0}% of null iterations".format(number_of_null_iterations / number_of_iterations * 100))
+    print("Number of iterations : {}".format(number_of_iterations))
 
     print("{0} Starting training...".format(step))
     step += 1
 
+    """
+    Train the network.
+    """
     for epoch in range(max_epoch + 1):
         loss = torch.tensor([1], dtype=torch.float)
         for index, graph in enumerate(inputs_train):
