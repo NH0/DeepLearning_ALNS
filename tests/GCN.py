@@ -422,12 +422,15 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     """
     Create the train and test sets.
     """
-    inputs_train, inputs_test, train_mask = generate_train_and_test_sets_from_cvrp_state(cvrp_state, alns_instance_statistics,
+    print("{0} Creating inputs and labels ... ".format(step), end='', flush=True)
+    inputs_train, inputs_test, train_mask = generate_train_and_test_sets_from_cvrp_state(cvrp_state,
+                                                                                         alns_instance_statistics,
                                                                                          device)
+    print("created inputs, ", end='', flush=True)
     labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
     number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
-    print("{0} Created inputs and labels".format(step))
+    print("and created labels", flush=True)
     step += 1
 
     """
@@ -440,7 +443,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
                                       output_feature=output_size,
                                       dropout_probability=dropout_probability)
     graph_convolutional_network = graph_convolutional_network.to(device)
-    print("{0} Created GCN".format(step))
+    print("{0} Created GCN".format(step), flush=True)
     step += 1
 
     """
@@ -460,7 +463,8 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
         if abs(iteration['objective_difference']) < epsilon:
             number_of_null_iterations += 1
     print("{0}% of null iterations".format(number_of_null_iterations / number_of_iterations * 100))
-    print("Number of iterations : {}".format(number_of_iterations))
+    print("Dataset size : {}".format(number_of_iterations))
+    print("Training set size : {}".format(len(inputs_train)))
 
     print("{0} Starting training...".format(step))
     step += 1
