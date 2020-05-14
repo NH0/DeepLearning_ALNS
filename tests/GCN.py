@@ -20,7 +20,7 @@ DROPOUT_PROBABILITY = 0.2
 MAX_EPOCH = 80
 EPSILON = 1e-5
 
-INITIAL_LEARNING_RATE = 0.0001
+INITIAL_LEARNING_RATE = 0.00005
 LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
@@ -47,7 +47,7 @@ class GatedGCNLayer(nn.Module):
 
 
     And to allow different sizes between node features and edge features, we also add a linear transformation to eta_ij
-    h = node_embedding x hi + ReLU(BN(W1 x hi + Sum(embedding_eta x eta_ij * W2 x hj)))
+    h = embedding_node x hi + ReLU(BN(W1 x hi + Sum(embedding_eta x eta_ij * W2 x hj)))
     """
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
