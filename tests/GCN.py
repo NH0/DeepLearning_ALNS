@@ -11,7 +11,7 @@ from ALNS.generate_instances import generate_cvrp_instance
 from NeuralNetwork.create_dataset import retrieve_alns_stats
 
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
-ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_5000iter_0.8decay_0.35destr_18determ.pickle'
+ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 
 NODE_FEATURES = 3
 HIDDEN_DIMENSION = 32
@@ -20,7 +20,7 @@ DROPOUT_PROBABILITY = 0.2
 MAX_EPOCH = 200
 EPSILON = 1e-5
 
-INITIAL_LEARNING_RATE = 0.00005
+INITIAL_LEARNING_RATE = 0.00001
 LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
@@ -51,7 +51,7 @@ class GatedGCNLayer(nn.Module):
     """
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
-                 dropout_probability):
+                 dropout_probability, has_dropout=False):
         super().__init__()
 
         self.input_node_features = input_node_features
@@ -67,6 +67,7 @@ class GatedGCNLayer(nn.Module):
         # This embedding is used to be able to add the edge feature vector to the node feature vector
         self.embedding_eta = nn.Linear(output_edge_features, output_node_features, bias=False)
 
+        self.has_dropout = has_dropout
         self.dropout_probability = dropout_probability
 
         self.U = nn.Linear(input_node_features, output_node_features, bias=True)
@@ -114,8 +115,9 @@ class GatedGCNLayer(nn.Module):
         h = graph.ndata['h']
         e = graph.edata['e']
 
-        h = torch.nn.functional.dropout(h, self.dropout_probability)
-        e = torch.nn.functional.dropout(e, self.dropout_probability)
+        if self.has_dropout:
+            h = torch.nn.functional.dropout(h, self.dropout_probability)
+            e = torch.nn.functional.dropout(e, self.dropout_probability)
 
         return h, e
 
