@@ -14,7 +14,9 @@ STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 
 NODE_FEATURES = 3
-HIDDEN_DIMENSION = 32
+HIDDEN_NODE_DIMENSIONS = [64, 64, 32, 32]
+HIDDEN_EDGE_DIMENSIONS = [64, 64, 32, 32]
+HIDDEN_LINEAR_DIMENSION = 32
 OUTPUT_SIZE = 3
 DROPOUT_PROBABILITY = 0.2
 MAX_EPOCH = 200
@@ -49,6 +51,7 @@ class GatedGCNLayer(nn.Module):
     And to allow different sizes between node features and edge features, we also add a linear transformation to eta_ij
     h = embedding_node x hi + ReLU(BN(W1 x hi + Sum(embedding_eta x eta_ij * W2 x hj)))
     """
+
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
                  dropout_probability, has_dropout=False):
@@ -130,33 +133,39 @@ class GCN(nn.Module):
     The network is based on Gated Graph Convolution layers followed by a Fully connected layer with and output of size
     3 (for the 3 possible classes).
     """
-    def __init__(self, input_node_features, hidden_node_dimension,
-                 input_edge_features, hidden_edge_dimension,
-                 output_feature, dropout_probability):
+
+    def __init__(self,
+                 input_node_features, hidden_node_dimension_list,
+                 input_edge_features, hidden_edge_dimension_list,
+                 hidden_linear_dimension,
+                 output_feature,
+                 dropout_probability):
         super(GCN, self).__init__()
-        self.convolution = GatedGCNLayer(input_node_features, hidden_node_dimension,
-                                         input_edge_features, hidden_edge_dimension,
-                                         dropout_probability)
-        self.convolution2 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
-                                          hidden_edge_dimension, hidden_edge_dimension,
-                                          dropout_probability)
-        self.convolution3 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
-                                          hidden_edge_dimension, hidden_edge_dimension,
-                                          dropout_probability)
-        self.convolution4 = GatedGCNLayer(hidden_node_dimension, hidden_node_dimension,
-                                          hidden_edge_dimension, hidden_edge_dimension,
-                                          dropout_probability)
-        self.linear = nn.Linear(hidden_node_dimension, output_feature)
+
+        if len(hidden_node_dimension_list) != len(hidden_edge_dimension_list):
+            print("Node dimensions and edge dimensions lists aren't the same size !\nExiting...")
+            exit(1)
+
+        self.convolutions = [GatedGCNLayer(input_node_features, hidden_node_dimension_list[0],
+                                           input_edge_features, hidden_edge_dimension_list[0],
+                                           dropout_probability)]
+
+        for i in range(1, len(hidden_node_dimension_list)):
+            self.convolutions.append(GatedGCNLayer(hidden_node_dimension_list[i - 1], hidden_node_dimension_list[i],
+                                                   hidden_edge_dimension_list[i - 1], hidden_edge_dimension_list[i],
+                                                   dropout_probability))
+
+        self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
+        self.linear2 = nn.Linear(hidden_linear_dimension, output_feature)
 
     def forward(self, graph, h, e):
-        h, e = self.convolution(graph, h, e)
-        h, e = self.convolution2(graph, h, e)
-        h, e = self.convolution3(graph, h, e)
-        h, e = self.convolution4(graph, h, e)
+        for convolution in self.convolutions:
+            h, e = convolution(graph, h, e)
 
         # Return a tensor of shape (hidden_dimension)
         h = torch.mean(h, dim=0)
-        h = self.linear(h)
+        h = self.linear1(h)
+        h = self.linear2(h)
         return h
 
 
@@ -383,10 +392,19 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     return labels
 
 
-def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIMENSION, output_size=OUTPUT_SIZE,
+def main(alns_statistics_file=ALNS_STATISTICS_FILE,
+         hidden_node_dimensions=None,
+         hidden_edge_dimensions=None,
+         hidden_linear_dimension=HIDDEN_LINEAR_DIMENSION,
+         output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH, epsilon=EPSILON,
          initial_learning_rate=INITIAL_LEARNING_RATE, learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR):
+    # Avoid mutable default arguments
+    if hidden_edge_dimensions is None:
+        hidden_edge_dimensions = HIDDEN_EDGE_DIMENSIONS
+    if hidden_node_dimensions is None:
+        hidden_node_dimensions = HIDDEN_NODE_DIMENSIONS
     step = 1
 
     """
@@ -437,9 +455,10 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE, hidden_dimension=HIDDEN_DIME
     Create the gated graph convolutional network
     """
     graph_convolutional_network = GCN(input_node_features=number_of_node_features,
-                                      hidden_node_dimension=hidden_dimension,
+                                      hidden_node_dimension_list=hidden_node_dimensions,
                                       input_edge_features=number_of_edge_features,
-                                      hidden_edge_dimension=hidden_dimension,
+                                      hidden_edge_dimension_list=hidden_edge_dimensions,
+                                      hidden_linear_dimension=hidden_linear_dimension,
                                       output_feature=output_size,
                                       dropout_probability=dropout_probability)
     graph_convolutional_network = graph_convolutional_network.to(device)
