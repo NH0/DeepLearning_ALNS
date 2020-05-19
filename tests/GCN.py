@@ -13,9 +13,8 @@ from NeuralNetwork.create_dataset import retrieve_alns_stats
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 
-NODE_FEATURES = 3
-HIDDEN_NODE_DIMENSIONS = [64, 64, 32, 32]
-HIDDEN_EDGE_DIMENSIONS = [64, 64, 32, 32]
+HIDDEN_NODE_DIMENSIONS = [64, 32, 16, 8]
+HIDDEN_EDGE_DIMENSIONS = [32, 16, 16, 8]
 HIDDEN_LINEAR_DIMENSION = 32
 OUTPUT_SIZE = 3
 DROPOUT_PROBABILITY = 0.2
@@ -405,6 +404,15 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
         hidden_edge_dimensions = HIDDEN_EDGE_DIMENSIONS
     if hidden_node_dimensions is None:
         hidden_node_dimensions = HIDDEN_NODE_DIMENSIONS
+    print("#"*50)
+    print("# Statistics file : {}".format(alns_statistics_file))
+    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
+    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
+    print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
+    print("# Dropout probability : {}".format(dropout_probability))
+    print("# Max epoch : {}".format(max_epoch))
+    print("# Initial learning rate : {}".format(initial_learning_rate))
+    print("#"*50)
     step = 1
 
     """
