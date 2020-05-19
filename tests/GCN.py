@@ -345,7 +345,6 @@ def generate_train_and_test_sets_from_cvrp_state(cvrp_state, alns_instance_stati
 
     for i, graph in enumerate(list_of_dgl_graphs):
         generate_graph_features_from_statistics(graph, i, cvrp_state, alns_instance_statistics, device)
-        # graph.to(torch.device(device))
 
     inputs = list_of_dgl_graphs
     train_set = []
@@ -495,6 +494,9 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
     for epoch in range(max_epoch + 1):
         loss = torch.tensor([1], dtype=torch.float)
         for index, graph in enumerate(inputs_train):
+            print("Device of graph.ndata : {}\nDevice of graph.edata : {}".format(graph.ndata['n_feat'].device,
+                                                                                  graph.edata['e_feat'].device),
+                  flush=True)
             logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
             logp = F.softmax(logits, dim=0)
             loss = loss_function(logp, labels[train_mask][index])
