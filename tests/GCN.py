@@ -55,7 +55,7 @@ class GatedGCNLayer(nn.Module):
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
                  dropout_probability, has_dropout=False):
-        super().__init__()
+        super(GatedGCNLayer, self).__init__()
 
         self.input_node_features = input_node_features
         self.output_node_features = output_node_features
