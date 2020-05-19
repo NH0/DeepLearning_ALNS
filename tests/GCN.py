@@ -268,7 +268,7 @@ def generate_cvrp_graph(nx_graph):
     return dgl_graph
 
 
-def generate_graph_features_from_statistics(graph, graph_index, cvrp_state, alns_instance_statistics):
+def generate_graph_features_from_statistics(graph, graph_index, cvrp_state, alns_instance_statistics, device):
     """
     Add node and edge features to a DGL graph representing a CVRP instance.
 
@@ -310,8 +310,8 @@ def generate_graph_features_from_statistics(graph, graph_index, cvrp_state, alns
                       1 if (u, v) in alns_instance_statistics['Statistics'][graph_index]['list_of_edges'] else 0]
                      for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
 
-    node_features_tensor = torch.tensor(node_features, dtype=torch.float)
-    edge_features_tensor = torch.tensor(edge_features, dtype=torch.float)
+    node_features_tensor = torch.tensor(node_features, dtype=torch.float, device=device)
+    edge_features_tensor = torch.tensor(edge_features, dtype=torch.float, device=device)
     graph.ndata['n_feat'] = node_features_tensor
     graph.edata['e_feat'] = edge_features_tensor
 
@@ -344,8 +344,8 @@ def generate_train_and_test_sets_from_cvrp_state(cvrp_state, alns_instance_stati
     # The data is the CVRP state at different iterations of the ALNS heuristic
 
     for i, graph in enumerate(list_of_dgl_graphs):
-        generate_graph_features_from_statistics(graph, i, cvrp_state, alns_instance_statistics)
-        graph.to(torch.device(device))
+        generate_graph_features_from_statistics(graph, i, cvrp_state, alns_instance_statistics, device)
+        # graph.to(torch.device(device))
 
     inputs = list_of_dgl_graphs
     train_set = []
