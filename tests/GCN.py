@@ -139,7 +139,8 @@ class GCN(nn.Module):
                  input_edge_features, hidden_edge_dimension_list,
                  hidden_linear_dimension,
                  output_feature,
-                 dropout_probability):
+                 dropout_probability,
+                 device):
         super(GCN, self).__init__()
 
         if len(hidden_node_dimension_list) != len(hidden_edge_dimension_list):
@@ -148,12 +149,12 @@ class GCN(nn.Module):
 
         self.convolutions = [GatedGCNLayer(input_node_features, hidden_node_dimension_list[0],
                                            input_edge_features, hidden_edge_dimension_list[0],
-                                           dropout_probability)]
+                                           dropout_probability).to(device)]
 
         for i in range(1, len(hidden_node_dimension_list)):
             self.convolutions.append(GatedGCNLayer(hidden_node_dimension_list[i - 1], hidden_node_dimension_list[i],
                                                    hidden_edge_dimension_list[i - 1], hidden_edge_dimension_list[i],
-                                                   dropout_probability))
+                                                   dropout_probability).to(device))
 
         self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
         self.linear2 = nn.Linear(hidden_linear_dimension, output_feature)
@@ -460,7 +461,8 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
                                       hidden_edge_dimension_list=hidden_edge_dimensions,
                                       hidden_linear_dimension=hidden_linear_dimension,
                                       output_feature=output_size,
-                                      dropout_probability=dropout_probability)
+                                      dropout_probability=dropout_probability,
+                                      device=device)
     graph_convolutional_network = graph_convolutional_network.to(device)
     print("{0} Created GCN".format(step), flush=True)
     step += 1
@@ -494,9 +496,6 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
     for epoch in range(max_epoch + 1):
         loss = torch.tensor([1], dtype=torch.float)
         for index, graph in enumerate(inputs_train):
-            print("Device of graph.ndata : {}\nDevice of graph.edata : {}".format(graph.ndata['n_feat'].device,
-                                                                                  graph.edata['e_feat'].device),
-                  flush=True)
             logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
             logp = F.softmax(logits, dim=0)
             loss = loss_function(logp, labels[train_mask][index])
