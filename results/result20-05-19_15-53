@@ -1,0 +1,123 @@
+nohup: les entrées sont ignorées
+20_05_19_15-53
+Starting script
+Using backend: pytorch
+##################################################
+# Statistics file : dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
+# Hidden node dimensions : [64, 32, 16, 8]
+# Hidden edge dimensions : [32, 16, 16, 8]
+# Hidden linear dimension : 32
+# Dropout probability : 0.2
+# Max epoch : 500
+# Initial learning rate : 1e-05
+##################################################
+1 Retrieved alns statistics
+2 Created new cvrp state
+Using device cuda
+3 Creating inputs and labels ... created inputs, and created labels
+4 Created GCN
+50.0% of null iterations
+Dataset size : 2552
+Training set size : 1871
+5 Starting training...
+Epoch 0, loss 0.374953, accuracy 0.1246
+Epoch 5, loss 0.372352, accuracy 0.1246
+Epoch 10, loss 0.369820, accuracy 0.1246
+Epoch 15, loss 0.367359, accuracy 0.1246
+Epoch 20, loss 0.364969, accuracy 0.1246
+Epoch 25, loss 0.362647, accuracy 0.1246
+Epoch 30, loss 0.360389, accuracy 0.1246
+Epoch 35, loss 0.358195, accuracy 0.1246
+Epoch 40, loss 0.356063, accuracy 0.1246
+Epoch 45, loss 0.353993, accuracy 0.1246
+Epoch 50, loss 0.351983, accuracy 0.1246
+Epoch 55, loss 0.350034, accuracy 0.1246
+Epoch 60, loss 0.348143, accuracy 0.1246
+Epoch 65, loss 0.346307, accuracy 0.1246
+Epoch 70, loss 0.344526, accuracy 0.1246
+Epoch 75, loss 0.342797, accuracy 0.1246
+Epoch 80, loss 0.341119, accuracy 0.1246
+Epoch 85, loss 0.339488, accuracy 0.1246
+Epoch 90, loss 0.337906, accuracy 0.1246
+Epoch 95, loss 0.336371, accuracy 0.1246
+Epoch 100, loss 0.334881, accuracy 0.1246
+Epoch 105, loss 0.333435, accuracy 0.1246
+Epoch 110, loss 0.332030, accuracy 0.1246
+Epoch 115, loss 0.330665, accuracy 0.1246
+Epoch 120, loss 0.329338, accuracy 0.1246
+Epoch 125, loss 0.328048, accuracy 0.1246
+Epoch 130, loss 0.326794, accuracy 0.1246
+Epoch 135, loss 0.325574, accuracy 0.1246
+Epoch 140, loss 0.324388, accuracy 0.1246
+Epoch 145, loss 0.323235, accuracy 0.1246
+Epoch 150, loss 0.322114, accuracy 0.1246
+Epoch 155, loss 0.321025, accuracy 0.1246
+Epoch 160, loss 0.319967, accuracy 0.1246
+Epoch 165, loss 0.318938, accuracy 0.1246
+Epoch 170, loss 0.317936, accuracy 0.1246
+Epoch 175, loss 0.316963, accuracy 0.1246
+Epoch 180, loss 0.316016, accuracy 0.1246
+Epoch 185, loss 0.315096, accuracy 0.1246
+Epoch 190, loss 0.314200, accuracy 0.1246
+Epoch 195, loss 0.313331, accuracy 0.1246
+Epoch 200, loss 0.312484, accuracy 0.1246
+Epoch 205, loss 0.311661, accuracy 0.1246
+Epoch 210, loss 0.310861, accuracy 0.1246
+Epoch 215, loss 0.310083, accuracy 0.1246
+Epoch 220, loss 0.309326, accuracy 0.1246
+Epoch 225, loss 0.308590, accuracy 0.1246
+Epoch 230, loss 0.307875, accuracy 0.1246
+Epoch 235, loss 0.307180, accuracy 0.1246
+Epoch 240, loss 0.306504, accuracy 0.1246
+Epoch 245, loss 0.305847, accuracy 0.1246
+Epoch 250, loss 0.305209, accuracy 0.1246
+Epoch 255, loss 0.304589, accuracy 0.1246
+Epoch 260, loss 0.303986, accuracy 0.1246
+Epoch 265, loss 0.303401, accuracy 0.1246
+Epoch 270, loss 0.302833, accuracy 0.1246
+Epoch 275, loss 0.302281, accuracy 0.1246
+Epoch 280, loss 0.301744, accuracy 0.1246
+Epoch 285, loss 0.301223, accuracy 0.1246
+Epoch 290, loss 0.300716, accuracy 0.1246
+Epoch 295, loss 0.300223, accuracy 0.1246
+Epoch 300, loss 0.299743, accuracy 0.1246
+Epoch 305, loss 0.299276, accuracy 0.1246
+Epoch 310, loss 0.298821, accuracy 0.1246
+Epoch 315, loss 0.298379, accuracy 0.1246
+Epoch 320, loss 0.297948, accuracy 0.1246
+Epoch 325, loss 0.297529, accuracy 0.1246
+Epoch 330, loss 0.297122, accuracy 0.1246
+Epoch 335, loss 0.296725, accuracy 0.1246
+Epoch 340, loss 0.296340, accuracy 0.1246
+Epoch 345, loss 0.295964, accuracy 0.1246
+Epoch 350, loss 0.295598, accuracy 0.1246
+Epoch 355, loss 0.295242, accuracy 0.1246
+Epoch 360, loss 0.294895, accuracy 0.1246
+Epoch 365, loss 0.294558, accuracy 0.1246
+Epoch 370, loss 0.294230, accuracy 0.1246
+Epoch 375, loss 0.293910, accuracy 0.1246
+Epoch 380, loss 0.293598, accuracy 0.1246
+Epoch 385, loss 0.293295, accuracy 0.1246
+Epoch 390, loss 0.292999, accuracy 0.1246
+Epoch 395, loss 0.292712, accuracy 0.1246
+Epoch 400, loss 0.292433, accuracy 0.1246
+Epoch 405, loss 0.292161, accuracy 0.1246
+Epoch 410, loss 0.291896, accuracy 0.1246
+Epoch 415, loss 0.291638, accuracy 0.1246
+Epoch 420, loss 0.291387, accuracy 0.1246
+Epoch 425, loss 0.291143, accuracy 0.1246
+Epoch 430, loss 0.290906, accuracy 0.1246
+Epoch 435, loss 0.290675, accuracy 0.1246
+Epoch 440, loss 0.290450, accuracy 0.1246
+Epoch 445, loss 0.290232, accuracy 0.1246
+Epoch 450, loss 0.290019, accuracy 0.1246
+Epoch 455, loss 0.289811, accuracy 0.1246
+Epoch 460, loss 0.289609, accuracy 0.1246
+Epoch 465, loss 0.289413, accuracy 0.1246
+Epoch 470, loss 0.289221, accuracy 0.1246
+Epoch 475, loss 0.289035, accuracy 0.1246
+Epoch 480, loss 0.288854, accuracy 0.1246
+Epoch 485, loss 0.288677, accuracy 0.1246
+Epoch 490, loss 0.288506, accuracy 0.1246
+Epoch 495, loss 0.288340, accuracy 0.1246
+Epoch 500, loss 0.288179, accuracy 0.1246
