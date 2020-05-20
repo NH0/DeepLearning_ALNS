@@ -547,7 +547,7 @@ def main(recreate_dataset=False,
     """
     number_of_iterations = len(train_mask)
     number_of_null_iterations = 0
-    null_label = torch.tensor([0, 1, 0], dtype=torch.float)
+    null_label = torch.tensor([0, 1, 0], dtype=torch.float, device=device)
     for iteration in labels:
         if torch.equal(iteration, null_label):
             number_of_null_iterations += 1
