@@ -1,0 +1,66 @@
+nohup: les entrées sont ignorées
+20_05_20_11-00
+Starting script
+Using backend: pytorch
+##################################################
+# Statistics file : dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
+# Hidden node dimensions : [32, 32]
+# Hidden edge dimensions : [32, 16]
+# Hidden linear dimension : 32
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+##################################################
+1 Retrieved alns statistics
+2 Created new cvrp state
+Using device cuda
+3 Creating inputs and labels ... created inputs, and created labels
+4 Created GCN
+50.0% of null iterations
+Dataset size : 2552
+Training set size : 1871
+5 Starting training...
+Epoch 0, loss 0.166270, accuracy 0.0694
+Epoch 5, loss 0.176300, accuracy 0.0694
+Epoch 10, loss 0.187754, accuracy 0.0694
+Epoch 15, loss 0.200301, accuracy 0.0694
+Epoch 20, loss 0.213116, accuracy 0.0717
+Epoch 25, loss 0.225162, accuracy 0.1246
+Epoch 30, loss 0.235902, accuracy 0.1246
+Epoch 35, loss 0.244933, accuracy 0.1246
+Epoch 40, loss 0.252188, accuracy 0.1246
+Epoch 45, loss 0.258036, accuracy 0.1246
+Epoch 50, loss 0.262789, accuracy 0.1246
+Epoch 55, loss 0.266543, accuracy 0.1246
+Epoch 60, loss 0.269399, accuracy 0.1246
+Epoch 65, loss 0.271559, accuracy 0.1246
+Epoch 70, loss 0.273215, accuracy 0.1246
+Epoch 75, loss 0.274498, accuracy 0.1246
+Epoch 80, loss 0.275484, accuracy 0.1246
+Epoch 85, loss 0.276219, accuracy 0.1246
+Epoch 90, loss 0.276748, accuracy 0.1246
+Epoch 95, loss 0.277124, accuracy 0.1246
+Epoch 100, loss 0.277396, accuracy 0.1246
+Epoch 105, loss 0.277595, accuracy 0.1246
+Epoch 110, loss 0.277743, accuracy 0.1246
+Epoch 115, loss 0.277855, accuracy 0.1246
+Epoch 120, loss 0.277940, accuracy 0.1246
+Epoch 125, loss 0.278007, accuracy 0.1246
+Epoch 130, loss 0.278060, accuracy 0.1246
+Epoch 135, loss 0.278103, accuracy 0.1246
+Epoch 140, loss 0.278139, accuracy 0.1246
+Epoch 145, loss 0.278168, accuracy 0.1246
+Epoch 150, loss 0.278194, accuracy 0.1246
+Epoch 155, loss 0.278216, accuracy 0.1246
+Epoch 160, loss 0.278235, accuracy 0.1246
+Epoch 165, loss 0.278252, accuracy 0.1246
+Epoch 170, loss 0.278266, accuracy 0.1246
+Epoch 175, loss 0.278279, accuracy 0.1246
+Epoch 180, loss 0.278291, accuracy 0.1246
+Epoch 185, loss 0.278301, accuracy 0.1246
+Epoch 190, loss 0.278310, accuracy 0.1246
+Epoch 195, loss 0.278318, accuracy 0.1246
+Epoch 200, loss 0.278325, accuracy 0.1246
+Epoch 205, loss 0.278332, accuracy 0.1246
+Epoch 210, loss 0.278338, accuracy 0.1246
+Epoch 215, loss 0.278343, accuracy 0.1246
