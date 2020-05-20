@@ -21,7 +21,7 @@ def display_loss(result_file_path):
 
 
 def main():
-    display_loss('result05-14_11-26')
+    display_loss('result05-19_15-53')
 
 
 if __name__ == '__main__':
