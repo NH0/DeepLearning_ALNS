@@ -1,6 +1,7 @@
 import dgl
 import torch
 import os
+import pickle
 
 import numpy as np
 import torch.nn as nn
@@ -10,8 +11,10 @@ from ALNS.alns_state import CvrpState
 from ALNS.generate_instances import generate_cvrp_instance
 from NeuralNetwork.create_dataset import retrieve_alns_stats
 
+DATASET_PREFIX = 'inputs_mask_labels_'
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
+DATASET_PATH = STATISTICS_DATA_PATH + DATASET_PREFIX + ALNS_STATISTICS_FILE
 
 HIDDEN_NODE_DIMENSIONS = [64, 32, 16, 8]
 HIDDEN_EDGE_DIMENSIONS = [32, 16, 16, 8]
@@ -294,6 +297,7 @@ def generate_graph_features_from_statistics(graph, graph_index, cvrp_state, alns
     alns_instance_statistics : the statistics saved during the execution of the ALNS algorithm. It contains the
                                destroyed nodes, the edges of the solution and the difference in the total cost (not used
                                in this function).
+    device:  CPU or CUDA depending on the device used for execution
 
     Returns
     -------
@@ -384,37 +388,18 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     labels
     """
     labels = torch.tensor([[1, 0, 0] if iteration['objective_difference'] > 0
-                           else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon else [0, 0, 1]
+                           else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon
+                           else [0, 0, 1]
                            for iteration in alns_instance_statistics['Statistics']],
                           dtype=torch.float, device=device)
 
     return labels
 
 
-def main(alns_statistics_file=ALNS_STATISTICS_FILE,
-         hidden_node_dimensions=None,
-         hidden_edge_dimensions=None,
-         hidden_linear_dimension=HIDDEN_LINEAR_DIMENSION,
-         output_size=OUTPUT_SIZE,
-         dropout_probability=DROPOUT_PROBABILITY,
-         max_epoch=MAX_EPOCH, epsilon=EPSILON,
-         initial_learning_rate=INITIAL_LEARNING_RATE, learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR):
-    # Avoid mutable default arguments
-    if hidden_edge_dimensions is None:
-        hidden_edge_dimensions = HIDDEN_EDGE_DIMENSIONS
-    if hidden_node_dimensions is None:
-        hidden_node_dimensions = HIDDEN_NODE_DIMENSIONS
-    print("#"*50)
-    print("# Statistics file : {}".format(alns_statistics_file))
-    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
-    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
-    print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
-    print("# Dropout probability : {}".format(dropout_probability))
-    print("# Max epoch : {}".format(max_epoch))
-    print("# Initial learning rate : {}".format(initial_learning_rate))
-    print("#"*50)
+def create_dataset_from_statistics(alns_statistics_file,
+                                   device,
+                                   epsilon=EPSILON):
     step = 1
-
     """
     Retrieve the statistics saved during the ALNS execution.
     """
@@ -424,7 +409,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
     if type(alns_instance_statistics) != dict:
         print("Error, the stats file contains different CVRP instances.")
         return -1
-    print("{0} Retrieved alns statistics".format(step))
+    print("\t{} Retrieved alns statistics".format(step))
     step += 1
 
     """
@@ -434,8 +419,59 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
                                    number_of_depots=alns_instance_statistics['Number_of_depots'],
                                    capacity=alns_instance_statistics['Capacity'],
                                    seed=alns_instance_statistics['Seed'])
-    print("{0} Created new cvrp state".format(step))
+    print("\t{} Created new cvrp state".format(step))
     step += 1
+    print("\t{} Creating inputs and labels ... ".format(step), end='', flush=True)
+    inputs_train, inputs_test, train_mask = generate_train_and_test_sets_from_cvrp_state(cvrp_state,
+                                                                                         alns_instance_statistics,
+                                                                                         device)
+    print("created inputs, ", end='', flush=True)
+    labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
+
+    print("and created labels", flush=True)
+
+    return inputs_train, inputs_test, train_mask, labels
+
+
+def pickle_dataset(filename, inputs_train, inputs_test, train_mask, labels):
+    with open(filename, 'wb') as dataset_file:
+        try:
+            pickle.dump({'inputs_training': inputs_train,
+                         'inputs_testing': inputs_test,
+                         'train_mask': train_mask,
+                         'labels': labels}, dataset_file)
+        except pickle.PicklingError:
+            print("Unable to pickle data...\nExiting now.")
+            exit(1)
+        print("Successfully saved the data in {}".format(filename))
+
+
+def unpickle_dataset(dataset_path):
+    with open(dataset_path, 'rb') as dataset_file:
+        try:
+            dataset = pickle.load(dataset_file)
+        except pickle.UnpicklingError:
+            print("Error, couldn't unpickle the dataset.\nExiting now.")
+            exit(2)
+
+    return dataset['inputs_training'], dataset['inputs_testing'], dataset['train_mask'], dataset['labels']
+
+
+def main(recreate_dataset=False,
+         hidden_node_dimensions=None,
+         hidden_edge_dimensions=None,
+         hidden_linear_dimension=HIDDEN_LINEAR_DIMENSION,
+         output_size=OUTPUT_SIZE,
+         dropout_probability=DROPOUT_PROBABILITY,
+         max_epoch=MAX_EPOCH, epsilon=EPSILON,
+         initial_learning_rate=INITIAL_LEARNING_RATE,
+         learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
+         **keywords_args):
+    # Avoid mutable default arguments
+    if hidden_edge_dimensions is None:
+        hidden_edge_dimensions = HIDDEN_EDGE_DIMENSIONS
+    if hidden_node_dimensions is None:
+        hidden_node_dimensions = HIDDEN_NODE_DIMENSIONS
 
     """
     Use GPU if available.
@@ -444,21 +480,45 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
         device = 'cuda'
     else:
         device = 'cpu'
-    print("Using device {}".format(device))
 
-    """
-    Create the train and test sets.
-    """
-    print("{0} Creating inputs and labels ... ".format(step), end='', flush=True)
-    inputs_train, inputs_test, train_mask = generate_train_and_test_sets_from_cvrp_state(cvrp_state,
-                                                                                         alns_instance_statistics,
-                                                                                         device)
-    print("created inputs, ", end='', flush=True)
-    labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
+    print("#" * 50)
+    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
+    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
+    print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
+    print("# Dropout probability : {}".format(dropout_probability))
+    print("# Max epoch : {}".format(max_epoch))
+    print("# Initial learning rate : {}".format(initial_learning_rate))
+    print("# Device : {}".format(device))
+    print("#" * 50)
+
+    if recreate_dataset:
+        print("Creating dataset from ALNS statistics :")
+        if 'alns_statistics_file' not in keywords_args:
+            alns_statistics_file = ALNS_STATISTICS_FILE
+        else:
+            alns_statistics_file = keywords_args['alns_statistics_file']
+        """
+        Create the train and test sets.
+        """
+        inputs_train, inputs_test, train_mask, labels = create_dataset_from_statistics(alns_statistics_file,
+                                                                                       device,
+                                                                                       epsilon)
+        print("Created dataset !")
+        if 'pickle_dataset' in keywords_args:
+            if keywords_args['pickle_dataset']:
+                dataset_filename = DATASET_PREFIX + alns_statistics_file
+                pickle_dataset(dataset_filename, inputs_train, inputs_test, train_mask, labels)
+    else:
+        print("Retrieving dataset ... ", end='', flush=True)
+        if 'dataset_path' not in keywords_args:
+            dataset_path = DATASET_PATH
+        else:
+            dataset_path = keywords_args['dataset_path']
+        inputs_train, inputs_test, train_mask, labels = unpickle_dataset(dataset_path)
+        print("Done !", flush=True)
+
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
     number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
-    print("and created labels", flush=True)
-    step += 1
 
     """
     Create the gated graph convolutional network
@@ -472,8 +532,7 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
                                       dropout_probability=dropout_probability,
                                       device=device)
     graph_convolutional_network = graph_convolutional_network.to(device)
-    print("{0} Created GCN".format(step), flush=True)
-    step += 1
+    print("Created GCN", flush=True)
 
     """
     Define the optimizer, the learning rate scheduler and the loss function.
@@ -486,17 +545,17 @@ def main(alns_statistics_file=ALNS_STATISTICS_FILE,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    number_of_iterations = len(alns_instance_statistics['Statistics'])
+    number_of_iterations = len(train_mask)
     number_of_null_iterations = 0
-    for iteration in alns_instance_statistics['Statistics']:
-        if abs(iteration['objective_difference']) < epsilon:
+    null_label = torch.tensor([0, 1, 0], dtype=torch.float)
+    for iteration in labels:
+        if torch.equal(iteration, null_label):
             number_of_null_iterations += 1
-    print("{0}% of null iterations".format(number_of_null_iterations / number_of_iterations * 100))
+    print("{0}% of null iterations".format(round(number_of_null_iterations / number_of_iterations * 100, 2)))
     print("Dataset size : {}".format(number_of_iterations))
     print("Training set size : {}".format(len(inputs_train)))
 
-    print("{0} Starting training...".format(step))
-    step += 1
+    print("\nStarting training...\n")
 
     """
     Train the network.
