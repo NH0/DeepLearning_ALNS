@@ -1,4 +1,5 @@
 import re
+import sys
 from numpy import arange
 import matplotlib.pyplot as plt
 
@@ -20,9 +21,9 @@ def display_loss(result_file_path):
     plt.show()
 
 
-def main():
-    display_loss('result05-19_15-53')
+def main(loss_file):
+    display_loss(loss_file)
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
