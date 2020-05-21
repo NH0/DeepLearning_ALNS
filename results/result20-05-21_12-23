@@ -1,0 +1,34 @@
+nohup: les entrées sont ignorées
+20_05_21_12-23
+Starting script
+Using backend: pytorch
+##################################################
+# Hidden node dimensions : [64, 32, 16, 8]
+# Hidden edge dimensions : [32, 16, 16, 8]
+# Hidden linear dimension : 32
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+# Device : cuda
+##################################################
+Retrieving dataset ... Done !
+Created GCN
+48.82% of total null iterations
+49.6% of null iterations in training set
+Dataset size : 2552
+Training set size : 1871
+
+Starting training...
+
+Epoch 0, loss 0.352518, accuracy 0.1179
+Epoch 5, loss 0.350761, accuracy 0.1242
+Epoch 10, loss 0.350079, accuracy 0.1238
+Epoch 15, loss 0.348234, accuracy 0.1254
+Epoch 20, loss 0.345286, accuracy 0.1242
+Epoch 25, loss 0.342237, accuracy 0.1234
+Epoch 30, loss 0.342273, accuracy 0.1238
+Epoch 35, loss 0.340016, accuracy 0.1238
+Epoch 40, loss 0.338675, accuracy 0.1250
+Epoch 45, loss 0.336157, accuracy 0.1238
+Epoch 50, loss 0.335508, accuracy 0.1242
+Epoch 55, loss 0.334167, accuracy 0.1246
