@@ -469,11 +469,11 @@ def display_proportion_of_null_iterations(train_mask, labels, training_set_size,
             number_of_total_null_iterations += 1
             if train_mask[index] == 1:
                 number_of_train_null_iterations += 1
-    print("{}% of total null iterations".format(
-        round(number_of_total_null_iterations / number_of_iterations * 100, 2)
+    print("{:.2%} of total null iterations".format(
+        round(number_of_total_null_iterations / number_of_iterations, 4)
     ))
-    print("{}% of null iterations in training set".format(
-        round(number_of_train_null_iterations / training_set_size * 100, 2)
+    print("{:.2%} of null iterations in training set".format(
+        round(number_of_train_null_iterations / training_set_size, 4)
     ))
     print("Dataset size : {}".format(number_of_iterations))
     print("Training set size : {}".format(training_set_size))
