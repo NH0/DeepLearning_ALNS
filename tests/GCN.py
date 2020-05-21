@@ -459,6 +459,26 @@ def unpickle_dataset(dataset_path):
     return dataset['inputs_training'], dataset['inputs_testing'], dataset['train_mask'], dataset['labels']
 
 
+def display_proportion_of_null_iterations(train_mask, labels, training_set_size, device):
+    number_of_iterations = len(train_mask)
+    number_of_total_null_iterations = 0
+    number_of_train_null_iterations = 0
+    null_label = torch.tensor([0, 1, 0], dtype=torch.float, device=device)
+    for index, iteration in enumerate(labels):
+        if torch.equal(iteration, null_label):
+            number_of_total_null_iterations += 1
+            if train_mask[index] == 1:
+                number_of_train_null_iterations += 1
+    print("{}% of total null iterations".format(
+        round(number_of_total_null_iterations / number_of_iterations * 100, 2)
+    ))
+    print("{}% of null iterations in training set".format(
+        round(number_of_train_null_iterations / training_set_size * 100, 2)
+    ))
+    print("Dataset size : {}".format(number_of_iterations))
+    print("Training set size : {}".format(training_set_size))
+
+
 def main(recreate_dataset=False,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
@@ -547,15 +567,7 @@ def main(recreate_dataset=False,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    number_of_iterations = len(train_mask)
-    number_of_null_iterations = 0
-    null_label = torch.tensor([0, 1, 0], dtype=torch.float, device=device)
-    for iteration in labels:
-        if torch.equal(iteration, null_label):
-            number_of_null_iterations += 1
-    print("{0}% of null iterations".format(round(number_of_null_iterations / number_of_iterations * 100, 2)))
-    print("Dataset size : {}".format(number_of_iterations))
-    print("Training set size : {}".format(len(inputs_train)))
+    display_proportion_of_null_iterations(train_mask, labels, len(inputs_train), device)
 
     print("\nStarting training...\n")
 
