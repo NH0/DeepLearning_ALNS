@@ -152,11 +152,13 @@ class GCN(nn.Module):
         self.convolutions = [GatedGCNLayer(input_node_features, hidden_node_dimension_list[0],
                                            input_edge_features, hidden_edge_dimension_list[0],
                                            dropout_probability).to(device)]
+        self.add_module('convolution1', self.convolutions[0])
 
         for i in range(1, len(hidden_node_dimension_list)):
             self.convolutions.append(GatedGCNLayer(hidden_node_dimension_list[i - 1], hidden_node_dimension_list[i],
                                                    hidden_edge_dimension_list[i - 1], hidden_edge_dimension_list[i],
                                                    dropout_probability).to(device))
+            self.add_module('convolution'+str(i+1), self.convolutions[-1])
 
         self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
         self.linear2 = nn.Linear(hidden_linear_dimension, output_feature)
