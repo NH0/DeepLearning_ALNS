@@ -15,6 +15,7 @@ DATASET_PREFIX = 'inputs_mask_labels_'
 STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 DATASET_PATH = STATISTICS_DATA_PATH + DATASET_PREFIX + ALNS_STATISTICS_FILE
+MODEL_PARAMETERS_PATH = STATISTICS_DATA_PATH + 'parametersGCN'
 
 HIDDEN_NODE_DIMENSIONS = [64, 32, 16, 8]
 HIDDEN_EDGE_DIMENSIONS = [32, 16, 16, 8]
@@ -479,6 +480,25 @@ def display_proportion_of_null_iterations(train_mask, labels, training_set_size,
     print("Training set size : {}".format(training_set_size))
 
 
+def save_model_parameters(GCN_model,
+                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                          initial_learning_rate,
+                          epoch,
+                          device):
+    name_model_parameters_file = '_ep' + epoch + '_ndim'
+    for dim in hidden_node_dimensions:
+        name_model_parameters_file += str(dim) + '.'
+    name_model_parameters_file += '_edim'
+    for dim in hidden_edge_dimensions:
+        name_model_parameters_file += str(dim) + '.'
+    name_model_parameters_file += '_lindim' + str(hidden_linear_dimension)
+    name_model_parameters_file += '_lr' + initial_learning_rate
+    name_model_parameters_file += '_dev' + device
+    name_model_parameters_file += '.pt'
+    torch.save(GCN_model.state_dict(), MODEL_PARAMETERS_PATH + name_model_parameters_file)
+    print("Successfully saved the model's parameters in {}".format(MODEL_PARAMETERS_PATH + name_model_parameters_file))
+
+
 def main(recreate_dataset=False,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
@@ -488,6 +508,8 @@ def main(recreate_dataset=False,
          max_epoch=MAX_EPOCH, epsilon=EPSILON,
          initial_learning_rate=INITIAL_LEARNING_RATE,
          learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
+         save_parameters_on_exit=True,
+         load_parameters_from_file=None,
          **keywords_args):
     # Avoid mutable default arguments
     if hidden_edge_dimensions is None:
@@ -555,6 +577,18 @@ def main(recreate_dataset=False,
                                       device=device)
     graph_convolutional_network = graph_convolutional_network.to(device)
     print("Created GCN", flush=True)
+    if load_parameters_from_file is not None:
+        try:
+            graph_convolutional_network.load_state_dict(torch.load(load_parameters_from_file))
+            print("Loaded parameters values from {}".format(load_parameters_from_file))
+        except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
+            print("Unable to load parameters from {}".format(load_parameters_from_file))
+            print("Exception : {}".format(exception_value))
+            should_continue = ''
+            while should_continue != 'y' or should_continue != 'n':
+                should_continue = input("Continue anyway with random parameters ? (y/n) ")
+            if should_continue == 'n':
+                exit(1)
 
     """
     Define the optimizer, the learning rate scheduler and the loss function.
@@ -575,20 +609,33 @@ def main(recreate_dataset=False,
     Train the network.
     """
     for epoch in range(max_epoch + 1):
-        loss = torch.tensor([1], dtype=torch.float)
-        for index, graph in enumerate(inputs_train):
-            logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-            logp = F.softmax(logits, dim=0)
-            loss = loss_function(logp, labels[train_mask][index])
+        try:
+            loss = torch.tensor([1], dtype=torch.float)
+            for index, graph in enumerate(inputs_train):
+                logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
+                logp = F.softmax(logits, dim=0)
+                loss = loss_function(logp, labels[train_mask][index])
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            scheduler.step(loss)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                scheduler.step(loss)
 
-        if epoch % 5 == 0:
-            accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
-            print('Epoch %d, loss %.6f, accuracy %.4f' % (epoch, loss.item(), accuracy))
+            if epoch % 5 == 0:
+                accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
+                print('Epoch %d, loss %.6f, accuracy %.4f' % (epoch, loss.item(), accuracy))
+        except KeyboardInterrupt:
+            if save_parameters_on_exit:
+                print("Saving parameters before quiting ...", flush=True)
+                save_model_parameters(GCN,
+                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                                      initial_learning_rate, epoch, device)
+            exit(0)
+
+    if save_parameters_on_exit:
+        save_model_parameters(GCN,
+                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                              initial_learning_rate, max_epoch, device)
 
 
 if __name__ == '__main__':
