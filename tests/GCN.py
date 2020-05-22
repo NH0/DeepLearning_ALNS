@@ -194,7 +194,6 @@ def evaluate(network, inputs_test, labels, train_mask):
     test_mask = ~train_mask
     network.eval()
     with torch.no_grad():
-        # Number of right predictions
         correct = 0
         for index, graph in enumerate(inputs_test):
             logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
@@ -202,7 +201,18 @@ def evaluate(network, inputs_test, labels, train_mask):
             predicted_class = torch.argmax(logp, dim=0).item()
             true_class = torch.argmax(labels[test_mask][index], dim=0).item()
             correct += predicted_class == true_class
-        return correct / len(test_mask)
+
+    return correct / len(inputs_test)
+
+
+def evaluate_random(labels, train_mask, number_of_test_values):
+    test_mask = ~train_mask
+    correct = 0
+    for i in range(number_of_test_values):
+        true_class = torch.argmax(labels[test_mask][i], dim=0).item()
+        correct += np.random.randint(0, 3) == true_class
+
+    return correct / number_of_test_values
 
 
 def make_complete_graph(initial_state):
@@ -623,7 +633,9 @@ def main(recreate_dataset=False,
 
             if epoch % 5 == 0:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
-                print('Epoch %d, loss %.6f, accuracy %.4f' % (epoch, loss.item(), accuracy))
+                random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
+                print("Epoch {:d}, loss {:f.6}, accuracy {:f.4}, random accuracy {:f.4}"
+                      .format(epoch, loss.item(), accuracy, random_accuracy))
         except KeyboardInterrupt:
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
