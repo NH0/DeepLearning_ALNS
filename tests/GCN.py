@@ -159,7 +159,7 @@ class GCN(nn.Module):
             self.convolutions.append(GatedGCNLayer(hidden_node_dimension_list[i - 1], hidden_node_dimension_list[i],
                                                    hidden_edge_dimension_list[i - 1], hidden_edge_dimension_list[i],
                                                    dropout_probability).to(device))
-            self.add_module('convolution'+str(i+1), self.convolutions[-1])
+            self.add_module('convolution' + str(i + 1), self.convolutions[-1])
 
         self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
         self.linear2 = nn.Linear(hidden_linear_dimension, output_feature)
@@ -392,7 +392,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     """
     labels = torch.tensor([[1, 0, 0] if iteration['objective_difference'] > 0
                            else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon
-                           else [0, 0, 1]
+    else [0, 0, 1]
                            for iteration in alns_instance_statistics['Statistics']],
                           dtype=torch.float, device=device)
 
