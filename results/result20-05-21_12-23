@@ -517,3 +517,15 @@ Epoch 2465, loss 0.336196, accuracy 0.1223
 Epoch 2470, loss 0.279585, accuracy 0.1223
 Epoch 2475, loss 0.337901, accuracy 0.1207
 Epoch 2480, loss 0.357048, accuracy 0.1148
+Epoch 2485, loss 0.302000, accuracy 0.1179
+Epoch 2490, loss 0.338060, accuracy 0.1203
+Epoch 2495, loss 0.332994, accuracy 0.1215
+Epoch 2500, loss 0.350994, accuracy 0.1234
+Epoch 2505, loss 0.353982, accuracy 0.1148
+Epoch 2510, loss 0.259918, accuracy 0.1211
+Epoch 2515, loss 0.339497, accuracy 0.1176
+Epoch 2520, loss 0.602971, accuracy 0.1199
+Epoch 2525, loss 0.412532, accuracy 0.1207
+Epoch 2530, loss 0.290972, accuracy 0.1203
+Epoch 2535, loss 0.526740, accuracy 0.1203
+./start_GCN.sh : ligne 7 : 77034 Complété              python -u -c "import sys; sys.path.append('/scratch1/flethi/Code'); from tests.GCN import main; main()"
