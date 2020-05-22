@@ -635,7 +635,7 @@ def main(recreate_dataset=False,
             if epoch % 5 == 0:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
-                print("Epoch {:d}, loss {:f.6}, accuracy {:f.4}, random accuracy {:f.4}"
+                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}"
                       .format(epoch, loss.item(), accuracy, random_accuracy))
         except KeyboardInterrupt:
             if save_parameters_on_exit:
