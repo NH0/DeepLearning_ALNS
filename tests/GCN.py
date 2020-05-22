@@ -640,13 +640,13 @@ def main(recreate_dataset=False,
         except KeyboardInterrupt:
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
-                save_model_parameters(GCN,
+                save_model_parameters(graph_convolutional_network,
                                       hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                                       initial_learning_rate, epoch, device)
             exit(0)
 
     if save_parameters_on_exit:
-        save_model_parameters(GCN,
+        save_model_parameters(graph_convolutional_network,
                               hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                               initial_learning_rate, max_epoch, device)
 
