@@ -590,6 +590,7 @@ def main(recreate_dataset=False,
     if load_parameters_from_file is not None:
         try:
             graph_convolutional_network.load_state_dict(torch.load(load_parameters_from_file))
+            graph_convolutional_network.eval()
             print("Loaded parameters values from {}".format(load_parameters_from_file))
         except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
             print("Unable to load parameters from {}".format(load_parameters_from_file))
