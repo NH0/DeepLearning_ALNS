@@ -392,7 +392,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     """
     labels = torch.tensor([[1, 0, 0] if iteration['objective_difference'] > 0
                            else [0, 1, 0] if abs(iteration['objective_difference']) <= epsilon
-    else [0, 0, 1]
+                           else [0, 0, 1]
                            for iteration in alns_instance_statistics['Statistics']],
                           dtype=torch.float, device=device)
 
@@ -485,14 +485,14 @@ def save_model_parameters(GCN_model,
                           initial_learning_rate,
                           epoch,
                           device):
-    name_model_parameters_file = '_ep' + epoch + '_ndim'
+    name_model_parameters_file = '_ep' + str(epoch) + '_ndim'
     for dim in hidden_node_dimensions:
         name_model_parameters_file += str(dim) + '.'
     name_model_parameters_file += '_edim'
     for dim in hidden_edge_dimensions:
         name_model_parameters_file += str(dim) + '.'
     name_model_parameters_file += '_lindim' + str(hidden_linear_dimension)
-    name_model_parameters_file += '_lr' + initial_learning_rate
+    name_model_parameters_file += '_lr' + str(initial_learning_rate)
     name_model_parameters_file += '_dev' + device
     name_model_parameters_file += '.pt'
     torch.save(GCN_model.state_dict(), MODEL_PARAMETERS_PATH + name_model_parameters_file)
