@@ -220,6 +220,16 @@ def evaluate_random(labels, train_mask, number_of_test_values):
     return correct / number_of_test_values
 
 
+def evaluate_with_null_iteration(labels, train_mask, number_of_test_values):
+    test_mask = ~train_mask
+    correct = 0
+    for i in range(number_of_test_values):
+        true_class = torch.argmax(labels[test_mask][i], dim=0).item()
+        correct += 1 == true_class
+
+    return correct / number_of_test_values
+
+
 def make_complete_graph(initial_state):
     """
     Make the instance of a CVRP state complete (each node connected to every other node).
@@ -653,8 +663,10 @@ def main(recreate_dataset=False,
             if epoch % 5 == 0:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
-                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}"
-                      .format(epoch, loss.item(), accuracy, random_accuracy))
+                guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
+                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f},\
+                       always guessing null iterations {:.4f}"
+                      .format(epoch, loss.item(), accuracy, random_accuracy, guessing_null_iteration_accuracy))
         except KeyboardInterrupt:
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
