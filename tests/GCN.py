@@ -17,7 +17,7 @@ ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_
 DATASET_PATH = STATISTICS_DATA_PATH + DATASET_PREFIX + ALNS_STATISTICS_FILE
 MODEL_PARAMETERS_PATH = STATISTICS_DATA_PATH + 'parametersGCN'
 
-HIDDEN_NODE_DIMENSIONS = [64, 32, 16, 8]
+HIDDEN_NODE_DIMENSIONS = [64, 32, 32, 32]
 HIDDEN_EDGE_DIMENSIONS = [32, 16, 16, 8]
 HIDDEN_LINEAR_DIMENSION = 32
 OUTPUT_SIZE = 3
@@ -162,7 +162,9 @@ class GCN(nn.Module):
             self.add_module('convolution' + str(i + 1), self.convolutions[-1])
 
         self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
-        self.linear2 = nn.Linear(hidden_linear_dimension, output_feature)
+        self.linear2 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
+        self.linear3 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
+        self.linear4 = nn.Linear(hidden_linear_dimension, output_feature)
 
     def forward(self, graph, h, e):
         for convolution in self.convolutions:
@@ -172,6 +174,9 @@ class GCN(nn.Module):
         h = torch.mean(h, dim=0)
         h = self.linear1(h)
         h = self.linear2(h)
+        h = self.linear3(h)
+        h = self.linear4(h)
+
         return h
 
 
