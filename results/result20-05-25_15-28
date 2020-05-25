@@ -31,3 +31,7 @@ Epoch 35, loss 0.284273, accuracy 0.4611, random accuracy 0.3216
 Epoch 40, loss 0.286042, accuracy 0.4640, random accuracy 0.3568
 Epoch 45, loss 0.284220, accuracy 0.4670, random accuracy 0.3157
 Epoch 50, loss 0.283770, accuracy 0.4523, random accuracy 0.3436
+Epoch 55, loss 0.284336, accuracy 0.4581, random accuracy 0.3480
+Epoch 60, loss 0.666584, accuracy 0.4640, random accuracy 0.3319
+Epoch 65, loss 0.284843, accuracy 0.4596, random accuracy 0.3539
+Epoch 70, loss 0.294725, accuracy 0.4626, random accuracy 0.3142
