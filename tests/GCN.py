@@ -490,7 +490,8 @@ def display_proportion_of_null_iterations(train_mask, labels, training_set_size,
     print("Training set size : {}".format(training_set_size))
 
 
-def save_model_parameters(GCN_model,
+def save_model_parameters(graph_convolutional_network,
+                          optimizer,
                           hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                           initial_learning_rate,
                           epoch,
@@ -505,7 +506,10 @@ def save_model_parameters(GCN_model,
     name_model_parameters_file += '_lr' + str(initial_learning_rate)
     name_model_parameters_file += '_dev' + device
     name_model_parameters_file += '.pt'
-    torch.save(GCN_model.state_dict(), MODEL_PARAMETERS_PATH + name_model_parameters_file)
+    torch.save({'graph_convolutional_network_state': graph_convolutional_network.state_dict(),
+                'optimizer_state': optimizer.state_dict(),
+                'epoch': epoch},
+               MODEL_PARAMETERS_PATH + name_model_parameters_file)
     print("Successfully saved the model's parameters in {}".format(MODEL_PARAMETERS_PATH + name_model_parameters_file))
 
 
@@ -587,19 +591,6 @@ def main(recreate_dataset=False,
                                       device=device)
     graph_convolutional_network = graph_convolutional_network.to(device)
     print("Created GCN", flush=True)
-    if load_parameters_from_file is not None:
-        try:
-            graph_convolutional_network.load_state_dict(torch.load(load_parameters_from_file))
-            graph_convolutional_network.eval()
-            print("Loaded parameters values from {}".format(load_parameters_from_file))
-        except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
-            print("Unable to load parameters from {}".format(load_parameters_from_file))
-            print("Exception : {}".format(exception_value))
-            should_continue = ''
-            while should_continue != 'y' or should_continue != 'n':
-                should_continue = input("Continue anyway with random parameters ? (y/n) ")
-            if should_continue == 'n':
-                exit(1)
 
     """
     Define the optimizer, the learning rate scheduler and the loss function.
@@ -608,6 +599,28 @@ def main(recreate_dataset=False,
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.MSELoss()
+
+    """
+    Resume training state
+    """
+    initial_epoch = 0
+    if load_parameters_from_file is not None:
+        try:
+            training_state = torch.load(load_parameters_from_file)
+            graph_convolutional_network.load_state_dict(training_state['graph_convolutional_network_state'])
+            graph_convolutional_network.train()
+            optimizer.load_state_dict(training_state['optimizer_state'])
+            initial_epoch = training_state['epoch']
+            print("Loaded parameters values from {}".format(load_parameters_from_file))
+            print("Resuming at epoch {} ...".format(initial_epoch))
+        except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
+            print("Unable to load parameters from {}".format(load_parameters_from_file))
+            print("Exception : {}".format(exception_value))
+            should_continue = ''
+            while should_continue != 'y' or should_continue != 'n':
+                should_continue = input("Continue anyway with random parameters ? (y/n) ")
+            if should_continue == 'n':
+                exit(1)
 
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
@@ -619,7 +632,7 @@ def main(recreate_dataset=False,
     """
     Train the network.
     """
-    for epoch in range(max_epoch + 1):
+    for epoch in range(initial_epoch, max_epoch + 1):
         try:
             loss = torch.tensor([1], dtype=torch.float)
             for index, graph in enumerate(inputs_train):
@@ -641,12 +654,14 @@ def main(recreate_dataset=False,
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
                 save_model_parameters(graph_convolutional_network,
+                                      optimizer,
                                       hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                                       initial_learning_rate, epoch, device)
             exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
+                              optimizer,
                               hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                               initial_learning_rate, max_epoch, device)
 
