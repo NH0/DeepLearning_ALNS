@@ -1,7 +1,8 @@
-import os
+from get_root_path import get_project_root_path
 
+ROOT_PATH = get_project_root_path()
 DATASET_PREFIX = 'inputs_mask_labels_'
-STATISTICS_DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
+STATISTICS_DATA_PATH = ROOT_PATH + '/data/'
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 DATASET_PATH = STATISTICS_DATA_PATH + DATASET_PREFIX + ALNS_STATISTICS_FILE
 MODEL_PARAMETERS_PATH = STATISTICS_DATA_PATH + 'parametersGCN'
@@ -18,3 +19,6 @@ INITIAL_LEARNING_RATE = 0.00001
 LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
+
+if __name__ == '__main__':
+    print(ROOT_PATH)
