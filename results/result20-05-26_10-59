@@ -1,0 +1,59 @@
+nohup: les entrées sont ignorées
+20_05_26_10-59
+Starting script
+Using backend: pytorch
+##################################################
+# Hidden node dimensions : [64, 32, 32, 32]
+# Hidden edge dimensions : [128, 64, 64, 32]
+# Hidden linear dimension : 64
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+# Device : cuda
+##################################################
+Retrieving dataset ... Done !
+Created GCN
+48.82% of total null iterations
+49.60% of null iterations in training set
+Dataset size : 2552
+Training set size : 1871
+
+Starting training...
+
+Epoch 0, loss 0.195726, accuracy 0.2687, random accuracy 0.3289,                       always guessing null iterations 0.4670
+Epoch 5, loss 0.215015, accuracy 0.4464, random accuracy 0.3157,                       always guessing null iterations 0.4670
+Epoch 10, loss 0.223822, accuracy 0.4611, random accuracy 0.2937,                       always guessing null iterations 0.4670
+Epoch 15, loss 0.239042, accuracy 0.4611, random accuracy 0.3084,                       always guessing null iterations 0.4670
+Epoch 20, loss 0.244596, accuracy 0.4640, random accuracy 0.3730,                       always guessing null iterations 0.4670
+Epoch 25, loss 0.254343, accuracy 0.4611, random accuracy 0.3128,                       always guessing null iterations 0.4670
+Epoch 30, loss 0.260565, accuracy 0.4626, random accuracy 0.3216,                       always guessing null iterations 0.4670
+Epoch 35, loss 0.264575, accuracy 0.4655, random accuracy 0.3495,                       always guessing null iterations 0.4670
+Epoch 40, loss 0.270965, accuracy 0.4684, random accuracy 0.3510,                       always guessing null iterations 0.4670
+Epoch 45, loss 0.274836, accuracy 0.4699, random accuracy 0.3715,                       always guessing null iterations 0.4670
+Epoch 50, loss 0.273533, accuracy 0.4596, random accuracy 0.3612,                       always guessing null iterations 0.4670
+Epoch 55, loss 0.277984, accuracy 0.4684, random accuracy 0.2937,                       always guessing null iterations 0.4670
+Epoch 60, loss 0.277776, accuracy 0.4670, random accuracy 0.3216,                       always guessing null iterations 0.4670
+Epoch 65, loss 0.279753, accuracy 0.4640, random accuracy 0.3260,                       always guessing null iterations 0.4670
+Epoch 70, loss 0.280904, accuracy 0.4684, random accuracy 0.3128,                       always guessing null iterations 0.4670
+Epoch 75, loss 0.290184, accuracy 0.4626, random accuracy 0.3465,                       always guessing null iterations 0.4670
+Epoch 80, loss 0.285698, accuracy 0.4626, random accuracy 0.3421,                       always guessing null iterations 0.4670
+Epoch 85, loss 0.285428, accuracy 0.4626, random accuracy 0.3363,                       always guessing null iterations 0.4670
+Epoch 90, loss 0.291522, accuracy 0.4670, random accuracy 0.3436,                       always guessing null iterations 0.4670
+Epoch 95, loss 0.291285, accuracy 0.4655, random accuracy 0.3260,                       always guessing null iterations 0.4670
+Epoch 100, loss 0.288759, accuracy 0.4640, random accuracy 0.3392,                       always guessing null iterations 0.4670
+Epoch 105, loss 0.291049, accuracy 0.4626, random accuracy 0.3084,                       always guessing null iterations 0.4670
+Epoch 110, loss 0.291184, accuracy 0.4670, random accuracy 0.3465,                       always guessing null iterations 0.4670
+Epoch 115, loss 0.312256, accuracy 0.4670, random accuracy 0.3451,                       always guessing null iterations 0.4670
+Epoch 120, loss 0.287793, accuracy 0.4626, random accuracy 0.3098,                       always guessing null iterations 0.4670
+Epoch 125, loss 0.301262, accuracy 0.4670, random accuracy 0.3436,                       always guessing null iterations 0.4670
+Epoch 130, loss 0.285506, accuracy 0.4611, random accuracy 0.3275,                       always guessing null iterations 0.4670
+Epoch 135, loss 0.286172, accuracy 0.4640, random accuracy 0.3186,                       always guessing null iterations 0.4670
+Epoch 140, loss 0.287117, accuracy 0.4684, random accuracy 0.3421,                       always guessing null iterations 0.4670
+Epoch 145, loss 0.284493, accuracy 0.4684, random accuracy 0.3319,                       always guessing null iterations 0.4670
+Epoch 150, loss 0.284059, accuracy 0.4670, random accuracy 0.3363,                       always guessing null iterations 0.4670
+Epoch 155, loss 0.284096, accuracy 0.4670, random accuracy 0.3245,                       always guessing null iterations 0.4670
+Epoch 160, loss 0.284329, accuracy 0.4626, random accuracy 0.3245,                       always guessing null iterations 0.4670
+Epoch 165, loss 0.290622, accuracy 0.4714, random accuracy 0.3407,                       always guessing null iterations 0.4670
+Epoch 170, loss 0.289178, accuracy 0.4670, random accuracy 0.3231,                       always guessing null iterations 0.4670
+Epoch 175, loss 0.289116, accuracy 0.4611, random accuracy 0.3510,                       always guessing null iterations 0.4670
+Epoch 180, loss 0.289906, accuracy 0.4670, random accuracy 0.3010,                       always guessing null iterations 0.4670
