@@ -31,3 +31,11 @@ Epoch 40, loss 0.270992, accuracy 0.4464, random accuracy 0.3627,               
 Epoch 45, loss 0.275558, accuracy 0.4670, random accuracy 0.3333,                always guessing null iterations 0.4670
 Epoch 50, loss 0.274727, accuracy 0.4626, random accuracy 0.3128,                always guessing null iterations 0.4670
 Epoch 55, loss 0.263369, accuracy 0.4552, random accuracy 0.3421,                always guessing null iterations 0.4670
+Epoch 60, loss 0.294119, accuracy 0.4508, random accuracy 0.3289,                always guessing null iterations 0.4670
+Epoch 65, loss 0.274369, accuracy 0.4523, random accuracy 0.3348,                always guessing null iterations 0.4670
+Epoch 70, loss 0.291218, accuracy 0.4670, random accuracy 0.3377,                always guessing null iterations 0.4670
+Epoch 75, loss 0.310498, accuracy 0.4728, random accuracy 0.3495,                always guessing null iterations 0.4670
+Epoch 80, loss 0.272714, accuracy 0.4626, random accuracy 0.3465,                always guessing null iterations 0.4670
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/parametersGCN_ep85_ndim256.128.128.64._edim128.64.64.32._lindim64_lr1e-05_devcuda.pt
