@@ -257,8 +257,8 @@ def main(recreate_dataset=False,
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
                 guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
-                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f},\
-                always guessing null iterations {:.4f}"
+                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
+                      "always guessing null iterations {:.4f}"
                       .format(epoch, loss.item(), accuracy, random_accuracy, guessing_null_iteration_accuracy))
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
