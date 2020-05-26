@@ -1,0 +1,37 @@
+20_05_19_15-53
+Starting script
+Using backend: pytorch
+##################################################
+# Statistics file : dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
+# Hidden node dimensions : [64, 32, 16, 8]
+# Hidden edge dimensions : [32, 16, 16, 8]
+# Hidden linear dimension : 32
+# Dropout probability : 0.2
+# Max epoch : 500
+# Initial learning rate : 1e-05
+##################################################
+1 Retrieved alns statistics
+2 Created new cvrp state
+Using device cuda
+3 Creating inputs and labels ... created inputs, and created labels
+4 Created GCN
+50.0% of null iterations
+Dataset size : 2552
+Training set size : 1871
+5 Starting training...
+Epoch 0, loss 0.374953, accuracy 0.1246
+Epoch 5, loss 0.372352, accuracy 0.1246
+Epoch 10, loss 0.369820, accuracy 0.1246
+Epoch 15, loss 0.367359, accuracy 0.1246
+Epoch 20, loss 0.364969, accuracy 0.1246
+Epoch 25, loss 0.362647, accuracy 0.1246
+Epoch 30, loss 0.360389, accuracy 0.1246
+Epoch 35, loss 0.358195, accuracy 0.1246
+Epoch 40, loss 0.356063, accuracy 0.1246
+Epoch 45, loss 0.353993, accuracy 0.1246
+Epoch 50, loss 0.351983, accuracy 0.1246
+Epoch 55, loss 0.350034, accuracy 0.1246
+Epoch 60, loss 0.348143, accuracy 0.1246
+Epoch 65, loss 0.346307, accuracy 0.1246
+Epoch 70, loss 0.344526, accuracy 0.1246
+Epoch 75, loss 0.342797, accuracy 0.1246

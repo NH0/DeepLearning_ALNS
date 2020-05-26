@@ -2,13 +2,13 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-import ALNS.settings as settings
+import src.ALNS.settings as settings
 
 
 def generate_cvrp_instance(size=settings.SIZE, capacity=settings.CAPACITY, number_of_depots=settings.NUMBER_OF_DEPOTS,
                            seed=settings.SEED):
     """
-    Generates an instance of the Capacitated Vehicle Routing Problem.
+    Generates an instance (a graph) of the Capacitated Vehicle Routing Problem.
     Parameters :
     size: the number of clients
     capacity: the maximum amount of goods each vehicle can transport at a time
@@ -36,7 +36,7 @@ def generate_cvrp_instance(size=settings.SIZE, capacity=settings.CAPACITY, numbe
     return instance
 
 
-def draw_instance(instance, show_demands=False):
+def draw_instance(instance):
     """
     Draws an instance.
     Parameters :
@@ -58,5 +58,5 @@ def draw_instance(instance, show_demands=False):
 
 
 if __name__ == '__main__':
-    for i in range(3):
+    for j in range(3):
         draw_instance(generate_cvrp_instance(50, 40, 3))

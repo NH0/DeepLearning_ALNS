@@ -3,14 +3,14 @@ import copy
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from ALNS.compute_distances import compute_single_route_distance, compute_adjacency_matrix
+from src.ALNS.AlnsAlgorithm.compute_distances import compute_single_route_distance, compute_adjacency_matrix
 
 
 class CvrpState(State):
     """
     Solution class for the CVRP problem.
     It has four data members :
-     - instance : a networkx graph representing the problem. The edges on the graph are the routes used for the solution.
+     - instance : a networkx graph representing the problem. Edges on the graph are the routes used for the solution.
                     the nodes have the following attributes : coordinates, a pair of coordinates
                                                               demand, the demand of the client
                                                               isDepot, characterizing the depots

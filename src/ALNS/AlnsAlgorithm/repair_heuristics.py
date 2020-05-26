@@ -1,4 +1,4 @@
-from ALNS.compute_distances import compute_minimum_cost_position
+from src.ALNS.AlnsAlgorithm.compute_distances import compute_minimum_cost_position
 
 
 def greedy_insertion(current_state, random_state):
