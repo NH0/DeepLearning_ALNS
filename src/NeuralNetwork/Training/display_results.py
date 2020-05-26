@@ -3,6 +3,8 @@ import sys
 from numpy import arange
 import matplotlib.pyplot as plt
 
+from project_root_path import get_project_root_path
+
 
 def parse_result(result_file_path):
     loss = []
@@ -14,7 +16,8 @@ def parse_result(result_file_path):
     return loss
 
 
-def display_loss(result_file_path):
+def display_loss(result_file):
+    result_file_path = get_project_root_path() + '/results/' + result_file
     loss = parse_result(result_file_path)
     plt.plot(arange(0, 5 * len(loss), 5), loss)
     plt.savefig(result_file_path + '.png')
