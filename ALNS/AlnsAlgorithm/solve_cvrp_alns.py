@@ -4,11 +4,11 @@ from alns.criteria import SimulatedAnnealing
 import numpy.random as rnd
 from numpy import log
 
-from ALNS.generate_instances import generate_cvrp_instance
-from ALNS.removal_heuristics import removal_heuristic
-from ALNS.repair_heuristics import greedy_insertion
-from ALNS.saving_data import save_alns_solution_stats
-from ALNS.alns_state import CvrpState, generate_initial_solution
+from ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
+from ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
+from ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
+from ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
+from ALNS.CVRP.CVRP import CvrpState, generate_initial_solution
 
 import ALNS.settings as settings
 
@@ -84,9 +84,9 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
                                for i in range(iterations)]
         solution_data['Statistics'] = solution_statistics
         if 'file_path' in kwargs:
-            save_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
+            pickle_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
         else:
-            save_alns_solution_stats(solution_data)
+            pickle_alns_solution_stats(solution_data)
 
 
 if __name__ == '__main__':
