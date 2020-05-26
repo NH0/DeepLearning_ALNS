@@ -1,4 +1,4 @@
-from get_root_path import get_project_root_path
+from project_root_path import get_project_root_path
 
 ROOT_PATH = get_project_root_path()
 DATASET_PREFIX = 'inputs_mask_labels_'
