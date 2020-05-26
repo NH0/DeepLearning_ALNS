@@ -4,8 +4,8 @@ import numpy as np
 
 sys.path.append(os.getcwd())
 
-from ALNS.AlnsAlgorithm.solve_cvrp_alns import solve_cvrp_with_alns
-import ALNS.settings as settings
+from src.ALNS.AlnsAlgorithm.solve_cvrp_alns import solve_cvrp_with_alns
+import src.ALNS.settings as settings
 
 SIZE = settings.SIZE
 CAPACITY = settings.CAPACITY

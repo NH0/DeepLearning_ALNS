@@ -4,10 +4,10 @@ import pickle
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import NeuralNetwork.parameters as parameters
+import src.NeuralNetwork.parameters as parameters
 
-from NeuralNetwork.Dataset.dataset import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
-from NeuralNetwork.GCN import GCN
+from src.NeuralNetwork.Dataset.dataset import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
+from src.NeuralNetwork.GCN import GCN
 
 DATASET_PREFIX = parameters.DATASET_PREFIX
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE

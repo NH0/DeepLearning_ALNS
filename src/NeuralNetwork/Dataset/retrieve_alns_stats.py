@@ -2,7 +2,7 @@ import pickle
 import os
 import copy
 
-from ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
+from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
 
 DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
 EPSILON = 0.00001

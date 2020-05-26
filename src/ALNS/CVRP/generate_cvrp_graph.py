@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-import ALNS.settings as settings
+import src.ALNS.settings as settings
 
 
 def generate_cvrp_instance(size=settings.SIZE, capacity=settings.CAPACITY, number_of_depots=settings.NUMBER_OF_DEPOTS,

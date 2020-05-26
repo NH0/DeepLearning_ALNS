@@ -3,7 +3,7 @@ import copy
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from ALNS.AlnsAlgorithm.compute_distances import compute_single_route_distance, compute_adjacency_matrix
+from src.ALNS.AlnsAlgorithm.compute_distances import compute_single_route_distance, compute_adjacency_matrix
 
 
 class CvrpState(State):

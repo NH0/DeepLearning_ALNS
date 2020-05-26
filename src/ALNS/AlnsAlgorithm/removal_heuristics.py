@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 
-import ALNS.settings as settings
+import src.ALNS.settings as settings
 
 degree_of_destruction = settings.DEGREE_OF_DESTRUCTION
 DETERMINISM = settings.DETERMINISM

@@ -1,7 +1,7 @@
 import torch
 
 import torch.nn as nn
-import NeuralNetwork.parameters as parameters
+import src.NeuralNetwork.parameters as parameters
 
 EPSILON = parameters.EPSILON
 

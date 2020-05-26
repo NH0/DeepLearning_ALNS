@@ -4,13 +4,13 @@ from alns.criteria import SimulatedAnnealing
 import numpy.random as rnd
 from numpy import log
 
-from ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
-from ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
-from ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
-from ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
-from ALNS.CVRP.CVRP import CvrpState, generate_initial_solution
+from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
+from src.ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
+from src.ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
+from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
+from src.ALNS.CVRP.CVRP import CvrpState, generate_initial_solution
 
-import ALNS.settings as settings
+import src.ALNS.settings as settings
 
 SEED = settings.SEED
 

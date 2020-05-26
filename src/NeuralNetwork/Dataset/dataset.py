@@ -3,11 +3,11 @@ import torch
 import pickle
 
 import numpy as np
-import NeuralNetwork.parameters as parameters
+import src.NeuralNetwork.parameters as parameters
 
-from ALNS.CVRP.CVRP import CvrpState
-from ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
-from NeuralNetwork.Dataset.retrieve_alns_stats import retrieve_alns_stats
+from src.ALNS.CVRP.CVRP import CvrpState
+from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
+from src.NeuralNetwork.Dataset.retrieve_alns_stats import retrieve_alns_stats
 
 STATISTICS_DATA_PATH = parameters.STATISTICS_DATA_PATH
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
