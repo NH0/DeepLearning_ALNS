@@ -26,6 +26,8 @@ EPSILON = parameters.EPSILON
 INITIAL_LEARNING_RATE = parameters.INITIAL_LEARNING_RATE
 LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 
+DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
+
 
 def evaluate(network, inputs_test, labels, train_mask):
     """
@@ -147,7 +149,7 @@ def main(recreate_dataset=False,
         device = 'cpu'
 
     print("#" * 50)
-    print("# Date : {0:%y}_{0:%m}_{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
+    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
     print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
     print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
     print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
@@ -243,6 +245,15 @@ def main(recreate_dataset=False,
     for epoch in range(initial_epoch, max_epoch + 1):
         try:
             loss = torch.tensor([1], dtype=torch.float)
+
+            if epoch % DISPLAY_EVERY_N_EPOCH == 1:
+                accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
+                random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
+                guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
+                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
+                      "always guessing null iterations {:.4f}"
+                      .format(epoch, loss.item(), accuracy, random_accuracy, guessing_null_iteration_accuracy))
+
             for index, graph in enumerate(inputs_train):
                 logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
                 logp = F.softmax(logits, dim=0)
@@ -253,13 +264,6 @@ def main(recreate_dataset=False,
                 optimizer.step()
                 scheduler.step(loss)
 
-            if epoch % 5 == 0:
-                accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
-                random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
-                guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
-                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f},\
-                always guessing null iterations {:.4f}"
-                      .format(epoch, loss.item(), accuracy, random_accuracy, guessing_null_iteration_accuracy))
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
             if save_parameters_on_exit:

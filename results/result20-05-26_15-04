@@ -1,0 +1,41 @@
+nohup: les entrées sont ignorées
+Using backend: pytorch
+##################################################
+# Date : 20_05_26_15-04
+# Hidden node dimensions : [256, 128, 128, 64]
+# Hidden edge dimensions : [128, 64, 64, 32]
+# Hidden linear dimension : 64
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+# Device : cuda
+##################################################
+Retrieving dataset ... Done !
+Created GCN
+48.82% of total null iterations
+49.60% of null iterations in training set
+Dataset size : 2552
+Training set size : 1871
+
+Starting training...
+
+Epoch 0, loss 0.242597, accuracy 0.2746, random accuracy 0.3363,                always guessing null iterations 0.4670
+Epoch 5, loss 0.255823, accuracy 0.4435, random accuracy 0.3377,                always guessing null iterations 0.4670
+Epoch 10, loss 0.257574, accuracy 0.4714, random accuracy 0.3539,                always guessing null iterations 0.4670
+Epoch 15, loss 0.266750, accuracy 0.4611, random accuracy 0.3157,                always guessing null iterations 0.4670
+Epoch 20, loss 0.303186, accuracy 0.4581, random accuracy 0.3612,                always guessing null iterations 0.4670
+Epoch 25, loss 0.274716, accuracy 0.4552, random accuracy 0.3583,                always guessing null iterations 0.4670
+Epoch 30, loss 0.275451, accuracy 0.4626, random accuracy 0.3583,                always guessing null iterations 0.4670
+Epoch 35, loss 0.275489, accuracy 0.4655, random accuracy 0.3656,                always guessing null iterations 0.4670
+Epoch 40, loss 0.270992, accuracy 0.4464, random accuracy 0.3627,                always guessing null iterations 0.4670
+Epoch 45, loss 0.275558, accuracy 0.4670, random accuracy 0.3333,                always guessing null iterations 0.4670
+Epoch 50, loss 0.274727, accuracy 0.4626, random accuracy 0.3128,                always guessing null iterations 0.4670
+Epoch 55, loss 0.263369, accuracy 0.4552, random accuracy 0.3421,                always guessing null iterations 0.4670
+Epoch 60, loss 0.294119, accuracy 0.4508, random accuracy 0.3289,                always guessing null iterations 0.4670
+Epoch 65, loss 0.274369, accuracy 0.4523, random accuracy 0.3348,                always guessing null iterations 0.4670
+Epoch 70, loss 0.291218, accuracy 0.4670, random accuracy 0.3377,                always guessing null iterations 0.4670
+Epoch 75, loss 0.310498, accuracy 0.4728, random accuracy 0.3495,                always guessing null iterations 0.4670
+Epoch 80, loss 0.272714, accuracy 0.4626, random accuracy 0.3465,                always guessing null iterations 0.4670
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/parametersGCN_ep85_ndim256.128.128.64._edim128.64.64.32._lindim64_lr1e-05_devcuda.pt
