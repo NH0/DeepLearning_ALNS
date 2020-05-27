@@ -20,5 +20,7 @@ LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
 
+DISPLAY_EVERY_N_EPOCH = 5
+
 if __name__ == '__main__':
     print(ROOT_PATH)

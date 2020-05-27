@@ -26,6 +26,8 @@ EPSILON = parameters.EPSILON
 INITIAL_LEARNING_RATE = parameters.INITIAL_LEARNING_RATE
 LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 
+DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
+
 
 def evaluate(network, inputs_test, labels, train_mask):
     """
@@ -244,7 +246,7 @@ def main(recreate_dataset=False,
         try:
             loss = torch.tensor([1], dtype=torch.float)
 
-            if epoch % 5 == 1:
+            if epoch % DISPLAY_EVERY_N_EPOCH == 1:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
                 guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
