@@ -1,0 +1,36 @@
+nohup: les entrées sont ignorées
+Using backend: pytorch
+##################################################
+# Date : 20-05-27_14-15
+# Hidden node dimensions : [512, 256, 256, 128]
+# Hidden edge dimensions : [256, 128, 64, 64]
+# Hidden linear dimension : 128
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+# Device : cuda
+##################################################
+Retrieving dataset ... Done !
+Created GCN
+48.82% of total null iterations
+49.60% of null iterations in training set
+Dataset size : 2552
+Training set size : 1871
+
+Starting training...
+
+Epoch 1, loss 0.484506, accuracy 0.4567, random accuracy 0.3451, always guessing null iterations 0.4670
+Epoch 6, loss 0.656585, accuracy 0.4435, random accuracy 0.3377, always guessing null iterations 0.4670
+Epoch 11, loss 0.257693, accuracy 0.4053, random accuracy 0.3260, always guessing null iterations 0.4670
+Epoch 16, loss 0.056445, accuracy 0.4420, random accuracy 0.3451, always guessing null iterations 0.4670
+Epoch 21, loss 0.195654, accuracy 0.4214, random accuracy 0.3392, always guessing null iterations 0.4670
+Epoch 26, loss 0.150950, accuracy 0.4200, random accuracy 0.3201, always guessing null iterations 0.4670
+Epoch 31, loss 0.300338, accuracy 0.4347, random accuracy 0.3304, always guessing null iterations 0.4670
+Epoch 36, loss 0.000084, accuracy 0.4068, random accuracy 0.3700, always guessing null iterations 0.4670
+Epoch 41, loss 0.074559, accuracy 0.4523, random accuracy 0.3304, always guessing null iterations 0.4670
+Epoch 46, loss 0.302250, accuracy 0.4068, random accuracy 0.3304, always guessing null iterations 0.4670
+Epoch 51, loss 0.311377, accuracy 0.4302, random accuracy 0.3451, always guessing null iterations 0.4670
+Epoch 56, loss 0.000112, accuracy 0.4684, random accuracy 0.3113, always guessing null iterations 0.4670
+Epoch 61, loss 0.281964, accuracy 0.4405, random accuracy 0.3348, always guessing null iterations 0.4670
+Epoch 66, loss 0.260530, accuracy 0.4493, random accuracy 0.3495, always guessing null iterations 0.4670
+Epoch 71, loss 0.298235, accuracy 0.4699, random accuracy 0.3142, always guessing null iterations 0.4670
