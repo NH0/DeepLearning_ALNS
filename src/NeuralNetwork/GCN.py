@@ -141,7 +141,8 @@ class GCN(nn.Module):
         self.linear3 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
         self.linear4 = nn.Linear(hidden_linear_dimension, output_feature)
 
-    def forward(self, graph, h, e):
+    def forward(self, graph, h_init, e_init):
+        h, e = h_init, e_init
         for convolution in self.convolutions:
             h, e = convolution(graph, h, e)
 
