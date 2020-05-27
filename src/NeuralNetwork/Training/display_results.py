@@ -1,8 +1,9 @@
 import re
 import sys
-from numpy import arange
+
 import matplotlib.pyplot as plt
 
+from numpy import arange
 from project_root_path import get_project_root_path
 
 

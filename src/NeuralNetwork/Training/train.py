@@ -147,7 +147,7 @@ def main(recreate_dataset=False,
         device = 'cpu'
 
     print("#" * 50)
-    print("# Date : {0:%y}_{0:%m}_{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
+    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
     print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
     print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
     print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
