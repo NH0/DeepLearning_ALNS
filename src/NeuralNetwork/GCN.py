@@ -115,7 +115,7 @@ class GCN(nn.Module):
     def __init__(self,
                  input_node_features, hidden_node_dimension_list,
                  input_edge_features, hidden_edge_dimension_list,
-                 hidden_linear_dimension,
+                 hidden_linear_dimension_list,
                  output_feature,
                  dropout_probability,
                  device):
@@ -136,10 +136,15 @@ class GCN(nn.Module):
                                                    dropout_probability).to(device))
             self.add_module('convolution' + str(i + 1), self.convolutions[-1])
 
-        self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
-        self.linear2 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
-        self.linear3 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
-        self.linear4 = nn.Linear(hidden_linear_dimension, output_feature)
+        self.linear = [nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension_list[0]).to(device)]
+        self.add_module('linear1', self.linear[0])
+
+        for i in range(1, len(hidden_linear_dimension_list)):
+            self.linear.append(nn.Linear(hidden_linear_dimension_list[i-1], hidden_linear_dimension_list[i]).to(device))
+            self.add_module('linear' + str(i + 1), self.linear[-1])
+
+        self.linear.append(nn.Linear(hidden_linear_dimension_list[-1], output_feature).to(device))
+        self.add_module('linear' + str(len(hidden_linear_dimension_list) + 1), self.linear[-1])
 
     def forward(self, graph, h_init, e_init):
         h, e = h_init, e_init
@@ -148,9 +153,7 @@ class GCN(nn.Module):
 
         # Return a tensor of shape (hidden_dimension)
         h = torch.mean(h, dim=0)
-        h = self.linear1(h)
-        h = self.linear2(h)
-        h = self.linear3(h)
-        h = self.linear4(h)
+        for linear_layer in self.linear:
+            h = linear_layer(h)
 
         return h

@@ -17,7 +17,7 @@ MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
 
 HIDDEN_NODE_DIMENSIONS = parameters.HIDDEN_NODE_DIMENSIONS
 HIDDEN_EDGE_DIMENSIONS = parameters.HIDDEN_EDGE_DIMENSIONS
-HIDDEN_LINEAR_DIMENSION = parameters.HIDDEN_LINEAR_DIMENSION
+HIDDEN_LINEAR_DIMENSIONS = parameters.HIDDEN_LINEAR_DIMENSIONS
 OUTPUT_SIZE = parameters.OUTPUT_SIZE
 DROPOUT_PROBABILITY = parameters.DROPOUT_PROBABILITY
 MAX_EPOCH = parameters.MAX_EPOCH
@@ -101,7 +101,7 @@ def display_proportion_of_null_iterations(train_mask, labels, training_set_size,
 
 def save_model_parameters(graph_convolutional_network,
                           optimizer,
-                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                           initial_learning_rate,
                           epoch,
                           loss,
@@ -112,7 +112,9 @@ def save_model_parameters(graph_convolutional_network,
     name_model_parameters_file += '_edim'
     for dim in hidden_edge_dimensions:
         name_model_parameters_file += str(dim) + '.'
-    name_model_parameters_file += '_lindim' + str(hidden_linear_dimension)
+    name_model_parameters_file += '_ldim'
+    for dim in hidden_linear_dimensions:
+        name_model_parameters_file += str(dim) + '.'
     name_model_parameters_file += '_lr' + str(initial_learning_rate)
     name_model_parameters_file += '_dev' + device
     name_model_parameters_file += '.pt'
@@ -127,7 +129,7 @@ def save_model_parameters(graph_convolutional_network,
 def main(recreate_dataset=False,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
-         hidden_linear_dimension=HIDDEN_LINEAR_DIMENSION,
+         hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH, epsilon=EPSILON,
@@ -154,7 +156,7 @@ def main(recreate_dataset=False,
     print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
     print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
     print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
-    print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
+    print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
     print("# Dropout probability : {}".format(dropout_probability))
     print("# Max epoch : {}".format(max_epoch))
     print("# Initial learning rate : {}".format(initial_learning_rate))
@@ -197,7 +199,7 @@ def main(recreate_dataset=False,
                                       hidden_node_dimension_list=hidden_node_dimensions,
                                       input_edge_features=number_of_edge_features,
                                       hidden_edge_dimension_list=hidden_edge_dimensions,
-                                      hidden_linear_dimension=hidden_linear_dimension,
+                                      hidden_linear_dimension_list=hidden_linear_dimensions,
                                       output_feature=output_size,
                                       dropout_probability=dropout_probability,
                                       device=device)
@@ -272,14 +274,14 @@ def main(recreate_dataset=False,
                 print("Saving parameters before quiting ...", flush=True)
                 save_model_parameters(graph_convolutional_network,
                                       optimizer,
-                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                                       initial_learning_rate, epoch, loss, device)
             exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
                               optimizer,
-                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                               initial_learning_rate, max_epoch, loss, device)
 
 
