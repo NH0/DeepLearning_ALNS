@@ -58,6 +58,7 @@ def display_loss(result_file):
     figure = plt.figure()
     ax = figure.add_subplot(111)
     plt.plot(epochs, loss)
+    plt.title(result_file)
     plt.ylabel("Loss value (MSE loss)")
     plt.xlabel("Epoch")
     plt.text(0.98, 0.97,
