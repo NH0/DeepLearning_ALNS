@@ -104,6 +104,7 @@ def save_model_parameters(graph_convolutional_network,
                           hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
                           initial_learning_rate,
                           epoch,
+                          loss,
                           device):
     name_model_parameters_file = '_ep' + str(epoch) + '_ndim'
     for dim in hidden_node_dimensions:
@@ -117,7 +118,8 @@ def save_model_parameters(graph_convolutional_network,
     name_model_parameters_file += '.pt'
     torch.save({'graph_convolutional_network_state': graph_convolutional_network.state_dict(),
                 'optimizer_state': optimizer.state_dict(),
-                'epoch': epoch},
+                'epoch': epoch,
+                'loss': loss},
                MODEL_PARAMETERS_PATH + name_model_parameters_file)
     print("Successfully saved the model's parameters in {}".format(MODEL_PARAMETERS_PATH + name_model_parameters_file))
 
@@ -214,6 +216,7 @@ def main(recreate_dataset=False,
     Resume training state
     """
     initial_epoch = 0
+    loss = torch.tensor([1], dtype=torch.float)
     if load_parameters_from_file is not None:
         try:
             training_state = torch.load(load_parameters_from_file)
@@ -221,6 +224,7 @@ def main(recreate_dataset=False,
             graph_convolutional_network.train()
             optimizer.load_state_dict(training_state['optimizer_state'])
             initial_epoch = training_state['epoch']
+            loss = training_state['loss']
             print("Loaded parameters values from {}".format(load_parameters_from_file))
             print("Resuming at epoch {} ...".format(initial_epoch))
         except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
@@ -244,8 +248,6 @@ def main(recreate_dataset=False,
     """
     for epoch in range(initial_epoch, max_epoch + 1):
         try:
-            loss = torch.tensor([1], dtype=torch.float)
-
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
@@ -271,14 +273,14 @@ def main(recreate_dataset=False,
                 save_model_parameters(graph_convolutional_network,
                                       optimizer,
                                       hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
-                                      initial_learning_rate, epoch, device)
+                                      initial_learning_rate, epoch, loss, device)
             exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
                               optimizer,
                               hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
-                              initial_learning_rate, max_epoch, device)
+                              initial_learning_rate, max_epoch, loss, device)
 
 
 if __name__ == '__main__':
