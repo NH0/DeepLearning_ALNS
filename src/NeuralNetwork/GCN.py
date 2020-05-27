@@ -32,7 +32,8 @@ class GatedGCNLayer(nn.Module):
 
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
-                 dropout_probability, has_dropout=False):
+                 dropout_probability, has_dropout=False,
+                 has_batch_normalization=False):
         super(GatedGCNLayer, self).__init__()
 
         self.input_node_features = input_node_features
@@ -59,13 +60,20 @@ class GatedGCNLayer(nn.Module):
         self.W3 = nn.Linear(input_node_features, output_edge_features, bias=True)
 
         self.activation = nn.ReLU()
-        self.h_BN = nn.BatchNorm1d(output_node_features)
-        self.e_BN = nn.BatchNorm1d(output_edge_features)
+
+        self.has_BN = has_batch_normalization
+        if self.has_BN:
+            self.h_BN = nn.BatchNorm1d(output_node_features)
+            self.e_BN = nn.BatchNorm1d(output_edge_features)
+
         self.sigmoid = nn.Sigmoid()
 
     def message_function(self, edges):
         Vh_j = edges.src['Vh']
-        e_ij = edges.data['e'] + self.activation(self.e_BN(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h']))
+        if self.has_BN:
+            e_ij = edges.data['e'] + self.activation(self.e_BN(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h']))
+        else:
+            e_ij = edges.data['e'] + self.activation(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h'])
         edges.data['e'] = e_ij
 
         return {'Vh_j': Vh_j, 'e_ij': e_ij}
@@ -77,8 +85,12 @@ class GatedGCNLayer(nn.Module):
         e = nodes.mailbox['e_ij']
         sigma_ij = self.embedding_eta(self.sigmoid(e))
 
-        h = nodes.data['h'] + self.activation(self.h_BN(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
-                                                        / (torch.sum(sigma_ij, dim=1) + EPSILON)))
+        if self.has_BN:
+            h = nodes.data['h'] + self.activation(self.h_BN(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
+                                                            / (torch.sum(sigma_ij, dim=1) + EPSILON)))
+        else:
+            h = nodes.data['h'] + self.activation(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
+                                                  / (torch.sum(sigma_ij, dim=1) + EPSILON))
 
         return {'h': h}
 
