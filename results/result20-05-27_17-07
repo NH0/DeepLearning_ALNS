@@ -303,3 +303,23 @@ Epoch 1401, loss 0.265304, accuracy 0.4714, random accuracy 0.3069, always guess
 Epoch 1406, loss 0.265509, accuracy 0.4523, random accuracy 0.2702, always guessing null iterations 0.4670
 Epoch 1411, loss 0.255254, accuracy 0.4670, random accuracy 0.3436, always guessing null iterations 0.4670
 Epoch 1416, loss 0.295297, accuracy 0.4640, random accuracy 0.3377, always guessing null iterations 0.4670
+Epoch 1421, loss 0.256536, accuracy 0.4552, random accuracy 0.3186, always guessing null iterations 0.4670
+Epoch 1426, loss 0.255273, accuracy 0.4743, random accuracy 0.3128, always guessing null iterations 0.4670
+Epoch 1431, loss 0.293431, accuracy 0.4537, random accuracy 0.3186, always guessing null iterations 0.4670
+Epoch 1436, loss 0.261325, accuracy 0.4699, random accuracy 0.3333, always guessing null iterations 0.4670
+Epoch 1441, loss 0.666666, accuracy 0.4626, random accuracy 0.3010, always guessing null iterations 0.4670
+Epoch 1446, loss 0.259038, accuracy 0.4596, random accuracy 0.3421, always guessing null iterations 0.4670
+Epoch 1451, loss 0.258558, accuracy 0.4640, random accuracy 0.3128, always guessing null iterations 0.4670
+Epoch 1456, loss 0.257370, accuracy 0.4493, random accuracy 0.3789, always guessing null iterations 0.4670
+Epoch 1461, loss 0.307546, accuracy 0.4611, random accuracy 0.3598, always guessing null iterations 0.4670
+Epoch 1466, loss 0.169587, accuracy 0.4537, random accuracy 0.3392, always guessing null iterations 0.4670
+Epoch 1471, loss 0.251041, accuracy 0.4508, random accuracy 0.3333, always guessing null iterations 0.4670
+Epoch 1476, loss 0.265573, accuracy 0.4640, random accuracy 0.3539, always guessing null iterations 0.4670
+Epoch 1481, loss 0.271571, accuracy 0.4508, random accuracy 0.3333, always guessing null iterations 0.4670
+Epoch 1486, loss 0.250908, accuracy 0.4640, random accuracy 0.3275, always guessing null iterations 0.4670
+Epoch 1491, loss 0.261843, accuracy 0.4581, random accuracy 0.2996, always guessing null iterations 0.4670
+Epoch 1496, loss 0.265304, accuracy 0.4670, random accuracy 0.3304, always guessing null iterations 0.4670
+Epoch 1501, loss 0.261375, accuracy 0.4611, random accuracy 0.3172, always guessing null iterations 0.4670
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/parametersGCN_ep1502_ndim512.256.256.128._edim256.128.128.64._ldim128.128.32.8._lr1e-05_devcuda.pt

@@ -332,3 +332,20 @@ Epoch 1546, loss 0.401396, accuracy 0.4523, random accuracy 0.3539, always guess
 Epoch 1551, loss 0.247583, accuracy 0.4670, random accuracy 0.3040, always guessing null iterations 0.4670
 Epoch 1556, loss 0.240971, accuracy 0.4508, random accuracy 0.3186, always guessing null iterations 0.4670
 Epoch 1561, loss 0.290659, accuracy 0.4655, random accuracy 0.3231, always guessing null iterations 0.4670
+Epoch 1566, loss 0.252983, accuracy 0.4420, random accuracy 0.2849, always guessing null iterations 0.4670
+Epoch 1571, loss 0.274414, accuracy 0.4420, random accuracy 0.3113, always guessing null iterations 0.4670
+Epoch 1576, loss 0.525387, accuracy 0.4523, random accuracy 0.3363, always guessing null iterations 0.4670
+Epoch 1581, loss 0.300159, accuracy 0.4670, random accuracy 0.3348, always guessing null iterations 0.4670
+Epoch 1586, loss 0.306948, accuracy 0.4626, random accuracy 0.3436, always guessing null iterations 0.4670
+Epoch 1591, loss 0.262709, accuracy 0.4552, random accuracy 0.3113, always guessing null iterations 0.4670
+Epoch 1596, loss 0.648614, accuracy 0.4493, random accuracy 0.3554, always guessing null iterations 0.4670
+Epoch 1601, loss 0.308917, accuracy 0.4670, random accuracy 0.3186, always guessing null iterations 0.4670
+Epoch 1606, loss 0.236512, accuracy 0.4420, random accuracy 0.3377, always guessing null iterations 0.4670
+Epoch 1611, loss 0.264163, accuracy 0.4405, random accuracy 0.3686, always guessing null iterations 0.4670
+Epoch 1616, loss 0.281996, accuracy 0.4684, random accuracy 0.3245, always guessing null iterations 0.4670
+Epoch 1621, loss 0.261556, accuracy 0.4552, random accuracy 0.3421, always guessing null iterations 0.4670
+Epoch 1626, loss 0.442133, accuracy 0.4391, random accuracy 0.3260, always guessing null iterations 0.4670
+Epoch 1631, loss 0.647920, accuracy 0.4405, random accuracy 0.3333, always guessing null iterations 0.4670
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/parametersGCN_ep1631_ndim512.256.256.128._edim256.128.64.64._lindim128_lr1e-05_devcuda.pt
