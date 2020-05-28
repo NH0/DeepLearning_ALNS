@@ -228,8 +228,8 @@ def main(recreate_dataset=False,
             initial_epoch = training_state['epoch']
             training_loss = training_state['training_loss']
             print("Loaded parameters values from {}".format(load_parameters_from_file))
-            print("Resuming at epoch {} ...".format(initial_epoch))
-        except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
+            print("Resuming at epoch {}".format(initial_epoch))
+        except (pickle.UnpicklingError, TypeError, RuntimeError, KeyError) as exception_value:
             print("Unable to load parameters from {}".format(load_parameters_from_file))
             print("Exception : {}".format(exception_value))
             should_continue = ''
@@ -243,7 +243,7 @@ def main(recreate_dataset=False,
     """
     display_proportion_of_null_iterations(train_mask, labels, len(inputs_train), device)
 
-    print("\nStarting training...\n")
+    print("\nStarting training {}\n".format(chr(8987)))
 
     """
     Train the network.
