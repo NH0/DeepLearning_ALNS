@@ -32,7 +32,8 @@ class GatedGCNLayer(nn.Module):
 
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
-                 dropout_probability, has_dropout=False):
+                 dropout_probability, has_dropout=False,
+                 has_batch_normalization=False):
         super(GatedGCNLayer, self).__init__()
 
         self.input_node_features = input_node_features
@@ -59,13 +60,20 @@ class GatedGCNLayer(nn.Module):
         self.W3 = nn.Linear(input_node_features, output_edge_features, bias=True)
 
         self.activation = nn.ReLU()
-        self.h_BN = nn.BatchNorm1d(output_node_features)
-        self.e_BN = nn.BatchNorm1d(output_edge_features)
+
+        self.has_BN = has_batch_normalization
+        if self.has_BN:
+            self.h_BN = nn.BatchNorm1d(output_node_features)
+            self.e_BN = nn.BatchNorm1d(output_edge_features)
+
         self.sigmoid = nn.Sigmoid()
 
     def message_function(self, edges):
         Vh_j = edges.src['Vh']
-        e_ij = edges.data['e'] + self.activation(self.e_BN(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h']))
+        if self.has_BN:
+            e_ij = edges.data['e'] + self.activation(self.e_BN(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h']))
+        else:
+            e_ij = edges.data['e'] + self.activation(edges.data['W1e'] + edges.src['W2h'] + edges.dst['W3h'])
         edges.data['e'] = e_ij
 
         return {'Vh_j': Vh_j, 'e_ij': e_ij}
@@ -77,8 +85,12 @@ class GatedGCNLayer(nn.Module):
         e = nodes.mailbox['e_ij']
         sigma_ij = self.embedding_eta(self.sigmoid(e))
 
-        h = nodes.data['h'] + self.activation(self.h_BN(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
-                                                        / (torch.sum(sigma_ij, dim=1) + EPSILON)))
+        if self.has_BN:
+            h = nodes.data['h'] + self.activation(self.h_BN(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
+                                                            / (torch.sum(sigma_ij, dim=1) + EPSILON)))
+        else:
+            h = nodes.data['h'] + self.activation(Uh_i + torch.sum(sigma_ij * Vh_j, dim=1)
+                                                  / (torch.sum(sigma_ij, dim=1) + EPSILON))
 
         return {'h': h}
 
@@ -115,7 +127,7 @@ class GCN(nn.Module):
     def __init__(self,
                  input_node_features, hidden_node_dimension_list,
                  input_edge_features, hidden_edge_dimension_list,
-                 hidden_linear_dimension,
+                 hidden_linear_dimension_list,
                  output_feature,
                  dropout_probability,
                  device):
@@ -136,20 +148,24 @@ class GCN(nn.Module):
                                                    dropout_probability).to(device))
             self.add_module('convolution' + str(i + 1), self.convolutions[-1])
 
-        self.linear1 = nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension)
-        self.linear2 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
-        self.linear3 = nn.Linear(hidden_linear_dimension, hidden_linear_dimension)
-        self.linear4 = nn.Linear(hidden_linear_dimension, output_feature)
+        self.linear = [nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension_list[0]).to(device)]
+        self.add_module('linear1', self.linear[0])
 
-    def forward(self, graph, h, e):
+        for i in range(1, len(hidden_linear_dimension_list)):
+            self.linear.append(nn.Linear(hidden_linear_dimension_list[i-1], hidden_linear_dimension_list[i]).to(device))
+            self.add_module('linear' + str(i + 1), self.linear[-1])
+
+        self.linear.append(nn.Linear(hidden_linear_dimension_list[-1], output_feature).to(device))
+        self.add_module('linear' + str(len(hidden_linear_dimension_list) + 1), self.linear[-1])
+
+    def forward(self, graph, h_init, e_init):
+        h, e = h_init, e_init
         for convolution in self.convolutions:
             h, e = convolution(graph, h, e)
 
         # Return a tensor of shape (hidden_dimension)
         h = torch.mean(h, dim=0)
-        h = self.linear1(h)
-        h = self.linear2(h)
-        h = self.linear3(h)
-        h = self.linear4(h)
+        for linear_layer in self.linear:
+            h = linear_layer(h)
 
         return h

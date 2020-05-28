@@ -17,7 +17,7 @@ MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
 
 HIDDEN_NODE_DIMENSIONS = parameters.HIDDEN_NODE_DIMENSIONS
 HIDDEN_EDGE_DIMENSIONS = parameters.HIDDEN_EDGE_DIMENSIONS
-HIDDEN_LINEAR_DIMENSION = parameters.HIDDEN_LINEAR_DIMENSION
+HIDDEN_LINEAR_DIMENSIONS = parameters.HIDDEN_LINEAR_DIMENSIONS
 OUTPUT_SIZE = parameters.OUTPUT_SIZE
 DROPOUT_PROBABILITY = parameters.DROPOUT_PROBABILITY
 MAX_EPOCH = parameters.MAX_EPOCH
@@ -101,9 +101,10 @@ def display_proportion_of_null_iterations(train_mask, labels, training_set_size,
 
 def save_model_parameters(graph_convolutional_network,
                           optimizer,
-                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
+                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                           initial_learning_rate,
                           epoch,
+                          training_loss,
                           device):
     name_model_parameters_file = '_ep' + str(epoch) + '_ndim'
     for dim in hidden_node_dimensions:
@@ -111,13 +112,16 @@ def save_model_parameters(graph_convolutional_network,
     name_model_parameters_file += '_edim'
     for dim in hidden_edge_dimensions:
         name_model_parameters_file += str(dim) + '.'
-    name_model_parameters_file += '_lindim' + str(hidden_linear_dimension)
+    name_model_parameters_file += '_ldim'
+    for dim in hidden_linear_dimensions:
+        name_model_parameters_file += str(dim) + '.'
     name_model_parameters_file += '_lr' + str(initial_learning_rate)
     name_model_parameters_file += '_dev' + device
     name_model_parameters_file += '.pt'
     torch.save({'graph_convolutional_network_state': graph_convolutional_network.state_dict(),
                 'optimizer_state': optimizer.state_dict(),
-                'epoch': epoch},
+                'epoch': epoch,
+                'training_loss': training_loss},
                MODEL_PARAMETERS_PATH + name_model_parameters_file)
     print("Successfully saved the model's parameters in {}".format(MODEL_PARAMETERS_PATH + name_model_parameters_file))
 
@@ -125,7 +129,7 @@ def save_model_parameters(graph_convolutional_network,
 def main(recreate_dataset=False,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
-         hidden_linear_dimension=HIDDEN_LINEAR_DIMENSION,
+         hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH, epsilon=EPSILON,
@@ -152,7 +156,7 @@ def main(recreate_dataset=False,
     print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
     print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
     print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
-    print("# Hidden linear dimension : {}".format(hidden_linear_dimension))
+    print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
     print("# Dropout probability : {}".format(dropout_probability))
     print("# Max epoch : {}".format(max_epoch))
     print("# Initial learning rate : {}".format(initial_learning_rate))
@@ -195,7 +199,7 @@ def main(recreate_dataset=False,
                                       hidden_node_dimension_list=hidden_node_dimensions,
                                       input_edge_features=number_of_edge_features,
                                       hidden_edge_dimension_list=hidden_edge_dimensions,
-                                      hidden_linear_dimension=hidden_linear_dimension,
+                                      hidden_linear_dimension_list=hidden_linear_dimensions,
                                       output_feature=output_size,
                                       dropout_probability=dropout_probability,
                                       device=device)
@@ -214,6 +218,7 @@ def main(recreate_dataset=False,
     Resume training state
     """
     initial_epoch = 0
+    training_loss = []
     if load_parameters_from_file is not None:
         try:
             training_state = torch.load(load_parameters_from_file)
@@ -221,9 +226,10 @@ def main(recreate_dataset=False,
             graph_convolutional_network.train()
             optimizer.load_state_dict(training_state['optimizer_state'])
             initial_epoch = training_state['epoch']
+            training_loss = training_state['training_loss']
             print("Loaded parameters values from {}".format(load_parameters_from_file))
-            print("Resuming at epoch {} ...".format(initial_epoch))
-        except (pickle.UnpicklingError, TypeError, RuntimeError) as exception_value:
+            print("Resuming at epoch {}".format(initial_epoch))
+        except (pickle.UnpicklingError, TypeError, RuntimeError, KeyError) as exception_value:
             print("Unable to load parameters from {}".format(load_parameters_from_file))
             print("Exception : {}".format(exception_value))
             should_continue = ''
@@ -237,22 +243,22 @@ def main(recreate_dataset=False,
     """
     display_proportion_of_null_iterations(train_mask, labels, len(inputs_train), device)
 
-    print("\nStarting training...\n")
+    print("\nStarting training {}\n".format(chr(8987)))
 
     """
     Train the network.
     """
     for epoch in range(initial_epoch, max_epoch + 1):
         try:
-            loss = torch.tensor([1], dtype=torch.float)
-
+            running_loss = 0.0
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
                 accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
                 random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
                 guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
                 print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
                       "always guessing null iterations {:.4f}"
-                      .format(epoch, loss.item(), accuracy, random_accuracy, guessing_null_iteration_accuracy))
+                      .format(epoch, training_loss[epoch - 1], accuracy, random_accuracy,
+                              guessing_null_iteration_accuracy))
 
             for index, graph in enumerate(inputs_train):
                 logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
@@ -264,21 +270,24 @@ def main(recreate_dataset=False,
                 optimizer.step()
                 scheduler.step(loss)
 
+                running_loss += loss
+            training_loss.append(running_loss / len(inputs_train))
+
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
                 save_model_parameters(graph_convolutional_network,
                                       optimizer,
-                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
-                                      initial_learning_rate, epoch, device)
+                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
+                                      initial_learning_rate, epoch, training_loss, device)
             exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
                               optimizer,
-                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimension,
-                              initial_learning_rate, max_epoch, device)
+                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
+                              initial_learning_rate, max_epoch, training_loss, device)
 
 
 if __name__ == '__main__':

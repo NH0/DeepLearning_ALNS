@@ -24,8 +24,8 @@ def parse_result(result_file_path):
                 hidden_node_dimensions = re.search(r"\[(\d+, )*\d+\]$", line).group()
             elif line.startswith("# Hidden edge dimensions : "):
                 hidden_edge_dimensions = re.search(r"\[(\d+, )*\d+\]$", line).group()
-            elif line.startswith("# Hidden linear dimension : "):
-                hidden_linear_dimension = re.search(r"\d+", line).group()
+            elif line.startswith("# Hidden linear dimension"):
+                hidden_linear_dimension = re.search(r"(\[(\d+, )*\d+\]|\d+)$", line).group()
             elif line.startswith("Epoch"):
                 if not has_display_every_n_epoch:
                     epoch = int(re.search(r"Epoch (\d+)", line).group(1))
@@ -58,12 +58,13 @@ def display_loss(result_file):
     figure = plt.figure()
     ax = figure.add_subplot(111)
     plt.plot(epochs, loss)
+    plt.title(result_file)
     plt.ylabel("Loss value (MSE loss)")
     plt.xlabel("Epoch")
     plt.text(0.98, 0.97,
              'Hidden node dimensions : ' + result['hidden_node_dimensions']
              + '\nHidden edge dimensions : ' + result['hidden_edge_dimensions']
-             + '\nHidden linear dimension : ' + result['hidden_linear_dimension'],
+             + '\nHidden linear dimensions : ' + result['hidden_linear_dimension'],
              transform=ax.transAxes,
              horizontalalignment='right',
              verticalalignment='top',
