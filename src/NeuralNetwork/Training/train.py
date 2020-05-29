@@ -293,5 +293,5 @@ def main(recreate_dataset=False,
 
 if __name__ == '__main__':
     main(dataset_name='inputs_mask_labels_dataset_50-50'
-         '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+                      '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
          max_epoch=20)
