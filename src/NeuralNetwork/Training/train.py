@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import src.NeuralNetwork.parameters as parameters
 
+import distutils.util as utils
 from src.NeuralNetwork.Dataset.dataset import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
 from src.NeuralNetwork.GCN import GCN
 
@@ -178,7 +179,7 @@ def main(recreate_dataset=False,
                                                                                        epsilon)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args:
-            if keywords_args['pickle_dataset']:
+            if utils.strtobool(keywords_args['pickle_dataset']):
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
                 pickle_dataset(dataset_filename, inputs_train, inputs_test, train_mask, labels)
     else:
