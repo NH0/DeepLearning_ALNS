@@ -1,8 +1,5 @@
-import os
 import sys
 import numpy as np
-
-sys.path.append(os.getcwd())
 
 from src.ALNS.AlnsAlgorithm.solve_cvrp_alns import solve_cvrp_with_alns
 import src.ALNS.settings as settings
@@ -39,4 +36,4 @@ if __name__ == '__main__':
     elif len(sys.argv) == 3:
         generate_stats(sys.argv[1], int(sys.argv[2]))
     else:
-        print("Usage : {0} file_path [number_of_instances]".format(sys.argv[0]))
+        print("Usage : {0} [file_path] [number_of_instances]".format(sys.argv[0]))

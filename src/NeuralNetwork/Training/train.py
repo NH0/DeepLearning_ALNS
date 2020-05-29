@@ -7,13 +7,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import src.NeuralNetwork.parameters as parameters
 
+import distutils.util as utils
 from src.NeuralNetwork.Dataset.dataset import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
 from src.NeuralNetwork.GCN import GCN
 
+MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
 DATASET_PREFIX = parameters.DATASET_PREFIX
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
-DATASET_PATH = parameters.DATASET_PATH
-MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
+DATASET_NAME = parameters.DATASET_NAME
 
 HIDDEN_NODE_DIMENSIONS = parameters.HIDDEN_NODE_DIMENSIONS
 HIDDEN_EDGE_DIMENSIONS = parameters.HIDDEN_EDGE_DIMENSIONS
@@ -106,7 +107,7 @@ def save_model_parameters(graph_convolutional_network,
                           epoch,
                           training_loss,
                           device):
-    name_model_parameters_file = '_ep' + str(epoch) + '_ndim'
+    name_model_parameters_file = 'GCNparams_ep' + str(epoch) + '_ndim'
     for dim in hidden_node_dimensions:
         name_model_parameters_file += str(dim) + '.'
     name_model_parameters_file += '_edim'
@@ -177,16 +178,16 @@ def main(recreate_dataset=False,
                                                                                        epsilon)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args:
-            if keywords_args['pickle_dataset']:
+            if utils.strtobool(keywords_args['pickle_dataset']):
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
                 pickle_dataset(dataset_filename, inputs_train, inputs_test, train_mask, labels)
     else:
         print("Retrieving dataset ... ", end='', flush=True)
-        if 'dataset_path' not in keywords_args:
-            dataset_path = DATASET_PATH
+        if 'dataset_name' not in keywords_args:
+            dataset_name = DATASET_NAME
         else:
-            dataset_path = keywords_args['dataset_path']
-        inputs_train, inputs_test, train_mask, labels = unpickle_dataset(dataset_path)
+            dataset_name = keywords_args['dataset_name']
+        inputs_train, inputs_test, train_mask, labels = unpickle_dataset(dataset_name)
         print("Done !", flush=True)
 
     number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
@@ -221,16 +222,16 @@ def main(recreate_dataset=False,
     training_loss = []
     if load_parameters_from_file is not None:
         try:
-            training_state = torch.load(load_parameters_from_file)
+            training_state = torch.load(MODEL_PARAMETERS_PATH + load_parameters_from_file)
             graph_convolutional_network.load_state_dict(training_state['graph_convolutional_network_state'])
             graph_convolutional_network.train()
             optimizer.load_state_dict(training_state['optimizer_state'])
             initial_epoch = training_state['epoch']
             training_loss = training_state['training_loss']
-            print("Loaded parameters values from {}".format(load_parameters_from_file))
+            print("Loaded parameters values from {}".format(MODEL_PARAMETERS_PATH + load_parameters_from_file))
             print("Resuming at epoch {}".format(initial_epoch))
         except (pickle.UnpicklingError, TypeError, RuntimeError, KeyError) as exception_value:
-            print("Unable to load parameters from {}".format(load_parameters_from_file))
+            print("Unable to load parameters from {}".format(MODEL_PARAMETERS_PATH + load_parameters_from_file))
             print("Exception : {}".format(exception_value))
             should_continue = ''
             while should_continue != 'y' or should_continue != 'n':
@@ -291,4 +292,6 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    main()
+    main(dataset_name='inputs_mask_labels_dataset_50-50'
+         '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+         max_epoch=20)
