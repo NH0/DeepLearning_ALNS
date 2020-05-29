@@ -48,5 +48,5 @@ def create_evenly_distributed_alns_stats(input_pickle_path, output_pickle_path, 
 
 if __name__ == '__main__':
     create_evenly_distributed_alns_stats(
-        DATA_PATH + '1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle',
-        DATA_PATH + 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle')
+        DATA_PATH + '1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+        DATA_PATH + 'dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle')
