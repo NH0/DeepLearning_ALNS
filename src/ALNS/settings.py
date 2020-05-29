@@ -1,5 +1,7 @@
 import os
 
+from project_root_path import get_project_root_path
+
 SEED = 456322
 
 SIZE = 50
@@ -20,7 +22,8 @@ START_TEMPERATURE_CONTROL = 0.05
 COOLING_RATE = 0.99995
 END_TEMPERATURE = 0.01
 
-FILE_PATH = os.getcwd().rpartition('/')[0] \
+ROOT_PATH = get_project_root_path()
+FILE_PATH = ROOT_PATH \
             + "/data/{0}inst_{1}nod_{2}cap_{3}dep_{4}iter_{5}decay_{6}destr_{7}determ.pickle" \
             .format(NUMBER_OF_INSTANCES, SIZE, CAPACITY, NUMBER_OF_DEPOTS,
                     ITERATIONS, OPERATOR_DECAY, DEGREE_OF_DESTRUCTION, DETERMINISM)
