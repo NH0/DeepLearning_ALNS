@@ -30,6 +30,22 @@ LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
 
+def make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler):
+    def train_step(graph, label):
+        logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
+        logp = F.softmax(logits, dim=0)
+        loss = loss_function(logp, label)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        scheduler.step(loss)
+
+        return loss.item()
+
+    return train_step
+
+
 def evaluate(network, inputs_test, labels, train_mask):
     """
     Evaluate a neural network on a given test set.
@@ -214,6 +230,7 @@ def main(recreate_dataset=False,
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.MSELoss()
+    train_step = make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler)
 
     """
     Resume training state
@@ -262,16 +279,9 @@ def main(recreate_dataset=False,
                               guessing_null_iteration_accuracy))
 
             for index, graph in enumerate(inputs_train):
-                logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-                logp = F.softmax(logits, dim=0)
-                loss = loss_function(logp, labels[train_mask][index])
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                scheduler.step(loss)
-
+                loss = train_step(graph, labels[train_mask][index])
                 running_loss += loss
+
             training_loss.append(running_loss / len(inputs_train))
 
         except KeyboardInterrupt:
