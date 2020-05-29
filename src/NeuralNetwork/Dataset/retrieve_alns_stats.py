@@ -1,11 +1,11 @@
 import pickle
-import os
 import copy
 
+import src.NeuralNetwork.parameters as parameters
 from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
 
-DATA_PATH = os.getcwd().rpartition('/')[0] + '/data/'
-EPSILON = 0.00001
+DATA_PATH = parameters.STATISTICS_DATA_PATH
+EPSILON = parameters.EPSILON
 
 
 def retrieve_alns_stats(file):
