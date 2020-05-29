@@ -16,7 +16,6 @@ DATASET_PREFIX = parameters.DATASET_PREFIX
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
 DATASET_NAME = parameters.DATASET_NAME
 
-
 HIDDEN_NODE_DIMENSIONS = parameters.HIDDEN_NODE_DIMENSIONS
 HIDDEN_EDGE_DIMENSIONS = parameters.HIDDEN_EDGE_DIMENSIONS
 HIDDEN_LINEAR_DIMENSIONS = parameters.HIDDEN_LINEAR_DIMENSIONS
@@ -293,6 +292,6 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    main(dataset_name=
-         'inputs_mask_labels_dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+    main(dataset_name='inputs_mask_labels_dataset_50-50'
+         '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
          max_epoch=20)
