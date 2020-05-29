@@ -250,8 +250,8 @@ def create_dataset_from_statistics(alns_statistics_file,
     return inputs_train, inputs_test, train_mask, labels
 
 
-def pickle_dataset(filename, inputs_train, inputs_test, train_mask, labels):
-    with open(filename, 'wb') as dataset_file:
+def pickle_dataset(dataset_name, inputs_train, inputs_test, train_mask, labels):
+    with open(DATASET_PATH + dataset_name, 'wb') as dataset_file:
         try:
             pickle.dump({'inputs_training': inputs_train,
                          'inputs_testing': inputs_test,
@@ -260,11 +260,11 @@ def pickle_dataset(filename, inputs_train, inputs_test, train_mask, labels):
         except pickle.PicklingError:
             print("Unable to pickle data...\nExiting now.")
             exit(1)
-        print("Successfully saved the data in {}".format(filename))
+        print("Successfully saved the data in {}".format(DATASET_PATH + dataset_name))
 
 
-def unpickle_dataset(dataset_path):
-    with open(dataset_path, 'rb') as dataset_file:
+def unpickle_dataset(dataset_name):
+    with open(DATASET_PATH + dataset_name, 'rb') as dataset_file:
         try:
             dataset = pickle.load(dataset_file)
         except pickle.UnpicklingError:
