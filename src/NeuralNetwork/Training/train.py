@@ -214,7 +214,9 @@ def main(recreate_dataset=False,
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.MSELoss()
-
+    print("gcn conv1.U.weight : {}".format(graph_convolutional_network.convolution1.U.weight))
+    print("gcn linear1.weight : {}".format(graph_convolutional_network.linear1.weight))
+    print("gcn linear1.bias : {}".format(graph_convolutional_network.linear1.bias))
     """
     Resume training state
     """
