@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import src.NeuralNetwork.parameters as parameters
 
-import distutils.util as utils
 from src.NeuralNetwork.Dataset.dataset_utils import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
 from src.NeuralNetwork.GCN import GCN
 
