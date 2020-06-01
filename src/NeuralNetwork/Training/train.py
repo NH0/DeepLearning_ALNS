@@ -276,6 +276,7 @@ def main(recreate_dataset=False,
                               guessing_null_iteration_accuracy))
 
             for graph_batch, label_batch in train_loader:
+                label_batch.to(device)
                 loss = train_step(graph_batch, label_batch)
                 running_loss += loss
 
