@@ -22,6 +22,12 @@ MASK_SEED = parameters.MASK_SEED
 BATCH_SIZE = parameters.BATCH_SIZE
 
 
+def collate(sample):
+    graphs, labels = map(list, zip(*sample))
+    graph_batch = dgl.batch(graphs)
+    return graph_batch, torch.tensor(labels)
+
+
 def make_complete_graph(initial_state):
     """
     Make the instance of a CVRP state complete (each node connected to every other node).
@@ -240,8 +246,8 @@ def create_dataset_from_statistics(alns_statistics_file,
     train_size = int(0.8 * dataset_size)
     torch.manual_seed(MASK_SEED)
     train_set, test_set = random_split(dataset, [train_size, dataset_size - train_size])
-    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(dataset=test_set, batch_size=1)
+    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
+    test_loader = DataLoader(dataset=test_set, batch_size=1, collate_fn=collate)
 
     return train_loader, test_loader
 

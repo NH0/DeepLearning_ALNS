@@ -1,4 +1,5 @@
 import torch
+import dgl
 
 import torch.nn as nn
 import src.NeuralNetwork.parameters as parameters
@@ -164,7 +165,8 @@ class GCN(nn.Module):
             h, e = convolution(graph, h, e)
 
         # Return a tensor of shape (hidden_dimension)
-        h = torch.mean(h, dim=0)
+        graph.ndata['h'] = h
+        h = dgl.mean_nodes(graph, 'h')
         for linear_layer in self.linear:
             h = linear_layer(h)
 
