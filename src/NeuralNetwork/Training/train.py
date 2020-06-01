@@ -281,8 +281,6 @@ def main(recreate_dataset=False,
                 running_loss += loss
 
             training_loss.append(running_loss / len(train_loader))
-            print(training_loss)
-            exit(0)
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
@@ -301,6 +299,6 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    main(dataset_name='inputs_mask_labels_dataset_50-50'
-                      '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
-         max_epoch=20)
+    main(dataset_name='inputs_mask_labels_'
+                      'dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+         save_parameters_on_exit=False)
