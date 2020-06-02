@@ -34,7 +34,7 @@ def parse_result(result_file_path):
                     else:
                         display_every_n_epoch = epoch - start_epoch
                         has_display_every_n_epoch = True
-                loss.append(float(re.search(r"loss ([0-9]+\.[0-9]+)", line).group(1)))
+                loss.append(float(re.search(r"loss (-?[0-9]+\.[0-9]+)", line).group(1)))
 
     return {'loss': loss,
             'hidden_node_dimensions': hidden_node_dimensions,
@@ -59,7 +59,7 @@ def display_loss(result_file):
     ax = figure.add_subplot(111)
     plt.plot(epochs, loss)
     plt.title(result_file)
-    plt.ylabel("Loss value (MSE loss)")
+    plt.ylabel("Loss value (NLL loss)")
     plt.xlabel("Epoch")
     plt.text(0.98, 0.97,
              'Hidden node dimensions : ' + result['hidden_node_dimensions']
