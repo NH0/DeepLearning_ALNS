@@ -7,8 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import src.NeuralNetwork.parameters as parameters
 
-import distutils.util as utils
-from src.NeuralNetwork.Dataset.dataset import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
+from src.NeuralNetwork.Dataset.dataset_utils import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
 from src.NeuralNetwork.GCN import GCN
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
@@ -23,6 +22,7 @@ OUTPUT_SIZE = parameters.OUTPUT_SIZE
 DROPOUT_PROBABILITY = parameters.DROPOUT_PROBABILITY
 MAX_EPOCH = parameters.MAX_EPOCH
 EPSILON = parameters.EPSILON
+BATCH_SIZE = parameters.BATCH_SIZE
 
 INITIAL_LEARNING_RATE = parameters.INITIAL_LEARNING_RATE
 LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
@@ -30,73 +30,86 @@ LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
 
-def evaluate(network, inputs_test, labels, train_mask):
+def make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler):
+    def train_step(graph, label):
+        logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
+        logp = F.log_softmax(logits, dim=1)
+        loss = loss_function(logp, label)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        scheduler.step(loss)
+
+        return loss.detach().item()
+
+    return train_step
+
+
+def evaluate(network, test_loader):
     """
     Evaluate a neural network on a given test set.
 
     Parameters
     ----------
+    test_loader : the test dataset
     network : the network to evaluate
-    inputs_test : the test dataset, containing DGL graphs
-    labels : the expected values to be returned by the network
-    train_mask : the inverse of mask to apply on the labels to keep only the labels corresponding to the test set
 
     Returns
     -------
     The proportion of right predictions
     """
-    # Inverse the mask to have the test mask
-    test_mask = ~train_mask
     network.eval()
     with torch.no_grad():
         correct = 0
-        for index, graph in enumerate(inputs_test):
+        for graph, label in test_loader:
             logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-            logp = F.softmax(logits, dim=0)
-            predicted_class = torch.argmax(logp, dim=0).item()
-            true_class = torch.argmax(labels[test_mask][index], dim=0).item()
+            logp = F.softmax(logits, dim=1)
+            predicted_class = torch.argmax(logp, dim=1).item()
+            true_class = label[0].item()
             correct += predicted_class == true_class
 
-    return correct / len(inputs_test)
+    return correct / len(test_loader)
 
 
-def evaluate_random(labels, train_mask, number_of_test_values):
-    test_mask = ~train_mask
+def evaluate_random(test_loader):
     correct = 0
-    for i in range(number_of_test_values):
-        true_class = torch.argmax(labels[test_mask][i], dim=0).item()
+    for _, label in test_loader:
+        true_class = label[0].item()
         correct += np.random.randint(0, 3) == true_class
 
-    return correct / number_of_test_values
+    return correct / len(test_loader)
 
 
-def evaluate_with_null_iteration(labels, train_mask, number_of_test_values):
-    test_mask = ~train_mask
+def evaluate_with_null_iteration(test_loader):
     correct = 0
-    for i in range(number_of_test_values):
-        true_class = torch.argmax(labels[test_mask][i], dim=0).item()
+    for _, label in test_loader:
+        true_class = label[0].item()
         correct += 1 == true_class
 
-    return correct / number_of_test_values
+    return correct / len(test_loader)
 
 
-def display_proportion_of_null_iterations(train_mask, labels, training_set_size, device):
-    number_of_iterations = len(train_mask)
-    number_of_total_null_iterations = 0
+def display_proportion_of_null_iterations(train_loader, test_loader, dataset_size, batch_size):
+    training_set_size = len(train_loader) * batch_size
+    test_set_size = len(test_loader)
     number_of_train_null_iterations = 0
-    null_label = torch.tensor([0, 1, 0], dtype=torch.float, device=device)
-    for index, iteration in enumerate(labels):
-        if torch.equal(iteration, null_label):
-            number_of_total_null_iterations += 1
-            if train_mask[index] == 1:
+    number_of_test_null_iterations = 0
+    for _, labels in train_loader:
+        for label in labels:
+            if label.item() == 1:
                 number_of_train_null_iterations += 1
-    print("{:.2%} of total null iterations".format(
-        round(number_of_total_null_iterations / number_of_iterations, 4)
-    ))
+    for _, labels in test_loader:
+        for label in labels:
+            if label.item() == 1:
+                number_of_test_null_iterations += 1
     print("{:.2%} of null iterations in training set".format(
         round(number_of_train_null_iterations / training_set_size, 4)
     ))
-    print("Dataset size : {}".format(number_of_iterations))
+    print("{:.2%} of null iterations in test set".format(
+        round(number_of_test_null_iterations / test_set_size, 4)
+    ))
+    print("Dataset size : {}".format(dataset_size))
     print("Training set size : {}".format(training_set_size))
 
 
@@ -133,7 +146,7 @@ def main(recreate_dataset=False,
          hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
-         max_epoch=MAX_EPOCH, epsilon=EPSILON,
+         max_epoch=MAX_EPOCH, epsilon=EPSILON, batch_size=BATCH_SIZE,
          initial_learning_rate=INITIAL_LEARNING_RATE,
          learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
          save_parameters_on_exit=True,
@@ -162,6 +175,7 @@ def main(recreate_dataset=False,
     print("# Max epoch : {}".format(max_epoch))
     print("# Initial learning rate : {}".format(initial_learning_rate))
     print("# Device : {}".format(device))
+    print("# Training batch size : {}".format(batch_size))
     print("#" * 50)
 
     if recreate_dataset:
@@ -173,25 +187,23 @@ def main(recreate_dataset=False,
         """
         Create the train and test sets.
         """
-        inputs_train, inputs_test, train_mask, labels = create_dataset_from_statistics(alns_statistics_file,
-                                                                                       device,
-                                                                                       epsilon)
+        train_loader, test_loader = create_dataset_from_statistics(alns_statistics_file, device, batch_size, epsilon)
         print("Created dataset !")
-        if 'pickle_dataset' in keywords_args:
-            if utils.strtobool(keywords_args['pickle_dataset']):
+        if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
+            if keywords_args['pickle_dataset']:
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
-                pickle_dataset(dataset_filename, inputs_train, inputs_test, train_mask, labels)
+                pickle_dataset(dataset_filename, train_loader, test_loader)
     else:
         print("Retrieving dataset ... ", end='', flush=True)
         if 'dataset_name' not in keywords_args:
             dataset_name = DATASET_NAME
         else:
             dataset_name = keywords_args['dataset_name']
-        inputs_train, inputs_test, train_mask, labels = unpickle_dataset(dataset_name)
+        train_loader, test_loader = unpickle_dataset(dataset_name)
         print("Done !", flush=True)
 
-    number_of_node_features = len(inputs_test[0].ndata['n_feat'][0])
-    number_of_edge_features = len(inputs_test[0].edata['e_feat'][0])
+    number_of_node_features = len(next(iter(train_loader))[0].ndata['n_feat'][0])
+    number_of_edge_features = len(next(iter(train_loader))[0].edata['e_feat'][0])
 
     """
     Create the gated graph convolutional network
@@ -213,7 +225,8 @@ def main(recreate_dataset=False,
     """
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
-    loss_function = nn.MSELoss()
+    loss_function = nn.NLLLoss()
+    train_step = make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler)
 
     """
     Resume training state
@@ -242,7 +255,8 @@ def main(recreate_dataset=False,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    display_proportion_of_null_iterations(train_mask, labels, len(inputs_train), device)
+    display_proportion_of_null_iterations(train_loader, test_loader, len(train_loader) * batch_size + len(test_loader),
+                                          batch_size)
 
     print("\nStarting training {}\n".format(chr(8987)))
 
@@ -253,26 +267,19 @@ def main(recreate_dataset=False,
         try:
             running_loss = 0.0
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
-                accuracy = evaluate(graph_convolutional_network, inputs_test, labels, train_mask)
-                random_accuracy = evaluate_random(labels, train_mask, len(inputs_test))
-                guessing_null_iteration_accuracy = evaluate_with_null_iteration(labels, train_mask, len(inputs_test))
+                accuracy = evaluate(graph_convolutional_network, test_loader)
+                random_accuracy = evaluate_random(test_loader)
+                guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader)
                 print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
                       "always guessing null iterations {:.4f}"
                       .format(epoch, training_loss[epoch - 1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
 
-            for index, graph in enumerate(inputs_train):
-                logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-                logp = F.softmax(logits, dim=0)
-                loss = loss_function(logp, labels[train_mask][index])
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                scheduler.step(loss)
-
+            for graph_batch, label_batch in train_loader:
+                loss = train_step(graph_batch, label_batch)
                 running_loss += loss
-            training_loss.append(running_loss / len(inputs_train))
+
+            training_loss.append(running_loss / len(train_loader))
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
@@ -282,7 +289,6 @@ def main(recreate_dataset=False,
                                       optimizer,
                                       hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                                       initial_learning_rate, epoch, training_loss, device)
-            exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
@@ -292,6 +298,9 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    main(dataset_name='inputs_mask_labels_dataset_50-50'
-         '_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
-         max_epoch=20)
+    # main(recreate_dataset=True,
+    #      alns_statistics_file='dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+    #      save_parameters_on_exit=False)
+    main(dataset_name='inputs_mask_labels_'
+                      'dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+         save_parameters_on_exit=False)

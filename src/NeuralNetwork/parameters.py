@@ -7,6 +7,8 @@ MODEL_PARAMETERS_PATH = STATISTICS_DATA_PATH
 
 ALNS_STATISTICS_FILE = 'dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle'
 DATASET_PREFIX = 'inputs_mask_labels_'
+# for search&replace, here is the dataset name in the form of a string :
+# inputs_mask_labels_dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
 DATASET_NAME = DATASET_PREFIX + ALNS_STATISTICS_FILE
 
 HIDDEN_NODE_DIMENSIONS = [512, 256, 256, 128]
@@ -21,6 +23,7 @@ INITIAL_LEARNING_RATE = 0.00001
 LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
+BATCH_SIZE = 128
 
 DISPLAY_EVERY_N_EPOCH = 5
 
