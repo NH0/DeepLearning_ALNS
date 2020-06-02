@@ -101,3 +101,67 @@ Epoch 386, loss 62.229164, accuracy 0.4325, random accuracy 0.3483, always guess
 Epoch 391, loss 22.253243, accuracy 0.4051, random accuracy 0.3327, always guessing null iterations 0.5010
 Epoch 396, loss 61.425491, accuracy 0.4031, random accuracy 0.3190, always guessing null iterations 0.5010
 Epoch 401, loss 671.686935, accuracy 0.4423, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 406, loss 37.304337, accuracy 0.4501, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 411, loss 72.109361, accuracy 0.4031, random accuracy 0.3503, always guessing null iterations 0.5010
+Epoch 416, loss 33.393084, accuracy 0.4658, random accuracy 0.3503, always guessing null iterations 0.5010
+Epoch 421, loss 28.480783, accuracy 0.4207, random accuracy 0.3973, always guessing null iterations 0.5010
+Epoch 426, loss 32.562148, accuracy 0.4090, random accuracy 0.3053, always guessing null iterations 0.5010
+Epoch 431, loss 36.057169, accuracy 0.3914, random accuracy 0.3170, always guessing null iterations 0.5010
+Epoch 436, loss 77.259196, accuracy 0.4070, random accuracy 0.3464, always guessing null iterations 0.5010
+Epoch 441, loss 62.920938, accuracy 0.4227, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 446, loss 50.143948, accuracy 0.4325, random accuracy 0.3033, always guessing null iterations 0.5010
+Epoch 451, loss 41.890925, accuracy 0.4618, random accuracy 0.3659, always guessing null iterations 0.5010
+Epoch 456, loss 61.597774, accuracy 0.4540, random accuracy 0.3307, always guessing null iterations 0.5010
+Epoch 461, loss 86.048834, accuracy 0.4755, random accuracy 0.3151, always guessing null iterations 0.5010
+Epoch 466, loss 52.717355, accuracy 0.4129, random accuracy 0.3131, always guessing null iterations 0.5010
+Epoch 471, loss 83.719574, accuracy 0.4168, random accuracy 0.3249, always guessing null iterations 0.5010
+Epoch 476, loss 142.663112, accuracy 0.3816, random accuracy 0.3444, always guessing null iterations 0.5010
+Epoch 481, loss 35.972497, accuracy 0.4031, random accuracy 0.3092, always guessing null iterations 0.5010
+Epoch 486, loss 102.747773, accuracy 0.4129, random accuracy 0.3209, always guessing null iterations 0.5010
+Epoch 491, loss 11.387211, accuracy 0.4051, random accuracy 0.3620, always guessing null iterations 0.5010
+Epoch 496, loss 37.610358, accuracy 0.4305, random accuracy 0.3601, always guessing null iterations 0.5010
+Epoch 501, loss 48.374035, accuracy 0.4384, random accuracy 0.3699, always guessing null iterations 0.5010
+Epoch 506, loss 13.508085, accuracy 0.4325, random accuracy 0.3679, always guessing null iterations 0.5010
+Epoch 511, loss 23.544152, accuracy 0.3738, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 516, loss 26.608889, accuracy 0.4207, random accuracy 0.3131, always guessing null iterations 0.5010
+Epoch 521, loss 17.520916, accuracy 0.4168, random accuracy 0.3425, always guessing null iterations 0.5010
+Epoch 526, loss 40.967549, accuracy 0.3914, random accuracy 0.3268, always guessing null iterations 0.5010
+Epoch 531, loss 25.482415, accuracy 0.4305, random accuracy 0.2838, always guessing null iterations 0.5010
+Epoch 536, loss 120.833363, accuracy 0.3777, random accuracy 0.3014, always guessing null iterations 0.5010
+Epoch 541, loss 30.196841, accuracy 0.4070, random accuracy 0.3366, always guessing null iterations 0.5010
+Epoch 546, loss 16.223390, accuracy 0.4247, random accuracy 0.3288, always guessing null iterations 0.5010
+Epoch 551, loss 38.063962, accuracy 0.3855, random accuracy 0.3268, always guessing null iterations 0.5010
+Epoch 556, loss 23.958640, accuracy 0.4481, random accuracy 0.3249, always guessing null iterations 0.5010
+Epoch 561, loss 363.112048, accuracy 0.3777, random accuracy 0.3542, always guessing null iterations 0.5010
+Epoch 566, loss 52.486017, accuracy 0.3836, random accuracy 0.2975, always guessing null iterations 0.5010
+Epoch 571, loss 32.566556, accuracy 0.4051, random accuracy 0.3249, always guessing null iterations 0.5010
+Epoch 576, loss 31.828332, accuracy 0.4403, random accuracy 0.3288, always guessing null iterations 0.5010
+Epoch 581, loss 256.334452, accuracy 0.4325, random accuracy 0.3072, always guessing null iterations 0.5010
+Epoch 586, loss 20.000040, accuracy 0.3777, random accuracy 0.3581, always guessing null iterations 0.5010
+Epoch 591, loss 24.410963, accuracy 0.3992, random accuracy 0.3601, always guessing null iterations 0.5010
+Epoch 596, loss 546.490872, accuracy 0.4364, random accuracy 0.3366, always guessing null iterations 0.5010
+Epoch 601, loss 42.151032, accuracy 0.4168, random accuracy 0.3307, always guessing null iterations 0.5010
+Epoch 606, loss 529.233791, accuracy 0.4364, random accuracy 0.3757, always guessing null iterations 0.5010
+Epoch 611, loss 30.718712, accuracy 0.4286, random accuracy 0.3209, always guessing null iterations 0.5010
+Epoch 616, loss 15.611853, accuracy 0.4188, random accuracy 0.3386, always guessing null iterations 0.5010
+Epoch 621, loss 22.350376, accuracy 0.4207, random accuracy 0.3659, always guessing null iterations 0.5010
+Epoch 626, loss 55.573746, accuracy 0.3973, random accuracy 0.3092, always guessing null iterations 0.5010
+Epoch 631, loss 131.189540, accuracy 0.4403, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 636, loss 258.156595, accuracy 0.4481, random accuracy 0.3327, always guessing null iterations 0.5010
+Epoch 641, loss 64.851812, accuracy 0.4110, random accuracy 0.3718, always guessing null iterations 0.5010
+Epoch 646, loss 29.995542, accuracy 0.4286, random accuracy 0.3209, always guessing null iterations 0.5010
+Epoch 651, loss 17.159734, accuracy 0.4051, random accuracy 0.3229, always guessing null iterations 0.5010
+Epoch 656, loss 23.741558, accuracy 0.4266, random accuracy 0.3112, always guessing null iterations 0.5010
+Epoch 661, loss 11.727007, accuracy 0.4286, random accuracy 0.3699, always guessing null iterations 0.5010
+Epoch 666, loss 26.775737, accuracy 0.3914, random accuracy 0.3483, always guessing null iterations 0.5010
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/GCNparams_ep666_ndim512.256.256.128._edim256.128.128.64._ldim128.128.32.8._lr1e-05_devcuda.pt
+Traceback (most recent call last):
+  File "start_training.py", line 12, in <module>
+    main()
+  File "start_training.py", line 8, in main
+    train()
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Training/train.py", line 275, in main
+    guessing_null_iteration_accuracy))
+IndexError: list index out of range
