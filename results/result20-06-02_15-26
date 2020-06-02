@@ -54,6 +54,7 @@ Epoch 126, loss 47.703376, accuracy 0.3503, random accuracy 0.3503, always guess
 Epoch 131, loss 63.436970, accuracy 0.3444, random accuracy 0.3112, always guessing null iterations 0.5010
 Epoch 136, loss 20.573132, accuracy 0.3170, random accuracy 0.2994, always guessing null iterations 0.5010
 Epoch 141, loss 26.699745, accuracy 0.3464, random accuracy 0.3131, always guessing null iterations 0.5010
+<<<<<<< HEAD
 Epoch 146, loss 41.953901, accuracy 0.3444, random accuracy 0.3033, always guessing null iterations 0.5010
 Epoch 151, loss 28.275789, accuracy 0.3581, random accuracy 0.2779, always guessing null iterations 0.5010
 Epoch 156, loss 28.866709, accuracy 0.3503, random accuracy 0.3542, always guessing null iterations 0.5010
@@ -74,3 +75,5 @@ Traceback (most recent call last):
   File "/scratch1/flethi/Code/src/NeuralNetwork/Training/train.py", line 275, in main
     .format(epoch, training_loss[epoch - 1], accuracy, random_accuracy,
 IndexError: list index out of range
+=======
+>>>>>>> 88db1939d9942f5272935970dcd3f2b274bcc9c0
