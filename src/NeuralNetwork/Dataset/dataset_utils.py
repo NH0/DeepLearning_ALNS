@@ -25,7 +25,7 @@ BATCH_SIZE = parameters.BATCH_SIZE
 def collate(sample):
     graphs, labels = map(list, zip(*sample))
     graph_batch = dgl.batch(graphs)
-    return graph_batch, torch.tensor(labels)
+    return graph_batch, torch.tensor(labels, device=labels[0].device)
 
 
 def make_complete_graph(initial_state):
