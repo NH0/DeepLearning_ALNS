@@ -33,8 +33,7 @@ DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 def make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler):
     def train_step(graph, label):
         logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-        logp = F.log_softmax(logits, dim=1)
-        loss = loss_function(logp, label)
+        loss = loss_function(logits, label)
 
         optimizer.zero_grad()
         loss.backward()
@@ -225,7 +224,7 @@ def main(recreate_dataset=False,
     """
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
-    loss_function = nn.NLLLoss()
+    loss_function = nn.CrossEntropyLoss()
     train_step = make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler)
 
     """
