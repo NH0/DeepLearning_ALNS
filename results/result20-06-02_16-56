@@ -1,0 +1,42 @@
+nohup: les entrées sont ignorées
+Using backend: pytorch
+##################################################
+# Date : 20-06-02_16-56
+# Hidden node dimensions : [512, 256, 256, 128]
+# Hidden edge dimensions : [256, 128, 128, 64]
+# Hidden linear dimensions : [128, 128, 32, 8]
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 0.0001
+# Device : cuda
+# Training batch size : 128
+##################################################
+Retrieving dataset ... Done !
+Created GCN
+48.34% of null iterations in training set
+50.10% of null iterations in test set
+Dataset size : 2559
+Training set size : 2048
+
+Starting training ⌛
+
+Epoch 1, loss 12.334738, accuracy 0.4521, random accuracy 0.3268, always guessing null iterations 0.5010
+Epoch 6, loss 2.208429, accuracy 0.4951, random accuracy 0.3483, always guessing null iterations 0.5010
+Epoch 11, loss 1.069687, accuracy 0.5010, random accuracy 0.3268, always guessing null iterations 0.5010
+Epoch 16, loss 1.105297, accuracy 0.5010, random accuracy 0.3112, always guessing null iterations 0.5010
+Epoch 21, loss 1.044528, accuracy 0.5029, random accuracy 0.3640, always guessing null iterations 0.5010
+Epoch 26, loss 1.054376, accuracy 0.5029, random accuracy 0.3249, always guessing null iterations 0.5010
+Epoch 31, loss 1.052967, accuracy 0.5010, random accuracy 0.3170, always guessing null iterations 0.5010
+Epoch 36, loss 1.050144, accuracy 0.5010, random accuracy 0.3425, always guessing null iterations 0.5010
+Epoch 41, loss 1.057962, accuracy 0.4990, random accuracy 0.3131, always guessing null iterations 0.5010
+Epoch 46, loss 1.053972, accuracy 0.4971, random accuracy 0.3170, always guessing null iterations 0.5010
+Epoch 51, loss 1.050481, accuracy 0.5010, random accuracy 0.3190, always guessing null iterations 0.5010
+Epoch 56, loss 1.047551, accuracy 0.5010, random accuracy 0.3542, always guessing null iterations 0.5010
+Epoch 61, loss 1.049565, accuracy 0.5010, random accuracy 0.3229, always guessing null iterations 0.5010
+Epoch 66, loss 1.055135, accuracy 0.5010, random accuracy 0.3581, always guessing null iterations 0.5010
+Epoch 71, loss 1.049322, accuracy 0.5010, random accuracy 0.3464, always guessing null iterations 0.5010
+Epoch 76, loss 1.049212, accuracy 0.5010, random accuracy 0.3483, always guessing null iterations 0.5010
+Epoch 81, loss 1.050375, accuracy 0.5010, random accuracy 0.3483, always guessing null iterations 0.5010
+Epoch 86, loss 1.049330, accuracy 0.5010, random accuracy 0.3542, always guessing null iterations 0.5010
+Epoch 91, loss 1.049210, accuracy 0.5010, random accuracy 0.3542, always guessing null iterations 0.5010
+Epoch 96, loss 1.047640, accuracy 0.5010, random accuracy 0.3170, always guessing null iterations 0.5010
