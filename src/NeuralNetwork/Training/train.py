@@ -33,7 +33,7 @@ DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 def make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler):
     def train_step(graph, label):
         logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-        logp = F.softmax(logits, dim=1)
+        logp = F.log_softmax(logits, dim=1)
         loss = loss_function(logp, label)
 
         optimizer.zero_grad()
