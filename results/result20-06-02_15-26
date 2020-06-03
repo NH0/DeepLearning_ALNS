@@ -1,0 +1,79 @@
+nohup: les entrées sont ignorées
+Using backend: pytorch
+##################################################
+# Date : 20-06-02_15-26
+# Hidden node dimensions : [512, 256, 256, 128]
+# Hidden edge dimensions : [256, 128, 128, 64]
+# Hidden linear dimensions : [128, 128, 32, 8]
+# Dropout probability : 0.2
+# Max epoch : 5000
+# Initial learning rate : 1e-05
+# Device : cuda
+# Training batch size : 128
+##################################################
+Creating dataset from ALNS statistics :
+	1 Retrieved alns statistics
+	2 Created new cvrp state
+	3 Creating inputs and labels ... created inputs, and created labels
+Created dataset !
+Successfully saved the data in /scratch1/flethi/Code/data/inputs_mask_labels_dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
+Created GCN
+48.34% of null iterations in training set
+50.10% of null iterations in test set
+Dataset size : 2559
+Training set size : 2048
+
+Starting training ⌛
+
+Epoch 1, loss 208.109004, accuracy 0.3542, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 6, loss 135.164741, accuracy 0.3796, random accuracy 0.3796, always guessing null iterations 0.5010
+Epoch 11, loss 85.959487, accuracy 0.3933, random accuracy 0.3307, always guessing null iterations 0.5010
+Epoch 16, loss 20.980091, accuracy 0.3464, random accuracy 0.3288, always guessing null iterations 0.5010
+Epoch 21, loss 38.729595, accuracy 0.3640, random accuracy 0.2935, always guessing null iterations 0.5010
+Epoch 26, loss 33.437843, accuracy 0.3601, random accuracy 0.3386, always guessing null iterations 0.5010
+Epoch 31, loss 45.668954, accuracy 0.3640, random accuracy 0.3483, always guessing null iterations 0.5010
+Epoch 36, loss 165.826890, accuracy 0.3601, random accuracy 0.3581, always guessing null iterations 0.5010
+Epoch 41, loss 35.332665, accuracy 0.3386, random accuracy 0.3092, always guessing null iterations 0.5010
+Epoch 46, loss 25.767509, accuracy 0.3640, random accuracy 0.3620, always guessing null iterations 0.5010
+Epoch 51, loss 14.223875, accuracy 0.3209, random accuracy 0.3346, always guessing null iterations 0.5010
+Epoch 56, loss 19.822828, accuracy 0.3796, random accuracy 0.3346, always guessing null iterations 0.5010
+Epoch 61, loss 35.156231, accuracy 0.3366, random accuracy 0.3601, always guessing null iterations 0.5010
+Epoch 66, loss 12.848634, accuracy 0.3190, random accuracy 0.3288, always guessing null iterations 0.5010
+Epoch 71, loss 139.988132, accuracy 0.3640, random accuracy 0.3875, always guessing null iterations 0.5010
+Epoch 76, loss 40.272056, accuracy 0.3620, random accuracy 0.3464, always guessing null iterations 0.5010
+Epoch 81, loss 12.961682, accuracy 0.3366, random accuracy 0.2857, always guessing null iterations 0.5010
+Epoch 86, loss 48.818167, accuracy 0.3562, random accuracy 0.2975, always guessing null iterations 0.5010
+Epoch 91, loss 36.640979, accuracy 0.3151, random accuracy 0.3229, always guessing null iterations 0.5010
+Epoch 96, loss 19.218107, accuracy 0.3757, random accuracy 0.3072, always guessing null iterations 0.5010
+Epoch 101, loss 49.308960, accuracy 0.3523, random accuracy 0.3405, always guessing null iterations 0.5010
+Epoch 106, loss 54.098094, accuracy 0.3229, random accuracy 0.2935, always guessing null iterations 0.5010
+Epoch 111, loss 121.219369, accuracy 0.3503, random accuracy 0.3307, always guessing null iterations 0.5010
+Epoch 116, loss 46.587497, accuracy 0.4012, random accuracy 0.3209, always guessing null iterations 0.5010
+Epoch 121, loss 32.716031, accuracy 0.3875, random accuracy 0.3366, always guessing null iterations 0.5010
+Epoch 126, loss 47.703376, accuracy 0.3503, random accuracy 0.3503, always guessing null iterations 0.5010
+Epoch 131, loss 63.436970, accuracy 0.3444, random accuracy 0.3112, always guessing null iterations 0.5010
+Epoch 136, loss 20.573132, accuracy 0.3170, random accuracy 0.2994, always guessing null iterations 0.5010
+Epoch 141, loss 26.699745, accuracy 0.3464, random accuracy 0.3131, always guessing null iterations 0.5010
+<<<<<<< HEAD
+Epoch 146, loss 41.953901, accuracy 0.3444, random accuracy 0.3033, always guessing null iterations 0.5010
+Epoch 151, loss 28.275789, accuracy 0.3581, random accuracy 0.2779, always guessing null iterations 0.5010
+Epoch 156, loss 28.866709, accuracy 0.3503, random accuracy 0.3542, always guessing null iterations 0.5010
+Epoch 161, loss 157.287997, accuracy 0.3542, random accuracy 0.3327, always guessing null iterations 0.5010
+Epoch 166, loss 44.876236, accuracy 0.3620, random accuracy 0.3464, always guessing null iterations 0.5010
+Epoch 171, loss 232.316973, accuracy 0.3425, random accuracy 0.3014, always guessing null iterations 0.5010
+Epoch 176, loss 169.712890, accuracy 0.3444, random accuracy 0.2994, always guessing null iterations 0.5010
+Epoch 181, loss 18.334405, accuracy 0.3425, random accuracy 0.3209, always guessing null iterations 0.5010
+Epoch 186, loss 24.637131, accuracy 0.3464, random accuracy 0.3112, always guessing null iterations 0.5010
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/GCNparams_ep187_ndim512.256.256.128._edim256.128.128.64._ldim128.128.32.8._lr1e-05_devcuda.pt
+Traceback (most recent call last):
+  File "start_training.py", line 12, in <module>
+    main()
+  File "start_training.py", line 8, in main
+    train()
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Training/train.py", line 275, in main
+    .format(epoch, training_loss[epoch - 1], accuracy, random_accuracy,
+IndexError: list index out of range
+=======
+>>>>>>> 88db1939d9942f5272935970dcd3f2b274bcc9c0

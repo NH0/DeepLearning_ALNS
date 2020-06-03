@@ -4,7 +4,6 @@ import datetime
 
 import numpy as np
 import torch.nn as nn
-import torch.nn.functional as F
 import src.NeuralNetwork.parameters as parameters
 
 from src.NeuralNetwork.Dataset.dataset_utils import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
@@ -30,10 +29,10 @@ LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
 
-def make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler):
+def make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler):
     def train_step(graph, label):
         logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-        logp = F.log_softmax(logits, dim=1)
+        logp = softmax_function(logits)
         loss = loss_function(logp, label)
 
         optimizer.zero_grad()
@@ -46,12 +45,14 @@ def make_training_step(graph_convolutional_network, loss_function, optimizer, sc
     return train_step
 
 
-def evaluate(network, test_loader):
+def evaluate(network, loss_function, softmax_function, test_loader):
     """
     Evaluate a neural network on a given test set.
 
     Parameters
     ----------
+    softmax_function
+    loss_function
     test_loader : the test dataset
     network : the network to evaluate
 
@@ -59,17 +60,19 @@ def evaluate(network, test_loader):
     -------
     The proportion of right predictions
     """
+    running_loss = 0.0
     network.eval()
     with torch.no_grad():
         correct = 0
         for graph, label in test_loader:
             logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
-            logp = F.softmax(logits, dim=1)
-            predicted_class = torch.argmax(logp, dim=1).item()
+            logp = softmax_function(logits)
+            running_loss += loss_function(logp, label)
+            predicted_class = torch.argmax(logits, dim=1).item()
             true_class = label[0].item()
             correct += predicted_class == true_class
 
-    return correct / len(test_loader)
+    return correct / len(test_loader), running_loss / len(test_loader)
 
 
 def evaluate_random(test_loader):
@@ -118,7 +121,7 @@ def save_model_parameters(graph_convolutional_network,
                           hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
                           initial_learning_rate,
                           epoch,
-                          training_loss,
+                          training_loss, test_loss,
                           device):
     name_model_parameters_file = 'GCNparams_ep' + str(epoch) + '_ndim'
     for dim in hidden_node_dimensions:
@@ -135,7 +138,8 @@ def save_model_parameters(graph_convolutional_network,
     torch.save({'graph_convolutional_network_state': graph_convolutional_network.state_dict(),
                 'optimizer_state': optimizer.state_dict(),
                 'epoch': epoch,
-                'training_loss': training_loss},
+                'training_loss': training_loss,
+                'test_loss': test_loss},
                MODEL_PARAMETERS_PATH + name_model_parameters_file)
     print("Successfully saved the model's parameters in {}".format(MODEL_PARAMETERS_PATH + name_model_parameters_file))
 
@@ -226,13 +230,15 @@ def main(recreate_dataset=False,
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
     loss_function = nn.NLLLoss()
-    train_step = make_training_step(graph_convolutional_network, loss_function, optimizer, scheduler)
+    softmax_function = nn.LogSoftmax(dim=1)
+    train_step = make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler)
 
     """
     Resume training state
     """
     initial_epoch = 0
     training_loss = []
+    test_loss = []
     if load_parameters_from_file is not None:
         try:
             training_state = torch.load(MODEL_PARAMETERS_PATH + load_parameters_from_file)
@@ -241,6 +247,7 @@ def main(recreate_dataset=False,
             optimizer.load_state_dict(training_state['optimizer_state'])
             initial_epoch = training_state['epoch']
             training_loss = training_state['training_loss']
+            test_loss = training_state['test_loss']
             print("Loaded parameters values from {}".format(MODEL_PARAMETERS_PATH + load_parameters_from_file))
             print("Resuming at epoch {}".format(initial_epoch))
         except (pickle.UnpicklingError, TypeError, RuntimeError, KeyError) as exception_value:
@@ -267,12 +274,14 @@ def main(recreate_dataset=False,
         try:
             running_loss = 0.0
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
-                accuracy = evaluate(graph_convolutional_network, test_loader)
+                accuracy, test_loss_element = evaluate(graph_convolutional_network,
+                                                       loss_function, softmax_function, test_loader)
+                test_loss.append(test_loss_element)
                 random_accuracy = evaluate_random(test_loader)
                 guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader)
-                print("Epoch {:d}, loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
+                print("Epoch {:d}, loss {:.6f}, test_loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
                       "always guessing null iterations {:.4f}"
-                      .format(epoch, training_loss[epoch - 1], accuracy, random_accuracy,
+                      .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
 
             for graph_batch, label_batch in train_loader:
@@ -288,13 +297,14 @@ def main(recreate_dataset=False,
                 save_model_parameters(graph_convolutional_network,
                                       optimizer,
                                       hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
-                                      initial_learning_rate, epoch, training_loss, device)
+                                      initial_learning_rate, epoch, training_loss, test_loss, device)
+            exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
                               optimizer,
                               hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
-                              initial_learning_rate, max_epoch, training_loss, device)
+                              initial_learning_rate, max_epoch, training_loss, test_loss, device)
 
 
 if __name__ == '__main__':
