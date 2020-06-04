@@ -9,6 +9,7 @@ from project_root_path import get_project_root_path
 
 def parse_result(result_file_path):
     loss = []
+    test_loss = []
 
     hidden_node_dimensions = ""
     hidden_edge_dimensions = ""
@@ -35,8 +36,12 @@ def parse_result(result_file_path):
                         display_every_n_epoch = epoch - start_epoch
                         has_display_every_n_epoch = True
                 loss.append(float(re.search(r"loss (-?[0-9]+\.[0-9]+)", line).group(1)))
+                test_loss_epoch = re.search(r"test_loss (-?[0-9]+\.[0-9]+)", line).group(1)
+                if test_loss_epoch is not None:
+                    test_loss.append(float(test_loss_epoch))
 
     return {'loss': loss,
+            'test_loss': test_loss,
             'hidden_node_dimensions': hidden_node_dimensions,
             'hidden_edge_dimensions': hidden_edge_dimensions,
             'hidden_linear_dimension': hidden_linear_dimension,
@@ -49,15 +54,20 @@ def display_loss(result_file):
     result = parse_result(result_file_path)
 
     loss = result['loss']
+    test_loss = result['test_loss']
 
     display_every_n_epoch = result['display_every_n_epoch']
     start_epoch = result['start_epoch']
     end_epoch = display_every_n_epoch * len(loss)
     epochs = arange(start_epoch, end_epoch, display_every_n_epoch)
 
-    figure = plt.figure()
-    ax = figure.add_subplot(111)
+    ax = plt.axes()
     plt.plot(epochs, loss)
+    if len(test_loss) > 0:
+        plt.plot(epochs, test_loss)
+    # x_epsilon = end_epoch * 1/30
+    # y_epsilon = max(loss) * 1/30
+    # plt.axis([start_epoch - x_epsilon, end_epoch + x_epsilon, min(loss) - y_epsilon, max(loss) + y_epsilon])
     plt.title(result_file)
     plt.ylabel("Loss value (NLL loss)")
     plt.xlabel("Epoch")
