@@ -118,22 +118,15 @@ def display_proportion_of_null_iterations(train_loader, test_loader, dataset_siz
 
 def save_model_parameters(graph_convolutional_network,
                           optimizer,
-                          hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
+                          softmax_function_name,
                           initial_learning_rate,
                           epoch,
                           training_loss, test_loss,
                           device):
-    name_model_parameters_file = 'GCNparams_ep' + str(epoch) + '_ndim'
-    for dim in hidden_node_dimensions:
-        name_model_parameters_file += str(dim) + '.'
-    name_model_parameters_file += '_edim'
-    for dim in hidden_edge_dimensions:
-        name_model_parameters_file += str(dim) + '.'
-    name_model_parameters_file += '_ldim'
-    for dim in hidden_linear_dimensions:
-        name_model_parameters_file += str(dim) + '.'
+    name_model_parameters_file = 'GCNparams_ep' + str(epoch)
     name_model_parameters_file += '_lr' + str(initial_learning_rate)
     name_model_parameters_file += '_dev' + device
+    name_model_parameters_file += '_' + softmax_function_name
     name_model_parameters_file += '.pt'
     torch.save({'graph_convolutional_network_state': graph_convolutional_network.state_dict(),
                 'optimizer_state': optimizer.state_dict(),
@@ -296,14 +289,14 @@ def main(recreate_dataset=False,
                 print("Saving parameters before quiting ...", flush=True)
                 save_model_parameters(graph_convolutional_network,
                                       optimizer,
-                                      hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
+                                      str(softmax_function.__class__()).partition('(')[0],
                                       initial_learning_rate, epoch, training_loss, test_loss, device)
             exit(0)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
                               optimizer,
-                              hidden_node_dimensions, hidden_edge_dimensions, hidden_linear_dimensions,
+                              str(softmax_function.__class__()).partition('(')[0],
                               initial_learning_rate, max_epoch, training_loss, test_loss, device)
 
 
