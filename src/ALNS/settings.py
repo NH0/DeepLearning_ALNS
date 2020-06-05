@@ -24,7 +24,6 @@ END_TEMPERATURE = 0.01
 
 ROOT_PATH = get_project_root_path()
 FILE_PATH = ROOT_PATH \
-            + "/data/{0}inst_{1}nod_{2}cap_{3}dep_{4}iter_{5}decay_{6}destr_{7}determ.pickle" \
-            .format(NUMBER_OF_INSTANCES, SIZE, CAPACITY, NUMBER_OF_DEPOTS,
-                    ITERATIONS, OPERATOR_DECAY, DEGREE_OF_DESTRUCTION, DETERMINISM)
+            + "/data/"\
+            + "stats_{0}iter.pickle".format(ITERATIONS)
 FILE_MODE = 'wb'

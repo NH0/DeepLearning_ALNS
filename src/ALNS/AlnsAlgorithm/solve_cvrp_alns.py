@@ -18,6 +18,9 @@ SIZE = settings.SIZE
 CAPACITY = settings.CAPACITY
 NUMBER_OF_DEPOTS = settings.NUMBER_OF_DEPOTS
 
+DEGREE_OF_DESTRUCTION = settings.DEGREE_OF_DESTRUCTION
+DETERMINISM = settings.DETERMINISM
+
 ITERATIONS = settings.NUMBER_OF_DEPOTS
 WEIGHTS = settings.WEIGHTS
 OPERATOR_DECAY = settings.OPERATOR_DECAY
@@ -76,7 +79,10 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
         solution_data = {'Size': solution.size,
                          'Number_of_depots': solution.number_of_depots,
                          'Capacity': solution.capacity,
-                         'Seed': seed}
+                         'Seed': seed,
+                         'Parameters': {'decay': operator_decay,
+                                        'degree_destruction': DEGREE_OF_DESTRUCTION,
+                                        'determinism': DETERMINISM}}
         solution_statistics = [{'destroyed_nodes': solution.statistics['destroyed_nodes'][i],
                                 'objective_difference': result.statistics.objectives[i + 1]
                                                         - result.statistics.objectives[i],

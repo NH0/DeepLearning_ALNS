@@ -309,8 +309,9 @@ def main(recreate_dataset=False,
 
 if __name__ == '__main__':
     # main(recreate_dataset=True,
-    #      alns_statistics_file='dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+    #      alns_statistics_file='50-50_stats_1000iter.pickle',
+    #      pickle_dataset=True,
     #      save_parameters_on_exit=False)
-    main(dataset_name='inputs_mask_labels_'
-                      'dataset_50-50_1inst_50nod_40cap_1dep_1000iter_0.8decay_0.35destr_18determ.pickle',
+    main(dataset_name='dataset_'
+                      '50-50_stats_1000iter.pickle',
          save_parameters_on_exit=False)
