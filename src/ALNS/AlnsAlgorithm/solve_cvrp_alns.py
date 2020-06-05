@@ -75,6 +75,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     solution = result.best_state
 
     # Create the statistics if necessary
+    solution_data = {}
     if solution.collect_alns_statistics:
         solution_data = {'Size': solution.size,
                          'Number_of_depots': solution.number_of_depots,
@@ -89,10 +90,14 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
                                 'list_of_edges': solution.statistics['list_of_edges'][i]}
                                for i in range(iterations)]
         solution_data['Statistics'] = solution_statistics
-        if 'file_path' in kwargs:
-            pickle_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
-        else:
-            pickle_alns_solution_stats(solution_data)
+
+        if 'pickle_single_stat' in kwargs and kwargs['pickle_single_stat']:
+            if 'file_path' in kwargs:
+                pickle_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
+            else:
+                pickle_alns_solution_stats(solution_data)
+
+    return solution_data
 
 
 if __name__ == '__main__':

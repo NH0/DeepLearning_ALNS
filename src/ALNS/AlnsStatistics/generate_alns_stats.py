@@ -2,6 +2,7 @@ import sys
 import numpy as np
 
 from src.ALNS.AlnsAlgorithm.solve_cvrp_alns import solve_cvrp_with_alns
+from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
 import src.ALNS.settings as settings
 
 SIZE = settings.SIZE
@@ -19,13 +20,17 @@ FILE_PATH = settings.FILE_PATH
 def generate_stats(file_path=FILE_PATH, number_of_stats=NUMBER_OF_INSTANCES):
     if number_of_stats == 1:
         solve_cvrp_with_alns(size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
-                             iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, file_path=file_path)
+                             iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS,
+                             file_path=file_path, pickle_single_stat=True)
         return 0
     for i in range(number_of_stats):
         seed = np.random.randint(0, 2 ** 32 - 1)
-        solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
-                             iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, file_path=file_path)
-    return 0
+        pickle_alns_solution_stats(result=solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY,
+                                                               number_of_depots=NUMBER_OF_DEPOTS,
+                                                               iterations=ITERATIONS,
+                                                               collect_statistics=COLLECT_STATISTICS),
+                                   file_path=file_path,
+                                   file_mode='ab')
 
 
 if __name__ == '__main__':
