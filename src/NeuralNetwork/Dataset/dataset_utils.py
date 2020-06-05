@@ -168,7 +168,7 @@ def generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device
     """
     nx_graph = cvrp_state.instance
     list_of_dgl_graphs = \
-        [generate_cvrp_graph(nx_graph) for _ in range(len(alns_instance_statistics['Statistics']))]
+        [generate_cvrp_graph(nx_graph) for _ in alns_instance_statistics['Statistics']]
     # All graphs must have the same number of node
     # They actually represent the same CVRP problem with different solution
     # The data is the CVRP state at different iterations of the ALNS heuristic
