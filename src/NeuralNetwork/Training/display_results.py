@@ -62,12 +62,13 @@ def display_loss(result_file):
     epochs = arange(start_epoch, end_epoch, display_every_n_epoch)
 
     ax = plt.axes()
-    plt.plot(epochs, loss)
+    plt.plot(epochs, loss, label='train loss')
     if len(test_loss) > 0:
-        plt.plot(epochs, test_loss)
+        plt.plot(epochs, test_loss, label='test loss')
     # x_epsilon = end_epoch * 1/30
     # y_epsilon = max(loss) * 1/30
     # plt.axis([start_epoch - x_epsilon, end_epoch + x_epsilon, min(loss) - y_epsilon, max(loss) + y_epsilon])
+    plt.legend(loc='upper left')
     plt.title(result_file)
     plt.ylabel("Loss value (NLL loss)")
     plt.xlabel("Epoch")
