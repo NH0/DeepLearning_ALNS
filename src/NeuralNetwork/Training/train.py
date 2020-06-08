@@ -143,7 +143,7 @@ def main(recreate_dataset=False,
          hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
-         max_epoch=MAX_EPOCH, epsilon=EPSILON, batch_size=BATCH_SIZE,
+         max_epoch=MAX_EPOCH, batch_size=BATCH_SIZE,
          initial_learning_rate=INITIAL_LEARNING_RATE,
          learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
          save_parameters_on_exit=True,
@@ -184,7 +184,7 @@ def main(recreate_dataset=False,
         """
         Create the train and test sets.
         """
-        train_loader, test_loader = create_dataset_from_statistics(alns_statistics_file, device, batch_size, epsilon)
+        train_loader, test_loader = create_dataset_from_statistics(alns_statistics_file, device, batch_size)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:
