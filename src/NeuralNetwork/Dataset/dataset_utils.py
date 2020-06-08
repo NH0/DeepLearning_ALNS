@@ -209,37 +209,46 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     return labels
 
 
-def create_dataset_from_statistics(alns_statistics_file,
-                                   device,
-                                   batch_size=BATCH_SIZE,
-                                   epsilon=EPSILON):
+def generate_inputs_and_labels_for_single_instance(single_instance_statistics, device, epsilon=EPSILON):
     step = 1
-    """
-    Retrieve the statistics saved during the ALNS execution.
-    """
-    alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
-    # Warning : can be a list of dictionaries, here considered to be a single dictionary
-    alns_instance_statistics = retrieve_alns_stats(alns_statistics_path)
-    if len(alns_instance_statistics) != 1:
-        print("Error, the stats file contains different CVRP instances.\nUsing only first instance.")
-    alns_instance_statistics = alns_instance_statistics[0]
-    print("\t{} Retrieved alns statistics".format(step))
+    print("\t{} Retrieved one instance's statistics".format(step))
     step += 1
 
     """
     Create the CVRP state using the given parameters.
     """
-    cvrp_state = create_cvrp_state(size=alns_instance_statistics['Size'],
-                                   number_of_depots=alns_instance_statistics['Number_of_depots'],
-                                   capacity=alns_instance_statistics['Capacity'],
-                                   seed=alns_instance_statistics['Seed'])
+    cvrp_state = create_cvrp_state(size=single_instance_statistics['Size'],
+                                   number_of_depots=single_instance_statistics['Number_of_depots'],
+                                   capacity=single_instance_statistics['Capacity'],
+                                   seed=single_instance_statistics['Seed'])
     print("\t{} Created new cvrp state".format(step))
     step += 1
     print("\t{} Creating inputs and labels ... ".format(step), end='', flush=True)
-    inputs = generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device)
+    inputs = generate_inputs_from_cvrp_state(cvrp_state, single_instance_statistics, device)
     print("created inputs, ", end='', flush=True)
-    labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
+    labels = generate_labels_from_cvrp_state(single_instance_statistics, device, epsilon)
     print("and created labels", flush=True)
+
+    return inputs, labels
+
+
+def create_dataset_from_statistics(alns_statistics_file,
+                                   device,
+                                   batch_size=BATCH_SIZE):
+    inputs = []
+    labels = []
+    """
+    Retrieve the statistics saved during the ALNS execution.
+    """
+    alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
+    # Warning : can be a list of dictionaries, here considered to be a single dictionary
+    alns_instances_statistics = retrieve_alns_stats(alns_statistics_path)
+    print("{} instances in the statistics file.".format(len(alns_instances_statistics)))
+    for single_instance_statistics in alns_instances_statistics:
+        single_instance_inputs, single_instance_labels =\
+            generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
+        inputs += single_instance_inputs
+        labels += single_instance_labels
 
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
