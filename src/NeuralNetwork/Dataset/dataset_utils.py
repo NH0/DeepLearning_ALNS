@@ -249,6 +249,7 @@ def create_dataset_from_statistics(alns_statistics_file,
             generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
         inputs += single_instance_inputs
         labels += single_instance_labels
+        print("\t" + "-" * 15)
 
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)

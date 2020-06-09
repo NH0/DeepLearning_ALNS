@@ -17,20 +17,20 @@ NUMBER_OF_INSTANCES = settings.NUMBER_OF_INSTANCES
 FILE_PATH = settings.FILE_PATH
 
 
-def generate_stats(file_path=FILE_PATH, number_of_stats=NUMBER_OF_INSTANCES):
-    if number_of_stats == 1:
+def generate_stats(file_path=FILE_PATH, number_of_stats=NUMBER_OF_INSTANCES, add_new_stats=True):
+    if number_of_stats == 1 and not add_new_stats:
         solve_cvrp_with_alns(size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
                              iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS,
                              file_path=file_path, pickle_single_stat=True)
-        return 0
-    for i in range(number_of_stats):
-        seed = np.random.randint(0, 2 ** 32 - 1)
-        pickle_alns_solution_stats(result=solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY,
-                                                               number_of_depots=NUMBER_OF_DEPOTS,
-                                                               iterations=ITERATIONS,
-                                                               collect_statistics=COLLECT_STATISTICS),
-                                   file_path=file_path,
-                                   file_mode='ab')
+    else:
+        for i in range(number_of_stats):
+            seed = np.random.randint(0, 2 ** 32 - 1)
+            pickle_alns_solution_stats(result=solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY,
+                                                                   number_of_depots=NUMBER_OF_DEPOTS,
+                                                                   iterations=ITERATIONS,
+                                                                   collect_statistics=COLLECT_STATISTICS),
+                                       file_path=file_path,
+                                       file_mode='ab')
 
 
 if __name__ == '__main__':
