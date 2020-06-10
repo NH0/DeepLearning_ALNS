@@ -6,7 +6,7 @@ import numpy as np
 import torch.nn as nn
 import src.NeuralNetwork.parameters as parameters
 
-from src.NeuralNetwork.Dataset.dataset_utils import create_dataset_from_statistics, pickle_dataset, unpickle_dataset
+from src.NeuralNetwork.Dataset.dataset_utils import create_dataloaders, pickle_dataset, unpickle_dataset
 from src.NeuralNetwork.GCN import GCN
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
@@ -184,7 +184,9 @@ def main(recreate_dataset=False,
         """
         Create the train and test sets.
         """
-        train_loader, test_loader = create_dataset_from_statistics(alns_statistics_file, device, batch_size)
+        train_loader, validation_loader, test_loader = create_dataloaders(alns_statistics_file,
+                                                                          device,
+                                                                          batch_size)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:

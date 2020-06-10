@@ -232,20 +232,17 @@ def generate_inputs_and_labels_for_single_instance(single_instance_statistics, d
     return inputs, labels
 
 
-def create_dataset_from_statistics(alns_statistics_file,
-                                   device,
-                                   batch_size=BATCH_SIZE):
+def create_dataset(alns_statistics_file, device):
     inputs = []
     labels = []
     """
     Retrieve the statistics saved during the ALNS execution.
     """
     alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
-    # Warning : can be a list of dictionaries, here considered to be a single dictionary
     alns_instances_statistics = retrieve_alns_stats(alns_statistics_path)
     print("{} instances in the statistics file.".format(len(alns_instances_statistics)))
     for single_instance_statistics in alns_instances_statistics:
-        single_instance_inputs, single_instance_labels =\
+        single_instance_inputs, single_instance_labels = \
             generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
         inputs += single_instance_inputs
         labels += single_instance_labels
@@ -253,13 +250,21 @@ def create_dataset_from_statistics(alns_statistics_file,
 
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
-    train_size = int(0.8 * dataset_size)
+    train_and_val_size = int(0.8 * dataset_size)
+    train_size = int(0.8 * train_and_val_size)
     torch.manual_seed(MASK_SEED)
-    train_set, test_set = random_split(dataset, [train_size, dataset_size - train_size])
+    train__and_val_set, test_set = random_split(dataset, [train_and_val_size, dataset_size - train_and_val_size])
+    train_set, val_set = random_split(train__and_val_set, [train_size, train_and_val_size - train_size])
+
+    return train_set, val_set, test_set
+
+
+def create_dataloaders(train_set, val_set, test_set, batch_size=BATCH_SIZE):
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
+    validation_loader = DataLoader(dataset=val_set, batch_size=1, collate_fn=collate)
     test_loader = DataLoader(dataset=test_set, batch_size=1, collate_fn=collate)
 
-    return train_loader, test_loader
+    return train_loader, validation_loader, test_loader
 
 
 def pickle_dataset(dataset_name, train_loader, test_loader):
