@@ -232,7 +232,7 @@ def generate_inputs_and_labels_for_single_instance(single_instance_statistics, d
     return inputs, labels
 
 
-def create_dataset(alns_statistics_file, device):
+def generate_all_inputs_and_labels(alns_statistics_file, device):
     inputs = []
     labels = []
     """
@@ -248,6 +248,11 @@ def create_dataset(alns_statistics_file, device):
         labels += single_instance_labels
         print("\t" + "-" * 15)
 
+    return inputs, labels
+
+
+def create_dataset(alns_statistics_file, device):
+    inputs, labels = generate_all_inputs_and_labels(alns_statistics_file, device)
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
     train_and_val_size = int(0.8 * dataset_size)
@@ -259,7 +264,8 @@ def create_dataset(alns_statistics_file, device):
     return train_set, val_set, test_set
 
 
-def create_dataloaders(train_set, val_set, test_set, batch_size=BATCH_SIZE):
+def create_dataloaders(alns_statistics_file, device, batch_size=BATCH_SIZE):
+    train_set, val_set, test_set = create_dataset(alns_statistics_file, device)
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
     validation_loader = DataLoader(dataset=val_set, batch_size=1, collate_fn=collate)
     test_loader = DataLoader(dataset=test_set, batch_size=1, collate_fn=collate)
