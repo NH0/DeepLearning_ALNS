@@ -211,11 +211,11 @@ def main(recreate_dataset=False,
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
                 pickle_dataset(dataset_filename, train_loader, test_loader)
     else:
-        print("Retrieving dataset ... ", end='', flush=True)
         if 'dataset_name' not in keywords_args:
             dataset_name = DATASET_NAME
         else:
             dataset_name = keywords_args['dataset_name']
+        print("Retrieving dataset {} ... ".format(dataset_name), end='', flush=True)
         train_loader, test_loader = unpickle_dataset(dataset_name)
         print("Done !", flush=True)
 
