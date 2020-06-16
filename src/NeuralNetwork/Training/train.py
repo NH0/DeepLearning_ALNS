@@ -78,7 +78,7 @@ def evaluate(network, loss_function, softmax_function, test_loader):
         print("Error : batch size is {}".format(batch_size))
         exit(1)
 
-    return correct / len(test_loader * batch_size), running_loss / len(test_loader * batch_size)
+    return correct / (len(test_loader) * batch_size), running_loss / (len(test_loader) * batch_size)
 
 
 def evaluate_random(test_loader):
@@ -95,7 +95,7 @@ def evaluate_random(test_loader):
         random_tensor.apply_(generate_random)
         correct += (random_tensor == label_batch).sum().item()
 
-    return correct / len(test_loader * batch_size)
+    return correct / (len(test_loader) * batch_size)
 
 
 def evaluate_with_null_iteration(test_loader):
@@ -108,7 +108,7 @@ def evaluate_with_null_iteration(test_loader):
         ones_tensor = torch.ones(size=label_batch.size, device=label_batch.device)
         correct += (ones_tensor == label_batch).sum().item()
 
-    return correct / len(test_loader * batch_size)
+    return correct / (len(test_loader) * batch_size)
 
 
 def display_proportion_of_null_iterations(train_loader, test_loader, dataset_size, batch_size):
@@ -275,7 +275,8 @@ def main(recreate_dataset=False,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    display_proportion_of_null_iterations(train_loader, test_loader, len(train_loader) * batch_size + len(test_loader),
+    display_proportion_of_null_iterations(train_loader, test_loader, len(train_loader) * batch_size +
+                                          len(test_loader) * batch_size,
                                           batch_size)
 
     print("\nStarting training {}\n".format(chr(8987)))
@@ -301,7 +302,7 @@ def main(recreate_dataset=False,
                 loss = train_step(graph_batch, label_batch)
                 running_loss += loss
 
-            training_loss.append(running_loss / len(train_loader))
+            training_loss.append(running_loss / (len(train_loader) * batch_size))
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
