@@ -61,36 +61,54 @@ def evaluate(network, loss_function, softmax_function, test_loader):
     The proportion of right predictions
     """
     running_loss = 0.0
+    batch_size = -1
     network.eval()
     with torch.no_grad():
         correct = 0
-        for graph, label in test_loader:
-            logits = network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
+        for graph_batch, label_batch in test_loader:
+            if batch_size == -1:
+                batch_size = label_batch.size(0)
+            logits = network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'])
             logp = softmax_function(logits)
-            running_loss += loss_function(logp, label)
-            predicted_class = torch.argmax(logits, dim=1).item()
-            true_class = label[0].item()
-            correct += predicted_class == true_class
+            running_loss += loss_function(logp, label_batch).detach().item()
+            predicted_class = torch.argmax(logits, dim=1).detach()
+            correct += (predicted_class == label_batch).sum().item()
 
-    return correct / len(test_loader), running_loss / len(test_loader)
+    if batch_size <= 0:
+        print("Error : batch size is {}".format(batch_size))
+        exit(1)
+
+    return correct / len(test_loader * batch_size), running_loss / len(test_loader * batch_size)
 
 
 def evaluate_random(test_loader):
     correct = 0
-    for _, label in test_loader:
-        true_class = label[0].item()
-        correct += np.random.randint(0, 3) == true_class
+    batch_size = -1
 
-    return correct / len(test_loader)
+    def generate_random():
+        return np.random.randint(0, OUTPUT_SIZE)
+
+    for _, label_batch in test_loader:
+        if batch_size == -1:
+            batch_size = label_batch.size(0)
+        random_tensor = torch.empty(size=label_batch.size, device=label_batch.device)
+        random_tensor.apply_(generate_random)
+        correct += (random_tensor == label_batch).sum().item()
+
+    return correct / len(test_loader * batch_size)
 
 
 def evaluate_with_null_iteration(test_loader):
     correct = 0
-    for _, label in test_loader:
-        true_class = label[0].item()
-        correct += 1 == true_class
+    batch_size = -1
 
-    return correct / len(test_loader)
+    for _, label_batch in test_loader:
+        if batch_size == -1:
+            batch_size = label_batch.size(0)
+        ones_tensor = torch.ones(size=label_batch.size, device=label_batch.device)
+        correct += (ones_tensor == label_batch).sum().item()
+
+    return correct / len(test_loader * batch_size)
 
 
 def display_proportion_of_null_iterations(train_loader, test_loader, dataset_size, batch_size):
