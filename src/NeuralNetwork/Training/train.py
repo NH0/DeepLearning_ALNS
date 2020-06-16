@@ -30,10 +30,10 @@ DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
 
 def make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler):
-    def train_step(graph, label):
-        logits = graph_convolutional_network(graph, graph.ndata['n_feat'], graph.edata['e_feat'])
+    def train_step(graph_batch, label_batch):
+        logits = graph_convolutional_network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'])
         logp = softmax_function(logits)
-        loss = loss_function(logp, label)
+        loss = loss_function(logp, label_batch)
 
         optimizer.zero_grad()
         loss.backward()
