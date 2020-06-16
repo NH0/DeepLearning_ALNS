@@ -138,29 +138,32 @@ class GCN(nn.Module):
             print("Node dimensions and edge dimensions lists aren't the same size !\nExiting...")
             exit(1)
 
-        self.convolutions = [GatedGCNLayer(input_node_features, hidden_node_dimension_list[0],
-                                           input_edge_features, hidden_edge_dimension_list[0],
-                                           dropout_probability).to(device)]
-        self.add_module('convolution1', self.convolutions[0])
+        self.node_embedding = nn.Linear(input_node_features, hidden_node_dimension_list[0])
+        self.edge_embedding = nn.Linear(input_edge_features, hidden_edge_dimension_list[0])
 
+        self.convolutions = []
         for i in range(1, len(hidden_node_dimension_list)):
             self.convolutions.append(GatedGCNLayer(hidden_node_dimension_list[i - 1], hidden_node_dimension_list[i],
                                                    hidden_edge_dimension_list[i - 1], hidden_edge_dimension_list[i],
                                                    dropout_probability).to(device))
-            self.add_module('convolution' + str(i + 1), self.convolutions[-1])
+            self.add_module('convolution' + str(i), self.convolutions[-1])
 
         self.linear = [nn.Linear(hidden_node_dimension_list[-1], hidden_linear_dimension_list[0]).to(device)]
         self.add_module('linear1', self.linear[0])
-
         for i in range(1, len(hidden_linear_dimension_list)):
             self.linear.append(nn.Linear(hidden_linear_dimension_list[i-1], hidden_linear_dimension_list[i]).to(device))
             self.add_module('linear' + str(i + 1), self.linear[-1])
 
-        self.linear.append(nn.Linear(hidden_linear_dimension_list[-1], output_feature).to(device))
-        self.add_module('linear' + str(len(hidden_linear_dimension_list) + 1), self.linear[-1])
+        self.last_linear = nn.Linear(hidden_linear_dimension_list[-1], output_feature).to(device)
+
+        self.activation = nn.ReLU()
 
     def forward(self, graph, h_init, e_init):
         h, e = h_init, e_init
+
+        h = self.node_embedding(h)
+        e = self.edge_embedding(e)
+
         for convolution in self.convolutions:
             h, e = convolution(graph, h, e)
 
@@ -169,5 +172,7 @@ class GCN(nn.Module):
         h = dgl.mean_nodes(graph, 'h')
         for linear_layer in self.linear:
             h = linear_layer(h)
+            h = self.activation(h)
+        h = self.last_linear(h)
 
         return h
