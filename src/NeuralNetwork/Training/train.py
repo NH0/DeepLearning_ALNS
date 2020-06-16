@@ -78,7 +78,7 @@ def evaluate(network, loss_function, softmax_function, test_loader):
         print("Error : batch size is {}".format(batch_size))
         exit(1)
 
-    return correct / (len(test_loader) * batch_size), running_loss / (len(test_loader) * batch_size)
+    return correct / (len(test_loader) * batch_size), running_loss / len(test_loader)
 
 
 def evaluate_random(test_loader):
@@ -105,9 +105,10 @@ def evaluate_with_null_iteration(test_loader):
     return correct / (len(test_loader) * batch_size)
 
 
-def display_proportion_of_null_iterations(train_loader, test_loader, dataset_size, batch_size):
+def display_proportion_of_null_iterations(train_loader, test_loader, batch_size, test_batch_size):
+    dataset_size = len(train_loader) * batch_size + len(test_loader) * test_batch_size
     training_set_size = len(train_loader) * batch_size
-    test_set_size = len(test_loader)
+    test_set_size = len(test_loader) * test_batch_size
     number_of_train_null_iterations = 0
     number_of_test_null_iterations = 0
     for _, labels in train_loader:
@@ -150,12 +151,14 @@ def save_model_parameters(graph_convolutional_network,
 
 
 def main(recreate_dataset=False,
+         batch_size=BATCH_SIZE,
+         test_batch_size=BATCH_SIZE,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
          hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
-         max_epoch=MAX_EPOCH, batch_size=BATCH_SIZE,
+         max_epoch=MAX_EPOCH,
          initial_learning_rate=INITIAL_LEARNING_RATE,
          learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
          save_parameters_on_exit=True,
@@ -175,18 +178,6 @@ def main(recreate_dataset=False,
     else:
         device = 'cpu'
 
-    print("#" * 50)
-    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
-    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
-    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
-    print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
-    print("# Dropout probability : {}".format(dropout_probability))
-    print("# Max epoch : {}".format(max_epoch))
-    print("# Initial learning rate : {}".format(initial_learning_rate))
-    print("# Device : {}".format(device))
-    print("# Training batch size : {}".format(batch_size))
-    print("#" * 50)
-
     if recreate_dataset:
         print("Creating dataset from ALNS statistics :")
         if 'alns_statistics_file' not in keywords_args:
@@ -198,7 +189,8 @@ def main(recreate_dataset=False,
         """
         train_loader, validation_loader, test_loader = create_dataloaders(alns_statistics_file,
                                                                           device,
-                                                                          batch_size)
+                                                                          batch_size,
+                                                                          test_batch_size)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:
@@ -211,10 +203,12 @@ def main(recreate_dataset=False,
             dataset_name = keywords_args['dataset_name']
         print("Retrieving dataset {} ... ".format(dataset_name), end='', flush=True)
         train_loader, test_loader = unpickle_dataset(dataset_name)
+        batch_size = train_loader.batch_size
+        test_batch_size = test_loader.batch_size
         print("Done !", flush=True)
 
-    number_of_node_features = len(next(iter(train_loader))[0].ndata['n_feat'][0])
-    number_of_edge_features = len(next(iter(train_loader))[0].edata['e_feat'][0])
+    number_of_node_features = len(train_loader.dataset[0][0].ndata['n_feat'][0])
+    number_of_edge_features = len(train_loader.dataset[0][0].edata['e_feat'][0])
 
     """
     Create the gated graph convolutional network
@@ -239,6 +233,19 @@ def main(recreate_dataset=False,
     loss_function = nn.NLLLoss()
     softmax_function = nn.LogSoftmax(dim=1)
     train_step = make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler)
+
+    print("#" * 50)
+    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
+    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
+    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
+    print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
+    print("# Dropout probability : {}".format(dropout_probability))
+    print("# Max epoch : {}".format(max_epoch))
+    print("# Initial learning rate : {}".format(initial_learning_rate))
+    print("# Device : {}".format(device))
+    print("# Training batch size : {}".format(batch_size))
+    print("# Testing batch size : {}".format(test_batch_size))
+    print("#" * 50)
 
     """
     Resume training state
@@ -269,9 +276,7 @@ def main(recreate_dataset=False,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    display_proportion_of_null_iterations(train_loader, test_loader, len(train_loader) * batch_size +
-                                          len(test_loader) * batch_size,
-                                          batch_size)
+    display_proportion_of_null_iterations(train_loader, test_loader, batch_size, test_batch_size)
 
     print("\nStarting training {}\n".format(chr(8987)))
 
@@ -296,7 +301,7 @@ def main(recreate_dataset=False,
                 loss = train_step(graph_batch, label_batch)
                 running_loss += loss
 
-            training_loss.append(running_loss / (len(train_loader) * batch_size))
+            training_loss.append(running_loss / len(train_loader))
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")

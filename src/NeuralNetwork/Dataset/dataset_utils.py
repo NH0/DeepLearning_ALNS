@@ -264,11 +264,11 @@ def create_dataset(alns_statistics_file, device):
     return train_set, val_set, test_set
 
 
-def create_dataloaders(alns_statistics_file, device, batch_size=BATCH_SIZE):
+def create_dataloaders(alns_statistics_file, device, batch_size=BATCH_SIZE, test_batch_size=BATCH_SIZE):
     train_set, val_set, test_set = create_dataset(alns_statistics_file, device)
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
-    validation_loader = DataLoader(dataset=val_set, batch_size=1, collate_fn=collate)
-    test_loader = DataLoader(dataset=test_set, batch_size=1, collate_fn=collate)
+    validation_loader = DataLoader(dataset=val_set, batch_size=test_batch_size, collate_fn=collate)
+    test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
 
     return train_loader, validation_loader, test_loader
 
