@@ -84,15 +84,10 @@ def evaluate(network, loss_function, softmax_function, test_loader):
 def evaluate_random(test_loader):
     correct = 0
     batch_size = -1
-
-    def generate_random():
-        return np.random.randint(0, OUTPUT_SIZE)
-
     for _, label_batch in test_loader:
         if batch_size == -1:
             batch_size = label_batch.size(0)
-        random_tensor = torch.empty(size=label_batch.size, device=label_batch.device)
-        random_tensor.apply_(generate_random)
+        random_tensor = torch.randint(0, OUTPUT_SIZE, size=label_batch.size(), device=label_batch.device)
         correct += (random_tensor == label_batch).sum().item()
 
     return correct / (len(test_loader) * batch_size)
@@ -101,11 +96,10 @@ def evaluate_random(test_loader):
 def evaluate_with_null_iteration(test_loader):
     correct = 0
     batch_size = -1
-
     for _, label_batch in test_loader:
         if batch_size == -1:
             batch_size = label_batch.size(0)
-        ones_tensor = torch.ones(size=label_batch.size, device=label_batch.device)
+        ones_tensor = torch.ones(size=label_batch.size(), device=label_batch.device)
         correct += (ones_tensor == label_batch).sum().item()
 
     return correct / (len(test_loader) * batch_size)
