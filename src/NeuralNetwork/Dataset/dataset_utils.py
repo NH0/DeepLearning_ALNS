@@ -3,7 +3,7 @@ import torch
 
 import src.NeuralNetwork.parameters as parameters
 
-from torch.utils.data import DataLoader
+from dgl import batch as dgl_batch
 from torch.utils.data.dataset import random_split
 from src.ALNS.CVRP.CVRP import CvrpState
 from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
@@ -21,12 +21,6 @@ MASK_SEED = parameters.MASK_SEED
 BATCH_SIZE = parameters.BATCH_SIZE
 
 DEVICE = parameters.DEVICE
-
-
-def collate(sample):
-    graphs, labels = map(list, zip(*sample))
-    graph_batch = dgl.batch(graphs)
-    return graph_batch, torch.tensor(labels, device=labels[0].device)
 
 
 def make_complete_graph(initial_state):
@@ -252,8 +246,7 @@ def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
     return inputs, labels
 
 
-def create_dataset(alns_statistics_file, device=DEVICE):
-    inputs, labels = generate_all_inputs_and_labels(alns_statistics_file, device)
+def create_dataset(inputs, labels):
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
     train_and_val_size = int(0.8 * dataset_size)
@@ -265,10 +258,7 @@ def create_dataset(alns_statistics_file, device=DEVICE):
     return train_set, val_set, test_set
 
 
-def create_dataloaders(alns_statistics_file, device=DEVICE, batch_size=BATCH_SIZE, test_batch_size=BATCH_SIZE):
-    train_set, val_set, test_set = create_dataset(alns_statistics_file, device)
-    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
-    validation_loader = DataLoader(dataset=val_set, batch_size=test_batch_size, collate_fn=collate)
-    test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
-
-    return train_loader, validation_loader, test_loader
+def collate(sample):
+    graphs, labels = map(list, zip(*sample))
+    graph_batch = dgl_batch(graphs)
+    return graph_batch, torch.tensor(labels, device=labels[0].device)

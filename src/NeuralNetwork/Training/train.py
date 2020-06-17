@@ -5,7 +5,8 @@ import datetime
 import torch.nn as nn
 import src.NeuralNetwork.parameters as parameters
 
-from src.NeuralNetwork.Dataset.dataset_utils import create_dataloaders
+from torch.utils.data import DataLoader
+from src.NeuralNetwork.Dataset.dataset_utils import create_dataset, collate, generate_all_inputs_and_labels
 from src.NeuralNetwork.GCN import GCN
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
@@ -155,7 +156,7 @@ def main(recreate_dataset=False,
          test_batch_size=BATCH_SIZE,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
-         hidden_linear_dimensions=HIDDEN_LINEAR_DIMENSIONS,
+         hidden_linear_dimensions=None,
          output_size=OUTPUT_SIZE,
          dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH,
@@ -169,6 +170,8 @@ def main(recreate_dataset=False,
         hidden_edge_dimensions = HIDDEN_EDGE_DIMENSIONS
     if hidden_node_dimensions is None:
         hidden_node_dimensions = HIDDEN_NODE_DIMENSIONS
+    if hidden_linear_dimensions is None:
+        hidden_linear_dimensions = HIDDEN_LINEAR_DIMENSIONS
 
     """
     Use GPU if available.
@@ -187,31 +190,34 @@ def main(recreate_dataset=False,
         """
         Create the train and test sets.
         """
-        train_loader, validation_loader, test_loader = create_dataloaders(alns_statistics_file,
-                                                                          device,
-                                                                          batch_size,
-                                                                          test_batch_size)
+        inputs, labels = generate_all_inputs_and_labels(alns_statistics_file, device)
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
-                torch.save({'train_loader': train_loader,
-                            'test_loader': test_loader},
-                           DATASET_PATH + dataset_filename)
+                # Cannot use torch.save on DGL graphs, see https://github.com/dmlc/dgl/issues/1524
+                # Using pickle.dump instead
+                with open(DATASET_PATH + dataset_filename, 'wb') as dataset_file:
+                    pickle.dump({
+                        'inputs': inputs,
+                        'labels': labels
+                        }, dataset_file)
                 print("Successfully saved the data in {}".format(DATASET_PATH + dataset_filename))
     else:
-        if 'dataset_name' not in keywords_args:
-            dataset_name = DATASET_NAME
+        if 'dataset_filename' not in keywords_args:
+            dataset_filename = DATASET_NAME
         else:
-            dataset_name = keywords_args['dataset_name']
-        print("Retrieving dataset {} ... ".format(dataset_name), end='', flush=True)
-        dataset = torch.load(DATASET_PATH + dataset_name, map_location='cpu')
-        train_loader = dataset['train_loader']
-        test_loader = dataset['test_loader']
-        batch_size = train_loader.batch_size
-        test_batch_size = test_loader.batch_size
+            dataset_filename = keywords_args['dataset_filename']
+        print("Retrieving dataset {} ... ".format(dataset_filename), end='', flush=True)
+        with open(DATASET_PATH + dataset_filename, 'rb') as dataset_file:
+            dataset = pickle.load(dataset_file)
+        inputs = dataset['inputs']
+        labels = dataset['labels']
         print("Done !", flush=True)
 
+    train_set, _, test_set = create_dataset(inputs, labels)
+    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
+    test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
     number_of_node_features = len(train_loader.dataset[0][0].ndata['n_feat'][0])
     number_of_edge_features = len(train_loader.dataset[0][0].edata['e_feat'][0])
 
@@ -326,11 +332,14 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    # main(recreate_dataset=True,
-    #      alns_statistics_file='50-50_stats_1000iter.pickle',
-    #      pickle_dataset=True,
-    #      save_parameters_on_exit=False)
-    main(dataset_name='dataset_'
-                      '50-50_stats_50'
-                      '000iter.pickle',
-         save_parameters_on_exit=False)
+    recreate = 0
+    if recreate:
+        main(recreate_dataset=True,
+             alns_statistics_file='50-50_stats_1000iter.pickle',
+             pickle_dataset=True,
+             save_parameters_on_exit=False)
+    else:
+        main(dataset_filename='dataset_'
+                              '50-50_stats_1'
+                              '000iter.pickle',
+             save_parameters_on_exit=False)
