@@ -3,15 +3,16 @@ from torch.cuda import is_available as is_cuda_available
 
 ROOT_PATH = get_project_root_path()
 STATISTICS_DATA_PATH = ROOT_PATH + '/data/'
-DATASET_PATH = STATISTICS_DATA_PATH
+INPUTS_LABELS_PATH = STATISTICS_DATA_PATH
 MODEL_PARAMETERS_PATH = STATISTICS_DATA_PATH
 
 ALNS_STATISTICS_FILE = '50-50_stats_50000iter.pickle'
-DATASET_PREFIX = 'dataset_'
+INPUTS_LABELS_PREFIX = 'inputs_labels_'
 # for search&replace, here is the dataset name in the form of a string :
-# inputs_mask_labels_dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
-# dataset_50-50_stats_50000iter.pickle
-DATASET_NAME = DATASET_PREFIX + ALNS_STATISTICS_FILE
+# old : inputs_mask_labels_dataset_50-50_1inst_50nod_40cap_1dep_50000iter_0.8decay_0.35destr_18determ.pickle
+# old : dataset_50-50_stats_50000iter.pickle
+# inputs_labels_50-50_stats_50000iter.pickle
+INPUTS_LABELS_NAME = INPUTS_LABELS_PREFIX + ALNS_STATISTICS_FILE
 
 HIDDEN_NODE_DIMENSIONS = [64, 64, 64, 32]
 HIDDEN_EDGE_DIMENSIONS = [64, 64, 64, 32]

@@ -10,10 +10,10 @@ from src.NeuralNetwork.Dataset.dataset_utils import create_dataset, collate, gen
 from src.NeuralNetwork.GCN import GCN
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
-DATASET_PATH = parameters.DATASET_PATH
-DATASET_PREFIX = parameters.DATASET_PREFIX
+INPUTS_LABELS_PATH = parameters.INPUTS_LABELS_PATH
+INPUTS_LABELS_PREFIX = parameters.INPUTS_LABELS_PREFIX
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
-DATASET_NAME = parameters.DATASET_NAME
+INPUTS_LABELS_NAME = parameters.INPUTS_LABELS_NAME
 
 HIDDEN_NODE_DIMENSIONS = parameters.HIDDEN_NODE_DIMENSIONS
 HIDDEN_EDGE_DIMENSIONS = parameters.HIDDEN_EDGE_DIMENSIONS
@@ -194,22 +194,22 @@ def main(recreate_dataset=False,
         print("Created dataset !")
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:
-                dataset_filename = DATASET_PREFIX + alns_statistics_file
+                inputs_labels_name = INPUTS_LABELS_PREFIX + alns_statistics_file
                 # Cannot use torch.save on DGL graphs, see https://github.com/dmlc/dgl/issues/1524
                 # Using pickle.dump instead
-                with open(DATASET_PATH + dataset_filename, 'wb') as dataset_file:
+                with open(INPUTS_LABELS_PATH + inputs_labels_name, 'wb') as dataset_file:
                     pickle.dump({
                         'inputs': inputs,
                         'labels': labels
                         }, dataset_file)
-                print("Successfully saved the data in {}".format(DATASET_PATH + dataset_filename))
+                print("Successfully saved the data in {}".format(INPUTS_LABELS_PATH + inputs_labels_name))
     else:
-        if 'dataset_filename' not in keywords_args:
-            dataset_filename = DATASET_NAME
+        if 'inputs_labels_name' not in keywords_args:
+            inputs_labels_name = INPUTS_LABELS_NAME
         else:
-            dataset_filename = keywords_args['dataset_filename']
-        print("Retrieving dataset {} ... ".format(dataset_filename), end='', flush=True)
-        with open(DATASET_PATH + dataset_filename, 'rb') as dataset_file:
+            inputs_labels_name = keywords_args['inputs_labels_name']
+        print("Retrieving dataset {} ... ".format(inputs_labels_name), end='', flush=True)
+        with open(INPUTS_LABELS_PATH + inputs_labels_name, 'rb') as dataset_file:
             dataset = pickle.load(dataset_file)
         inputs = dataset['inputs']
         labels = dataset['labels']
@@ -339,7 +339,7 @@ if __name__ == '__main__':
              pickle_dataset=True,
              save_parameters_on_exit=False)
     else:
-        main(dataset_filename='dataset_'
-                              '50-50_stats_1'
-                              '000iter.pickle',
+        main(inputs_labels_name='dataset_'
+                                '50-50_stats_1'
+                                '000iter.pickle',
              save_parameters_on_exit=False)
