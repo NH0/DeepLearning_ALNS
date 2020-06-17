@@ -265,32 +265,10 @@ def create_dataset(alns_statistics_file, device=DEVICE):
     return train_set, val_set, test_set
 
 
-def create_dataloaders(alns_statistics_file, device, batch_size=BATCH_SIZE, test_batch_size=BATCH_SIZE):
+def create_dataloaders(alns_statistics_file, device=DEVICE, batch_size=BATCH_SIZE, test_batch_size=BATCH_SIZE):
     train_set, val_set, test_set = create_dataset(alns_statistics_file, device)
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
     validation_loader = DataLoader(dataset=val_set, batch_size=test_batch_size, collate_fn=collate)
     test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
 
     return train_loader, validation_loader, test_loader
-
-
-def pickle_dataset(dataset_name, train_loader, test_loader):
-    with open(DATASET_PATH + dataset_name, 'wb') as dataset_file:
-        try:
-            pickle.dump({'train_loader': train_loader,
-                         'test_loader': test_loader}, dataset_file)
-        except pickle.PicklingError:
-            print("Unable to pickle data...\nExiting now.")
-            exit(1)
-        print("Successfully saved the data in {}".format(DATASET_PATH + dataset_name))
-
-
-def unpickle_dataset(dataset_name):
-    with open(DATASET_PATH + dataset_name, 'rb') as dataset_file:
-        try:
-            dataset = pickle.load(dataset_file)
-        except pickle.UnpicklingError:
-            print("Error, couldn't unpickle the dataset.\nExiting now.")
-            exit(2)
-
-    return dataset['train_loader'], dataset['test_loader']

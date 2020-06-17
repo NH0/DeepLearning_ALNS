@@ -2,14 +2,14 @@ import torch
 import pickle
 import datetime
 
-import numpy as np
 import torch.nn as nn
 import src.NeuralNetwork.parameters as parameters
 
-from src.NeuralNetwork.Dataset.dataset_utils import create_dataloaders, pickle_dataset, unpickle_dataset
+from src.NeuralNetwork.Dataset.dataset_utils import create_dataloaders
 from src.NeuralNetwork.GCN import GCN
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
+DATASET_PATH = parameters.DATASET_PATH
 DATASET_PREFIX = parameters.DATASET_PREFIX
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
 DATASET_NAME = parameters.DATASET_NAME
@@ -195,14 +195,19 @@ def main(recreate_dataset=False,
         if 'pickle_dataset' in keywords_args and type(keywords_args['pickle_dataset']) is bool:
             if keywords_args['pickle_dataset']:
                 dataset_filename = DATASET_PREFIX + alns_statistics_file
-                pickle_dataset(dataset_filename, train_loader, test_loader)
+                torch.save({'train_loader': train_loader,
+                            'test_loader': test_loader},
+                           DATASET_PATH + dataset_filename)
+                print("Successfully saved the data in {}".format(DATASET_PATH + dataset_filename))
     else:
         if 'dataset_name' not in keywords_args:
             dataset_name = DATASET_NAME
         else:
             dataset_name = keywords_args['dataset_name']
         print("Retrieving dataset {} ... ".format(dataset_name), end='', flush=True)
-        train_loader, test_loader = unpickle_dataset(dataset_name)
+        dataset = torch.load(DATASET_PATH + dataset_name, map_location='cpu')
+        train_loader = dataset['train_loader']
+        test_loader = dataset['test_loader']
         batch_size = train_loader.batch_size
         test_batch_size = test_loader.batch_size
         print("Done !", flush=True)
@@ -326,5 +331,6 @@ if __name__ == '__main__':
     #      pickle_dataset=True,
     #      save_parameters_on_exit=False)
     main(dataset_name='dataset_'
-                      '50-50_stats_1000iter.pickle',
+                      '50-50_stats_50'
+                      '000iter.pickle',
          save_parameters_on_exit=False)
