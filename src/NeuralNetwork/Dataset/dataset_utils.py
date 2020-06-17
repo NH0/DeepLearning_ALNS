@@ -1,6 +1,5 @@
 import dgl
 import torch
-import pickle
 
 import src.NeuralNetwork.parameters as parameters
 
@@ -20,6 +19,8 @@ EPSILON = parameters.EPSILON
 
 MASK_SEED = parameters.MASK_SEED
 BATCH_SIZE = parameters.BATCH_SIZE
+
+DEVICE = parameters.DEVICE
 
 
 def collate(sample):
@@ -181,7 +182,7 @@ def generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device
     return inputs
 
 
-def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EPSILON):
+def generate_labels_from_cvrp_state(alns_instance_statistics, device=DEVICE, epsilon=EPSILON):
     """
     Generate the labels for each ALNS iteration. The labels can be one in 3 values :
     - (1,0,0) : if the iteration worsens the current cost
@@ -209,7 +210,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     return labels
 
 
-def generate_inputs_and_labels_for_single_instance(single_instance_statistics, device, epsilon=EPSILON):
+def generate_inputs_and_labels_for_single_instance(single_instance_statistics, device=DEVICE, epsilon=EPSILON):
     step = 1
     print("\t{} Retrieved one instance's statistics".format(step))
     step += 1
@@ -232,7 +233,7 @@ def generate_inputs_and_labels_for_single_instance(single_instance_statistics, d
     return inputs, labels
 
 
-def generate_all_inputs_and_labels(alns_statistics_file, device):
+def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
     inputs = []
     labels = []
     """
@@ -251,7 +252,7 @@ def generate_all_inputs_and_labels(alns_statistics_file, device):
     return inputs, labels
 
 
-def create_dataset(alns_statistics_file, device):
+def create_dataset(alns_statistics_file, device=DEVICE):
     inputs, labels = generate_all_inputs_and_labels(alns_statistics_file, device)
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)

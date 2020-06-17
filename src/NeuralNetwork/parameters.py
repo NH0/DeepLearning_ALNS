@@ -1,4 +1,5 @@
 from project_root_path import get_project_root_path
+from torch.cuda import is_available as is_cuda_available
 
 ROOT_PATH = get_project_root_path()
 STATISTICS_DATA_PATH = ROOT_PATH + '/data/'
@@ -25,6 +26,8 @@ LEARNING_RATE_DECREASE_FACTOR = 0.9
 
 MASK_SEED = 123456
 BATCH_SIZE = 64
+
+DEVICE = 'cuda' if is_cuda_available() else 'cpu'
 
 DISPLAY_EVERY_N_EPOCH = 5
 
