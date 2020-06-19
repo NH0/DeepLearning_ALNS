@@ -4,6 +4,8 @@ from alns.criteria import SimulatedAnnealing
 import numpy.random as rnd
 from numpy import log
 
+import time
+
 from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
 from src.ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
 from src.ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
@@ -32,7 +34,7 @@ def compute_initial_temperature(initial_solution_cost, start_temperature_control
 
 
 def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depots=NUMBER_OF_DEPOTS,
-                         iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, **kwargs):
+                         iterations=ITERATIONS, collect_statistics=COLLECT_STATISTICS, draw=False, **kwargs):
     weights = WEIGHTS
     operator_decay = OPERATOR_DECAY
     start_temperature_control = settings.START_TEMPERATURE_CONTROL
@@ -51,12 +53,18 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
         end_temperature = kwargs['end_temperature']
 
     cvrp_instance = generate_cvrp_instance(size, capacity, number_of_depots, seed)
+    print("Created CVRP graph")
     # Create an empty state
     initial_state = CvrpState(cvrp_instance, collect_alns_statistics=collect_statistics, size=size,
                               number_of_depots=number_of_depots,
                               capacity=capacity)
+    print("Created CVRP state.\nGenerating initial solution... ", end='', flush=True)
     initial_solution = generate_initial_solution(initial_state)
+    print("done !")
     initial_distance = initial_solution.objective()
+    print("Initial objective : {:.4f}".format(initial_distance))
+    if draw:
+        initial_solution.draw()
 
     # Initialize ALNS
     random_state = rnd.RandomState(seed)
@@ -70,9 +78,17 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
                                    cooling_rate)
 
     # Solve the cvrp using ALNS
+
+    print("Starting ALNS, with {} iterations".format(iterations), flush=True)
+    time_start = time.time()
     result = alns.iterate(initial_solution, weights, operator_decay, criterion, iterations=iterations,
                           collect_stats=collect_statistics)
+    time_end = time.time()
+    print("ALNS finished in {:.1f} seconds".format(time_end - time_start), flush=True)
     solution = result.best_state
+    print("Solution objective : {:.4f}".format(solution.objective()))
+    if draw:
+        solution.draw()
 
     # Create the statistics if necessary
     solution_data = {}

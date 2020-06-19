@@ -42,14 +42,6 @@ def compute_number_of_clients_to_remove(state):
     return number_of_clients_to_remove
 
 
-# def select_random_nodes(state, random_state):
-#     # We create a list containing the indexes of the client nodes
-#     # Their indexes start after their indexes of the depots by construction
-#     list_of_nodes = np.arange(state.size) + state.number_of_depots
-#
-#     return random_state.choice(list_of_nodes, compute_number_of_clients_to_remove(state), replace=False)
-
-
 def select_related_nodes(state, random_state):
     # We create a list containing the indexes of the client nodes
     # Their indexes start after their indexes of the depots by construction
