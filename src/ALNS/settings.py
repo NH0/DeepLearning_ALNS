@@ -1,7 +1,5 @@
 from project_root_path import get_project_root_path
 
-from src.NeuralNetwork.GCN import GCN
-
 SEED = 456322
 
 SIZE = 50
@@ -21,8 +19,6 @@ DETERMINISM = 18
 START_TEMPERATURE_CONTROL = 0.05
 COOLING_RATE = 0.99995
 END_TEMPERATURE = 0.01
-
-NETWORK = GCN
 
 ROOT_PATH = get_project_root_path()
 FILE_PATH = ROOT_PATH \
