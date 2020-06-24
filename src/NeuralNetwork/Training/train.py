@@ -298,7 +298,8 @@ def main(recreate_dataset=False,
     test_loss = []
     if load_parameters_from_file is not None:
         try:
-            training_state = torch.load(MODEL_PARAMETERS_PATH + load_parameters_from_file)
+            training_state = torch.load(MODEL_PARAMETERS_PATH + load_parameters_from_file,
+                                        map_location=torch.device(device))
             graph_convolutional_network.load_state_dict(training_state['graph_convolutional_network_state'])
             graph_convolutional_network.train()
             optimizer.load_state_dict(training_state['optimizer_state'])
@@ -311,7 +312,7 @@ def main(recreate_dataset=False,
             print("Unable to load parameters from {}".format(MODEL_PARAMETERS_PATH + load_parameters_from_file))
             print("Exception : {}".format(exception_value))
             should_continue = ''
-            while should_continue != 'y' or should_continue != 'n':
+            while should_continue != 'y' and should_continue != 'n':
                 should_continue = input("Continue anyway with random parameters ? (y/n) ")
             if should_continue == 'n':
                 exit(1)
