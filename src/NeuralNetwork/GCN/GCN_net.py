@@ -34,7 +34,8 @@ class GatedGCNLayer(nn.Module):
     def __init__(self, input_node_features, output_node_features,
                  input_edge_features, output_edge_features,
                  dropout_probability, has_dropout=False,
-                 has_batch_normalization=True):
+                 has_batch_normalization=True,
+                 has_graph_normalization=False):
         super(GatedGCNLayer, self).__init__()
 
         self.input_node_features = input_node_features
@@ -52,6 +53,8 @@ class GatedGCNLayer(nn.Module):
 
         self.has_dropout = has_dropout
         self.dropout_probability = dropout_probability
+
+        self.has_graph_normalization = has_graph_normalization
 
         self.U = nn.Linear(input_node_features, output_node_features, bias=True)
         self.V = nn.Linear(input_node_features, output_node_features, bias=True)
@@ -95,7 +98,7 @@ class GatedGCNLayer(nn.Module):
 
         return {'h': h}
 
-    def forward(self, graph, h, e):
+    def forward(self, graph, h, e, node_snorm, edge_snorm):
         graph.ndata['h'] = self.embedding_node(h)
         graph.ndata['Uh'] = self.U(h)
         graph.ndata['Vh'] = self.V(h)
@@ -109,6 +112,10 @@ class GatedGCNLayer(nn.Module):
         h = graph.ndata['h']
         e = graph.edata['e']
 
+        if self.has_graph_normalization:
+            h = h * node_snorm  # normalize activation w.r.t. graph size
+            e = e * edge_snorm  # normalize activation w.r.t. graph size
+
         if self.has_dropout:
             h = torch.nn.functional.dropout(h, self.dropout_probability)
             e = torch.nn.functional.dropout(e, self.dropout_probability)
@@ -116,7 +123,7 @@ class GatedGCNLayer(nn.Module):
         return h, e
 
 
-class GCN(nn.Module):
+class GCNNet(nn.Module):
     """
     Classifies an alns iteration for the CVRP (destruction & reconstruction).
 
@@ -132,7 +139,7 @@ class GCN(nn.Module):
                  output_feature,
                  dropout_probability,
                  device):
-        super(GCN, self).__init__()
+        super(GCNNet, self).__init__()
 
         if len(hidden_node_dimension_list) != len(hidden_edge_dimension_list):
             print("Node dimensions and edge dimensions lists aren't the same size !\nExiting...")
@@ -158,14 +165,16 @@ class GCN(nn.Module):
 
         self.activation = nn.ReLU()
 
-    def forward(self, graph, h_init, e_init):
+    def forward(self, graph, h_init, e_init, node_snorm, edge_snorm):
         h, e = h_init, e_init
 
         h = self.node_embedding(h)
         e = self.edge_embedding(e)
 
         for convolution in self.convolutions:
-            h, e = convolution(graph, h, e)
+            h, e = convolution(graph, h, e, node_snorm, edge_snorm)
+            h = self.activation(h)  # non-linear activation
+            e = self.activation(e)  # non-linear activation
 
         # Return a tensor of shape (hidden_dimension)
         graph.ndata['h'] = h

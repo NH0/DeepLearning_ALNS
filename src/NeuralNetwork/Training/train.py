@@ -7,7 +7,8 @@ import src.NeuralNetwork.parameters as parameters
 
 from torch.utils.data import DataLoader
 from src.NeuralNetwork.Dataset.dataset_utils import create_dataset, collate, generate_all_inputs_and_labels
-from src.NeuralNetwork.GCN import GCN
+from src.NeuralNetwork.GCN.GCN_net import GCNNet
+from src.NeuralNetwork.Gated_GCN.gated_gcn_net import GatedGCNNet
 
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
 INPUTS_LABELS_PATH = parameters.INPUTS_LABELS_PATH
@@ -29,10 +30,14 @@ LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
+NETWORK_GCN = parameters.NETWORK_GCN
+NETWORK_GATEDGCN = parameters.NETWORK_GATEDGCN
+
 
 def make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler):
     def train_step(graph_batch, label_batch):
-        logits = graph_convolutional_network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'])
+        logits = graph_convolutional_network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'],
+                                             0, 0)
         logp = softmax_function(logits)
         loss = loss_function(logp, label_batch)
 
@@ -62,6 +67,11 @@ def evaluate(network, loss_function, softmax_function, test_loader):
     The proportion of right predictions
     """
     running_loss = 0.0
+    confusion_matrix = {  # Of shape [predicted value][real value]
+        0: {0: 0, 1: 0, 2: 0},
+        1: {0: 0, 1: 0, 2: 0},
+        2: {0: 0, 1: 0, 2: 0},
+    }
     batch_size = -1
     network.eval()
     with torch.no_grad():
@@ -69,17 +79,19 @@ def evaluate(network, loss_function, softmax_function, test_loader):
         for graph_batch, label_batch in test_loader:
             if batch_size == -1:
                 batch_size = label_batch.size(0)
-            logits = network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'])
+            logits = network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'], 0, 0)
             logp = softmax_function(logits)
             running_loss += loss_function(logp, label_batch).detach().item()
-            predicted_class = torch.argmax(logits, dim=1).detach()
-            correct += (predicted_class == label_batch).sum().item()
+            predicted_classes = torch.argmax(logits, dim=1).detach()
+            correct += (predicted_classes == label_batch).sum().item()
+            for predicted_class, label in zip(predicted_classes, label_batch):
+                confusion_matrix[predicted_class.item()][label.item()] += 1
 
     if batch_size <= 0:
         print("Error : batch size is {}".format(batch_size))
         exit(1)
 
-    return correct / (len(test_loader) * batch_size), running_loss / len(test_loader)
+    return correct / (len(test_loader) * batch_size), running_loss / len(test_loader), confusion_matrix
 
 
 def evaluate_random(test_loader):
@@ -154,6 +166,7 @@ def save_model_parameters(graph_convolutional_network,
 def main(recreate_dataset=False,
          batch_size=BATCH_SIZE,
          test_batch_size=BATCH_SIZE,
+         network=NETWORK_GCN,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
          hidden_linear_dimensions=None,
@@ -201,7 +214,7 @@ def main(recreate_dataset=False,
                     pickle.dump({
                         'inputs': inputs,
                         'labels': labels
-                        }, dataset_file)
+                    }, dataset_file)
                 print("Successfully saved the data in {}".format(INPUTS_LABELS_PATH + inputs_labels_name))
     else:
         if 'inputs_labels_name' not in keywords_args:
@@ -224,16 +237,34 @@ def main(recreate_dataset=False,
     """
     Create the gated graph convolutional network
     """
-    graph_convolutional_network = GCN(input_node_features=number_of_node_features,
-                                      hidden_node_dimension_list=hidden_node_dimensions,
-                                      input_edge_features=number_of_edge_features,
-                                      hidden_edge_dimension_list=hidden_edge_dimensions,
-                                      hidden_linear_dimension_list=hidden_linear_dimensions,
-                                      output_feature=output_size,
-                                      dropout_probability=dropout_probability,
-                                      device=device)
+    if network == NETWORK_GATEDGCN:
+        net_params = {
+            'in_dim': number_of_node_features,
+            'in_dim_edge': number_of_edge_features,
+            'hidden_dim': hidden_node_dimensions[0],
+            'out_dim': hidden_node_dimensions[-1],
+            'n_classes': OUTPUT_SIZE,
+            'dropout': dropout_probability,
+            'L': len(HIDDEN_NODE_DIMENSIONS),
+            'readout': 'mean',
+            'graph_norm': False,
+            'batch_norm': False,
+            'residual': False,
+            'edge_feat': True,
+            'device': device
+        }
+        graph_convolutional_network = GatedGCNNet(net_params)
+    else:
+        graph_convolutional_network = GCNNet(input_node_features=number_of_node_features,
+                                             hidden_node_dimension_list=hidden_node_dimensions,
+                                             input_edge_features=number_of_edge_features,
+                                             hidden_edge_dimension_list=hidden_edge_dimensions,
+                                             hidden_linear_dimension_list=hidden_linear_dimensions,
+                                             output_feature=output_size,
+                                             dropout_probability=dropout_probability,
+                                             device=device)
     graph_convolutional_network = graph_convolutional_network.to(device)
-    print("Created GCN", flush=True)
+    print("Created GCNNet", flush=True)
 
     """
     Define the optimizer, the learning rate scheduler and the loss function.
@@ -247,6 +278,7 @@ def main(recreate_dataset=False,
 
     print("#" * 50)
     print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
+    print("# Using {}".format(NETWORK_GATEDGCN))
     print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
     print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
     print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
@@ -298,8 +330,8 @@ def main(recreate_dataset=False,
         try:
             running_loss = 0.0
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
-                accuracy, test_loss_element = evaluate(graph_convolutional_network,
-                                                       loss_function, softmax_function, test_loader)
+                accuracy, test_loss_element, confusion_matrix = evaluate(graph_convolutional_network,
+                                                                         loss_function, softmax_function, test_loader)
                 test_loss.append(test_loss_element)
                 random_accuracy = evaluate_random(test_loader)
                 guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader)
@@ -307,6 +339,14 @@ def main(recreate_dataset=False,
                       "always guessing null iterations {:.4f}"
                       .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
+                print("Confusion matrix :")
+                print("{:^20}|{:^5}|{:^5}|{:^5}".format('Predicted \\ Real', '0', '1', '2'))
+                print("-"*38)
+                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[0], '0 (delta > 0)'))
+                print("-" * 38)
+                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[1], '1 (delta = 0)'))
+                print("-" * 38)
+                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[2], '2 (delta < 0)'))
 
             for graph_batch, label_batch in train_loader:
                 loss = train_step(graph_batch, label_batch)
@@ -342,4 +382,6 @@ if __name__ == '__main__':
         main(inputs_labels_name='dataset_'
                                 '50-50_stats_1'
                                 '000iter.pickle',
-             save_parameters_on_exit=False)
+             network=NETWORK_GATEDGCN,
+             save_parameters_on_exit=False,
+             max_epoch=99)
