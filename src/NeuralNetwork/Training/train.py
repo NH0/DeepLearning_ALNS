@@ -26,7 +26,9 @@ EPSILON = parameters.EPSILON
 BATCH_SIZE = parameters.BATCH_SIZE
 
 INITIAL_LEARNING_RATE = parameters.INITIAL_LEARNING_RATE
+MIN_LEARNING_RATE = parameters.MIN_LEARNING_RATE
 LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
+PATIENCE = parameters.PATIENCE
 
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
@@ -38,8 +40,7 @@ def make_training_step(graph_convolutional_network, loss_function, softmax_funct
     def train_step(graph_batch, label_batch):
         logits = graph_convolutional_network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'],
                                              0, 0)
-        logp = softmax_function(logits)
-        loss = loss_function(logp, label_batch)
+        loss = loss_function(logits, label_batch)
 
         optimizer.zero_grad()
         loss.backward()
@@ -51,7 +52,7 @@ def make_training_step(graph_convolutional_network, loss_function, softmax_funct
     return train_step
 
 
-def evaluate(network, loss_function, softmax_function, test_loader):
+def evaluate(network, loss_function, softmax_function, test_loader, test_set_size):
     """
     Evaluate a neural network on a given test set.
 
@@ -80,8 +81,7 @@ def evaluate(network, loss_function, softmax_function, test_loader):
             if batch_size == -1:
                 batch_size = label_batch.size(0)
             logits = network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'], 0, 0)
-            logp = softmax_function(logits)
-            running_loss += loss_function(logp, label_batch).detach().item()
+            running_loss += loss_function(logits, label_batch).detach().item()
             predicted_classes = torch.argmax(logits, dim=1).detach()
             correct += (predicted_classes == label_batch).sum().item()
             for predicted_class, label in zip(predicted_classes, label_batch):
@@ -91,10 +91,10 @@ def evaluate(network, loss_function, softmax_function, test_loader):
         print("Error : batch size is {}".format(batch_size))
         exit(1)
 
-    return correct / (len(test_loader) * batch_size), running_loss / len(test_loader), confusion_matrix
+    return correct / test_set_size, running_loss / len(test_loader), confusion_matrix
 
 
-def evaluate_random(test_loader):
+def evaluate_random(test_loader, test_set_size):
     correct = 0
     batch_size = -1
     for _, label_batch in test_loader:
@@ -103,10 +103,10 @@ def evaluate_random(test_loader):
         random_tensor = torch.randint(0, OUTPUT_SIZE, size=label_batch.size(), device=label_batch.device)
         correct += (random_tensor == label_batch).sum().item()
 
-    return correct / (len(test_loader) * batch_size)
+    return correct / test_set_size
 
 
-def evaluate_with_null_iteration(test_loader):
+def evaluate_with_null_iteration(test_loader, test_set_size):
     correct = 0
     batch_size = -1
     for _, label_batch in test_loader:
@@ -115,31 +115,65 @@ def evaluate_with_null_iteration(test_loader):
         ones_tensor = torch.ones(size=label_batch.size(), device=label_batch.device)
         correct += (ones_tensor == label_batch).sum().item()
 
-    return correct / (len(test_loader) * batch_size)
+    return correct / test_set_size
 
 
-def display_proportion_of_null_iterations(train_loader, test_loader, batch_size, test_batch_size):
-    dataset_size = len(train_loader) * batch_size + len(test_loader) * test_batch_size
-    training_set_size = len(train_loader) * batch_size
-    test_set_size = len(test_loader) * test_batch_size
-    number_of_train_null_iterations = 0
-    number_of_test_null_iterations = 0
+def compute_classes_weights(train_loader, test_loader, device):
+    training_set_size = 0
+    test_set_size = 0
+    train_iterations = {
+        0: 0, 1: 0, 2: 0
+    }
+    test_iterations = {
+        0: 0, 1: 0, 2: 0
+    }
     for _, labels in train_loader:
         for label in labels:
-            if label.item() == 1:
-                number_of_train_null_iterations += 1
+            train_iterations[label.item()] += 1
+            training_set_size += 1
     for _, labels in test_loader:
         for label in labels:
-            if label.item() == 1:
-                number_of_test_null_iterations += 1
-    print("{:.2%} of null iterations in training set".format(
-        round(number_of_train_null_iterations / training_set_size, 4)
+            test_iterations[label.item()] += 1
+            test_set_size += 1
+    print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
+        'Training set',
+        round(train_iterations[0] / training_set_size, 4),
+        round(train_iterations[1] / training_set_size, 4),
+        round(train_iterations[2] / training_set_size, 4),
     ))
-    print("{:.2%} of null iterations in test set".format(
-        round(number_of_test_null_iterations / test_set_size, 4)
+    print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
+        'Test set',
+        round(test_iterations[0] / test_set_size, 4),
+        round(test_iterations[1] / test_set_size, 4),
+        round(test_iterations[2] / test_set_size, 4),
     ))
-    print("Dataset size : {}".format(dataset_size))
+    print("Dataset size : {}".format(training_set_size + test_set_size))
     print("Training set size : {}".format(training_set_size))
+    train_weights = [
+        1 - train_iterations[0] / training_set_size,
+        (1 - train_iterations[1] / training_set_size) / 5,
+        1 - train_iterations[2] / training_set_size,
+    ]
+    test_weights = [
+        1 - test_iterations[0] / test_set_size,
+        (1 - test_iterations[1] / test_set_size) / 5,
+        1 - test_iterations[2] / test_set_size,
+    ]
+    print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
+        'Training weights',
+        round(train_weights[0], 4),
+        round(train_weights[1], 4),
+        round(train_weights[2], 4),
+    ))
+    print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
+        'Test weights',
+        round(test_weights[0], 4),
+        round(test_weights[1], 4),
+        round(test_weights[2], 4),
+    ))
+
+    return torch.tensor(train_weights, device=device), torch.tensor(test_weights, device=device), \
+           training_set_size, test_set_size
 
 
 def save_model_parameters(graph_convolutional_network,
@@ -174,7 +208,9 @@ def main(recreate_dataset=False,
          dropout_probability=DROPOUT_PROBABILITY,
          max_epoch=MAX_EPOCH,
          initial_learning_rate=INITIAL_LEARNING_RATE,
+         min_learning_rate=MIN_LEARNING_RATE,
          learning_rate_decrease_factor=LEARNING_RATE_DECREASE_FACTOR,
+         patience=PATIENCE,
          save_parameters_on_exit=True,
          load_parameters_from_file=None,
          **keywords_args):
@@ -233,6 +269,12 @@ def main(recreate_dataset=False,
     test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
     number_of_node_features = len(train_loader.dataset[0][0].ndata['n_feat'][0])
     number_of_edge_features = len(train_loader.dataset[0][0].edata['e_feat'][0])
+    """
+    Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
+    """
+    train_weights, test_weights, training_set_size, test_set_size = compute_classes_weights(train_loader,
+                                                                                            test_loader,
+                                                                                            device)
 
     """
     Create the gated graph convolutional network
@@ -248,8 +290,8 @@ def main(recreate_dataset=False,
             'L': len(HIDDEN_NODE_DIMENSIONS),
             'readout': 'mean',
             'graph_norm': False,
-            'batch_norm': False,
-            'residual': False,
+            'batch_norm': True,
+            'residual': True,
             'edge_feat': True,
             'device': device
         }
@@ -271,10 +313,16 @@ def main(recreate_dataset=False,
     We use the Adam optimizer and a MSE loss.
     """
     optimizer = torch.optim.Adam(graph_convolutional_network.parameters(), lr=initial_learning_rate)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=learning_rate_decrease_factor)
-    loss_function = nn.NLLLoss()
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                           patience=patience,
+                                                           factor=learning_rate_decrease_factor,
+                                                           min_lr=min_learning_rate,
+                                                           verbose=True)
+    loss_function_training = nn.CrossEntropyLoss(weight=train_weights)
+    loss_function_testing = nn.CrossEntropyLoss(weight=test_weights)
     softmax_function = nn.LogSoftmax(dim=1)
-    train_step = make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler)
+    train_step = make_training_step(graph_convolutional_network,
+                                    loss_function_training, softmax_function, optimizer, scheduler)
 
     print("#" * 50)
     print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
@@ -317,11 +365,6 @@ def main(recreate_dataset=False,
             if should_continue == 'n':
                 exit(1)
 
-    """
-    Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
-    """
-    display_proportion_of_null_iterations(train_loader, test_loader, batch_size, test_batch_size)
-
     print("\nStarting training {}\n".format(chr(8987)))
 
     """
@@ -332,17 +375,20 @@ def main(recreate_dataset=False,
             running_loss = 0.0
             if epoch % DISPLAY_EVERY_N_EPOCH == 1:
                 accuracy, test_loss_element, confusion_matrix = evaluate(graph_convolutional_network,
-                                                                         loss_function, softmax_function, test_loader)
+                                                                         loss_function_testing,
+                                                                         softmax_function,
+                                                                         test_loader,
+                                                                         test_set_size)
                 test_loss.append(test_loss_element)
-                random_accuracy = evaluate_random(test_loader)
-                guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader)
+                random_accuracy = evaluate_random(test_loader, test_set_size)
+                guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader, test_set_size)
                 print("Epoch {:d}, loss {:.6f}, test_loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
                       "always guessing null iterations {:.4f}"
                       .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
                 print("Confusion matrix :")
                 print("{:^20}|{:^5}|{:^5}|{:^5}".format('Predicted \\ Real', '0', '1', '2'))
-                print("-"*38)
+                print("-" * 38)
                 print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[0], '0 (delta > 0)'))
                 print("-" * 38)
                 print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[1], '1 (delta = 0)'))
@@ -376,12 +422,14 @@ if __name__ == '__main__':
     recreate = 0
     if recreate:
         main(recreate_dataset=True,
-             alns_statistics_file='50-50_stats_1000iter.pickle',
+             alns_statistics_file='stats_1000iter.pickle',
              pickle_dataset=True,
-             save_parameters_on_exit=False)
+             save_parameters_on_exit=False,
+             network=NETWORK_GATEDGCN,
+             max_epoch=20)
     else:
-        main(inputs_labels_name='dataset_'
-                                '50-50_stats_1'
+        main(inputs_labels_name='inputs_labels_'
+                                'stats_1'
                                 '000iter.pickle',
              network=NETWORK_GATEDGCN,
              save_parameters_on_exit=False,
