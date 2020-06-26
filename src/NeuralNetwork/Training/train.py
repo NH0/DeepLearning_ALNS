@@ -121,43 +121,43 @@ def evaluate_with_null_iteration(test_loader, test_set_size):
 def compute_classes_weights(train_loader, test_loader, device):
     training_set_size = 0
     test_set_size = 0
-    train_iterations = {
+    number_of_elements_train_set = {
         0: 0, 1: 0, 2: 0
     }
-    test_iterations = {
+    number_of_elements_test_set = {
         0: 0, 1: 0, 2: 0
     }
     for _, labels in train_loader:
         for label in labels:
-            train_iterations[label.item()] += 1
+            number_of_elements_train_set[label.item()] += 1
             training_set_size += 1
     for _, labels in test_loader:
         for label in labels:
-            test_iterations[label.item()] += 1
+            number_of_elements_test_set[label.item()] += 1
             test_set_size += 1
     print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
         'Training set',
-        round(train_iterations[0] / training_set_size, 4),
-        round(train_iterations[1] / training_set_size, 4),
-        round(train_iterations[2] / training_set_size, 4),
+        round(number_of_elements_train_set[0] / training_set_size, 4),
+        round(number_of_elements_train_set[1] / training_set_size, 4),
+        round(number_of_elements_train_set[2] / training_set_size, 4),
     ))
     print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
         'Test set',
-        round(test_iterations[0] / test_set_size, 4),
-        round(test_iterations[1] / test_set_size, 4),
-        round(test_iterations[2] / test_set_size, 4),
+        round(number_of_elements_test_set[0] / test_set_size, 4),
+        round(number_of_elements_test_set[1] / test_set_size, 4),
+        round(number_of_elements_test_set[2] / test_set_size, 4),
     ))
     print("Dataset size : {}".format(training_set_size + test_set_size))
     print("Training set size : {}".format(training_set_size))
     train_weights = [
-        1 - train_iterations[0] / training_set_size,
-        (1 - train_iterations[1] / training_set_size) / 2,
-        1 - train_iterations[2] / training_set_size,
+        1 - number_of_elements_train_set[0] / training_set_size,
+        (1 - number_of_elements_train_set[1] / training_set_size) / 2,
+        1 - number_of_elements_train_set[2] / training_set_size,
     ]
     test_weights = [
-        1 - test_iterations[0] / test_set_size,
-        (1 - test_iterations[1] / test_set_size) / 2,
-        1 - test_iterations[2] / test_set_size,
+        1 - number_of_elements_test_set[0] / test_set_size,
+        (1 - number_of_elements_test_set[1] / test_set_size) / 2,
+        1 - number_of_elements_test_set[2] / test_set_size,
     ]
     print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
         'Training weights',
