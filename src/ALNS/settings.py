@@ -2,8 +2,8 @@ from project_root_path import get_project_root_path
 
 SEED = 456322
 
-SIZE = 50
-CAPACITY = 40
+SIZE = 19
+CAPACITY = 14
 NUMBER_OF_DEPOTS = 1
 
 NUMBER_OF_INSTANCES = 1
