@@ -25,5 +25,5 @@ END_TEMPERATURE = 0.01
 ROOT_PATH = get_project_root_path()
 FILE_PATH = ROOT_PATH \
             + "/data/"\
-            + "stats_{0}iter.pickle".format(ITERATIONS)
+            + "stats_{0}it{1}in.pickle".format(ITERATIONS, NUMBER_OF_INSTANCES)
 FILE_MODE = 'wb'
