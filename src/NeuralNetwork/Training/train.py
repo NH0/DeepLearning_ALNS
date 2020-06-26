@@ -386,13 +386,13 @@ def main(recreate_dataset=False,
                       .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
                 print("Confusion matrix :")
-                print("{:^20}|{:^5}|{:^5}|{:^5}".format('Predicted \\ Real', '0', '1', '2'))
+                print("{:^20}|{:^7}|{:^7}|{:^7}".format('Predicted \\ Real', '0', '1', '2'))
                 print("-" * 38)
-                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[0], '0 (delta > 0)'))
+                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[0], '0 (delta > 0)'))
                 print("-" * 38)
-                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[1], '1 (delta = 0)'))
+                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[1], '1 (delta = 0)'))
                 print("-" * 38)
-                print("{1:^20}|{0[0]:^5}|{0[1]:^5}|{0[2]:^5}".format(confusion_matrix[2], '2 (delta < 0)'))
+                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[2], '2 (delta < 0)'))
 
             for graph_batch, label_batch in train_loader:
                 loss = train_step(graph_batch, label_batch)
