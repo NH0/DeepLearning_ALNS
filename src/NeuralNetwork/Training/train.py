@@ -263,7 +263,7 @@ def main(recreate_dataset=False,
         labels = dataset['labels']
         print("Done !", flush=True)
 
-    train_set, _, test_set = create_dataset(inputs, labels)
+    train_set, test_set = create_dataset(inputs, labels)
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
     test_loader = DataLoader(dataset=test_set, batch_size=test_batch_size, collate_fn=collate)
     number_of_node_features = len(train_loader.dataset[0][0].ndata['n_feat'][0])
