@@ -157,16 +157,19 @@ def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
     return inputs, labels
 
 
-def create_dataset(inputs, labels):
+def create_dataset(inputs, labels, validation_set=False):
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
     train_and_val_size = int(0.8 * dataset_size)
     train_size = int(0.8 * train_and_val_size)
     torch.manual_seed(MASK_SEED)
-    train__and_val_set, test_set = random_split(dataset, [train_and_val_size, dataset_size - train_and_val_size])
-    train_set, val_set = random_split(train__and_val_set, [train_size, train_and_val_size - train_size])
+    train_and_val_set, test_set = random_split(dataset, [train_and_val_size, dataset_size - train_and_val_size])
+    if validation_set:
+        train_set, val_set = random_split(train_and_val_set, [train_size, train_and_val_size - train_size])
 
-    return train_set, val_set, test_set
+        return train_set, val_set, test_set
+
+    return train_and_val_set, test_set
 
 
 def collate(sample):
