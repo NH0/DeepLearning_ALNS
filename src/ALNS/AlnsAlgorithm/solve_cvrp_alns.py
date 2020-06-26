@@ -34,6 +34,8 @@ NETWORK_PARAMS_FILE = parameters.NETWORK_PARAMS_FILE
 NETWORK_GCN = parameters.NETWORK_GCN
 NETWORK_GATEDGCN = parameters.NETWORK_GATEDGCN
 
+EPSILON = parameters.EPSILON
+
 
 def compute_initial_temperature(initial_solution_cost, start_temperature_control):
     return - initial_solution_cost * start_temperature_control / log(0.5)
@@ -47,6 +49,8 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     cooling_rate = settings.COOLING_RATE
     end_temperature = settings.END_TEMPERATURE
 
+    verbose = False
+
     if 'weights' in kwargs:
         weights = kwargs['weights']
     if 'operator_decay' in kwargs:
@@ -57,18 +61,22 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
         cooling_rate = kwargs['cooling_rate']
     if 'end_temperature' in kwargs:
         end_temperature = kwargs['end_temperature']
+    if 'verbose' in kwargs:
+        verbose = kwargs['verbose']
 
     cvrp_instance = generate_cvrp_instance(size, capacity, number_of_depots, seed)
-    print("Created CVRP graph")
+    if verbose:
+        print("Created CVRP graph")
     # Create an empty state
     initial_state = CvrpState(cvrp_instance, collect_alns_statistics=collect_statistics, size=size,
                               number_of_depots=number_of_depots,
                               capacity=capacity)
-    print("Created CVRP state.\nGenerating initial solution... ", end='', flush=True)
+    if verbose:
+        print("Created CVRP state.\nGenerating initial solution... ", end='', flush=True)
     initial_solution = generate_initial_solution(initial_state)
-    print("done !")
+    if verbose:
+        print("done !")
     initial_distance = initial_solution.objective()
-    print("Initial objective : {:.4f}".format(initial_distance))
     if draw:
         initial_solution.draw()
     number_of_node_features = len(initial_solution.dgl_graph.ndata['n_feat'][0])
@@ -81,7 +89,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     #                                                    NETWORK_PARAMS_FILE, NETWORK_GCN)
     ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
                                                        'GatedGCN_ep71.pkl', NETWORK_GATEDGCN)
-    alns.add_destroy_operator(ml_removal_heuristic)
+    alns.add_destroy_operator(removal_heuristic)
     alns.add_repair_operator(greedy_insertion)
 
     initial_temperature = compute_initial_temperature(initial_distance, start_temperature_control)
@@ -98,6 +106,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     time_end = time.time()
     print("ALNS finished in {:.1f} seconds".format(time_end - time_start), flush=True)
     solution = result.best_state
+    print("Initial objective : {:.4f}".format(initial_distance))
     print("Solution objective : {:.4f}".format(solution.objective()))
     if draw:
         solution.draw()
@@ -119,6 +128,25 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
                                for i in range(iterations)]
         solution_data['Statistics'] = solution_statistics
 
+        if 'display_proportion_objective_difference' in kwargs and kwargs['display_proportion_objective_difference']:
+            number_of_elements_train_set = {
+                0: 0, 1: 0, 2: 0
+            }
+            for stat in solution_statistics:
+                if stat['objective_difference'] > 0:
+                    stat_class = 0
+                elif abs(stat['objective_difference']) < EPSILON:
+                    stat_class = 1
+                else:
+                    stat_class = 2
+                number_of_elements_train_set[stat_class] += 1
+            print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}\n\n".format(
+                'Proportions',
+                round(number_of_elements_train_set[0] / iterations, 4),
+                round(number_of_elements_train_set[1] / iterations, 4),
+                round(number_of_elements_train_set[2] / iterations, 4),
+            ))
+
         if 'pickle_single_stat' in kwargs and kwargs['pickle_single_stat']:
             if 'file_path' in kwargs:
                 pickle_alns_solution_stats(solution_data, file_path=kwargs['file_path'])
@@ -135,4 +163,11 @@ if __name__ == '__main__':
     #                        capacity=CAPACITY)
     # main_initial_solution = generate_initial_solution(void_state)
     # main_initial_solution.draw()
-    solve_cvrp_with_alns(size=30, iterations=1000, collect_statistics=False, draw=True)
+    total = 10
+    for i in range(total):
+        seed = rnd.randint(1, 1e6)
+        print("\n\n{} / {} New cvrp problem seed {}".format(i, total, seed))
+        solve_cvrp_with_alns(seed=seed, size=30, iterations=50, collect_statistics=True, draw=False,
+                             display_proportion_objective_difference=True)
+        solve_cvrp_with_alns(seed=seed, size=30, iterations=500, collect_statistics=True, draw=False,
+                             display_proportion_objective_difference=True)

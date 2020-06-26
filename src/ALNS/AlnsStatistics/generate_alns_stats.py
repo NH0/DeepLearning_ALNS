@@ -35,7 +35,7 @@ def generate_stats(file_path=FILE_PATH, number_of_stats=NUMBER_OF_INSTANCES, add
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        generate_stats()
+        generate_stats(file_path='stats_profiling.pickle')
     elif len(sys.argv) == 2:
         generate_stats(sys.argv[1])
     elif len(sys.argv) == 3:
