@@ -857,3 +857,96 @@ Confusion matrix :
    1 (delta = 0)    | 119 | 256 | 136 
 --------------------------------------
    2 (delta < 0)    |  0  |  0  |  0  
+Epoch 461, loss 1.042533, test_loss 1.038913, accuracy 0.5000, random accuracy 0.3496, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 466, loss 1.041305, test_loss 1.038912, accuracy 0.5000, random accuracy 0.3145, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 471, loss 1.040479, test_loss 1.038912, accuracy 0.5000, random accuracy 0.3691, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 476, loss 1.041706, test_loss 1.038911, accuracy 0.5000, random accuracy 0.3281, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 481, loss 1.040879, test_loss 1.038910, accuracy 0.5000, random accuracy 0.3203, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 486, loss 1.044159, test_loss 1.038910, accuracy 0.5000, random accuracy 0.3496, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 491, loss 1.041705, test_loss 1.038909, accuracy 0.5000, random accuracy 0.3242, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 496, loss 1.044565, test_loss 1.038909, accuracy 0.5000, random accuracy 0.3496, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 501, loss 1.042537, test_loss 1.038908, accuracy 0.5000, random accuracy 0.3418, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 506, loss 1.043338, test_loss 1.038908, accuracy 0.5000, random accuracy 0.3398, always guessing null iterations 0.5000
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    |  0  |  0  |  0  
+--------------------------------------
+   1 (delta = 0)    | 119 | 256 | 136 
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Received keyboard interrupt.
+Saving parameters before quiting ...
+Successfully saved the model's parameters in /scratch1/flethi/Code/data/GCNparams_ep507_lr0.001_devcuda_LogSoftmax.pt
