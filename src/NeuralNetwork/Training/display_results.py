@@ -29,7 +29,11 @@ def parse_result(result_file_path):
                 hidden_linear_dimension = re.search(r"(\[(\d+, )*\d+\]|\d+)$", line).group()
             elif line.startswith("Epoch"):
                 if not has_display_every_n_epoch:
-                    epoch = int(re.search(r"Epoch (\d+)", line).group(1))
+                    search = re.search(r"Epoch (\d+),", line)
+                    if search is not None:
+                        epoch = int(search.group(1))
+                    else:
+                        continue
                     if start_epoch == -1:
                         start_epoch = epoch
                     else:
