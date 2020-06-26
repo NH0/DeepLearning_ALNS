@@ -25,6 +25,7 @@ def generate_stats(file_path=FILE_PATH, number_of_stats=NUMBER_OF_INSTANCES, add
     else:
         for i in range(number_of_stats):
             seed = np.random.randint(0, 2 ** 32 - 1)
+            print(" {} / {} ".format(i + 1, number_of_stats), end='')
             pickle_alns_solution_stats(result=solve_cvrp_with_alns(seed=seed, size=SIZE, capacity=CAPACITY,
                                                                    number_of_depots=NUMBER_OF_DEPOTS,
                                                                    iterations=ITERATIONS,
