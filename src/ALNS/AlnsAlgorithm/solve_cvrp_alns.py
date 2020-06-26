@@ -8,11 +8,13 @@ import time
 
 from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
 from src.ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
+from src.ALNS.AlnsAlgorithm.ml_removal_heuristics import define_ml_removal_heuristic
 from src.ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
 from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
 from src.ALNS.CVRP.CVRP import CvrpState, generate_initial_solution
 
 import src.ALNS.settings as settings
+import src.NeuralNetwork.parameters as parameters
 
 SEED = settings.SEED
 
@@ -27,6 +29,10 @@ ITERATIONS = settings.NUMBER_OF_DEPOTS
 WEIGHTS = settings.WEIGHTS
 OPERATOR_DECAY = settings.OPERATOR_DECAY
 COLLECT_STATISTICS = settings.COLLECT_STATISTICS
+
+NETWORK_PARAMS_FILE = parameters.NETWORK_PARAMS_FILE
+NETWORK_GCN = parameters.NETWORK_GCN
+NETWORK_GATEDGCN = parameters.NETWORK_GATEDGCN
 
 
 def compute_initial_temperature(initial_solution_cost, start_temperature_control):
@@ -65,11 +71,17 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     print("Initial objective : {:.4f}".format(initial_distance))
     if draw:
         initial_solution.draw()
+    number_of_node_features = len(initial_solution.dgl_graph.ndata['n_feat'][0])
+    number_of_edge_features = len(initial_solution.dgl_graph.edata['e_feat'][0])
 
     # Initialize ALNS
     random_state = rnd.RandomState(seed)
     alns = ALNS(random_state)
-    alns.add_destroy_operator(removal_heuristic)
+    # ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
+    #                                                    NETWORK_PARAMS_FILE, NETWORK_GCN)
+    ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
+                                                       'GatedGCN_ep71.pkl', NETWORK_GATEDGCN)
+    alns.add_destroy_operator(ml_removal_heuristic)
     alns.add_repair_operator(greedy_insertion)
 
     initial_temperature = compute_initial_temperature(initial_distance, start_temperature_control)
@@ -117,9 +129,10 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
 
 
 if __name__ == '__main__':
-    initial_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
-    void_state = CvrpState(initial_instance, collect_alns_statistics=False, size=SIZE,
-                           number_of_depots=NUMBER_OF_DEPOTS,
-                           capacity=CAPACITY)
-    main_initial_solution = generate_initial_solution(void_state)
-    main_initial_solution.draw()
+    # initial_instance = generate_cvrp_instance(SIZE, CAPACITY, NUMBER_OF_DEPOTS, SEED)
+    # void_state = CvrpState(initial_instance, collect_alns_statistics=False, size=SIZE,
+    #                        number_of_depots=NUMBER_OF_DEPOTS,
+    #                        capacity=CAPACITY)
+    # main_initial_solution = generate_initial_solution(void_state)
+    # main_initial_solution.draw()
+    solve_cvrp_with_alns(size=30, iterations=1000, collect_statistics=False, draw=True)

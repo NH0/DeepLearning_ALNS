@@ -38,7 +38,8 @@ def generate_dgl_graph(nx_graph):
 
 def initialize_dgl_features(cvrp_state, dgl_graph, destroyed_nodes, list_of_edges, device):
     nx_graph = cvrp_state.instance
-    number_of_nodes = nx_graph.number_of_nodes()
+    number_of_nodes = dgl_graph.number_of_nodes()
+    number_of_edges = dgl_graph.number_of_edges()
 
     node_features = [[cvrp_state.capacity - nx_graph.nodes[node]['demand'],
                       1 if nx_graph.nodes[node]['isDepot'] else 0,
@@ -52,3 +53,10 @@ def initialize_dgl_features(cvrp_state, dgl_graph, destroyed_nodes, list_of_edge
     edge_features_tensor = torch.tensor(edge_features, dtype=torch.float, device=device)
     dgl_graph.ndata['n_feat'] = node_features_tensor
     dgl_graph.edata['e_feat'] = edge_features_tensor
+
+    node_snorm = torch.tensor((number_of_nodes, 1),
+                              dtype=torch.float, device=device).fill_(1./float(number_of_nodes)).sqrt()
+    edge_snorm = torch.tensor((number_of_edges, 1),
+                              dtype=torch.float, device=device).fill_(1./float(number_of_edges)).sqrt()
+
+    return node_snorm, edge_snorm

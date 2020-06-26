@@ -13,9 +13,9 @@ def initialize_dgl_graph(state):
     nx_complete_graph = nx_graph.copy()
     make_complete_nx_graph(nx_complete_graph)
     dgl_graph = generate_dgl_graph(nx_complete_graph)
-    initialize_dgl_features(state, dgl_graph, [], nx.to_edgelist(nx_graph), 'cpu')
+    node_snorm, edge_snorm = initialize_dgl_features(state, dgl_graph, [], nx.to_edgelist(nx_graph), 'cpu')
 
-    return dgl_graph
+    return dgl_graph, node_snorm, edge_snorm
 
 
 class CvrpState(State):
@@ -68,7 +68,7 @@ class CvrpState(State):
 
         self.distances = compute_adjacency_matrix(self)
 
-        self.dgl_graph = initialize_dgl_graph(self)
+        self.dgl_graph, self.node_snorm, self.edge_snorm = initialize_dgl_graph(self)
 
         self.collect_alns_statistics = collect_alns_statistics
 
