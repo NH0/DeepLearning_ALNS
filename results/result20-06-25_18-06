@@ -1499,3 +1499,66 @@ Confusion matrix :
    1 (delta = 0)    | 88  |6535 | 62  
 --------------------------------------
    2 (delta < 0)    |  2  | 18  |  1  
+Epoch 816, loss 0.939512, test_loss 0.956823, accuracy 0.6453, random accuracy 0.3297, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 179 |3340 | 57  
+--------------------------------------
+   1 (delta = 0)    | 87  |6274 | 63  
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 821, loss 0.938825, test_loss 0.948212, accuracy 0.6258, random accuracy 0.3390, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 190 |3546 | 62  
+--------------------------------------
+   1 (delta = 0)    | 76  |6068 | 58  
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 826, loss 0.940676, test_loss 0.950901, accuracy 0.6247, random accuracy 0.3340, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 193 |3560 | 62  
+--------------------------------------
+   1 (delta = 0)    | 73  |6054 | 58  
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 831, loss 0.941717, test_loss 0.963043, accuracy 0.6163, random accuracy 0.3367, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 184 |3524 | 55  
+--------------------------------------
+   1 (delta = 0)    | 71  |5976 | 62  
+--------------------------------------
+   2 (delta < 0)    | 11  | 114 |  3  
+Epoch 836, loss 0.946976, test_loss 0.975047, accuracy 0.6351, random accuracy 0.3292, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 178 |3283 | 51  
+--------------------------------------
+   1 (delta = 0)    | 76  |6168 | 64  
+--------------------------------------
+   2 (delta < 0)    | 12  | 163 |  5  
+Epoch 841, loss 0.941052, test_loss 0.959889, accuracy 0.7111, random accuracy 0.3383, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 159 |2662 | 47  
+--------------------------------------
+   1 (delta = 0)    | 107 |6952 | 73  
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
+Epoch 846, loss 0.937253, test_loss 0.949208, accuracy 0.6375, random accuracy 0.3303, always guessing null iterations 0.9614
+Confusion matrix :
+  Predicted \ Real  |  0  |  1  |  2  
+--------------------------------------
+   0 (delta > 0)    | 182 |3421 | 63  
+--------------------------------------
+   1 (delta = 0)    | 84  |6193 | 57  
+--------------------------------------
+   2 (delta < 0)    |  0  |  0  |  0  
