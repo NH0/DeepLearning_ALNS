@@ -146,8 +146,10 @@ def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
     """
     alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
     alns_instances_statistics = retrieve_alns_stats(alns_statistics_path)
-    print("{} instances in the statistics file.".format(len(alns_instances_statistics)))
-    for single_instance_statistics in alns_instances_statistics:
+    number_of_instances = len(alns_instances_statistics)
+    print("{} instances in the statistics file.".format(number_of_instances))
+    for i, single_instance_statistics in enumerate(alns_instances_statistics):
+        print("{} / {} ".format(i + 1, number_of_instances), end='')
         single_instance_inputs, single_instance_labels = \
             generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
         inputs += single_instance_inputs
