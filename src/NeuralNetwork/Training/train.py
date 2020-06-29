@@ -150,12 +150,12 @@ def compute_classes_weights(train_loader, test_loader, device):
     print("Training set size : {}".format(training_set_size))
     train_weights = [
         1 - number_of_elements_train_set[0] / training_set_size,
-        (1 - number_of_elements_train_set[1] / training_set_size) / 2,
+        1 - number_of_elements_train_set[1] / training_set_size,
         1 - number_of_elements_train_set[2] / training_set_size,
     ]
     test_weights = [
         1 - number_of_elements_test_set[0] / test_set_size,
-        (1 - number_of_elements_test_set[1] / test_set_size) / 2,
+        1 - number_of_elements_test_set[1] / test_set_size,
         1 - number_of_elements_test_set[2] / test_set_size,
     ]
     print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
