@@ -289,8 +289,8 @@ def main(recreate_dataset=False,
             'L': len(HIDDEN_NODE_DIMENSIONS),
             'readout': 'mean',
             'graph_norm': False,
-            'batch_norm': True,
-            'residual': True,
+            'batch_norm': False,
+            'residual': False,
             'edge_feat': True,
             'device': device
         }
