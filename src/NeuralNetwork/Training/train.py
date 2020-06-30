@@ -175,6 +175,17 @@ def compute_classes_weights(train_loader, test_loader, device):
            training_set_size, test_set_size
 
 
+def display_confusion_matrix(confusion_matrix):
+    print("Confusion matrix :")
+    print("{:^20}|{:^7}|{:^7}|{:^7}".format('Predicted \\ Real', '0', '1', '2'))
+    print("-" * 38)
+    print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[0], '0 (delta > 0)'))
+    print("-" * 38)
+    print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[1], '1 (delta = 0)'))
+    print("-" * 38)
+    print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[2], '2 (delta < 0)'))
+
+
 def save_model_parameters(graph_convolutional_network,
                           optimizer,
                           softmax_function_name,
@@ -385,14 +396,7 @@ def main(recreate_dataset=False,
                       "always guessing null iterations {:.4f}"
                       .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
                               guessing_null_iteration_accuracy))
-                print("Confusion matrix :")
-                print("{:^20}|{:^7}|{:^7}|{:^7}".format('Predicted \\ Real', '0', '1', '2'))
-                print("-" * 38)
-                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[0], '0 (delta > 0)'))
-                print("-" * 38)
-                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[1], '1 (delta = 0)'))
-                print("-" * 38)
-                print("{1:^20}|{0[0]:^7}|{0[1]:^7}|{0[2]:^7}".format(confusion_matrix[2], '2 (delta < 0)'))
+                display_confusion_matrix(confusion_matrix)
 
             for graph_batch, label_batch in train_loader:
                 loss = train_step(graph_batch, label_batch)
@@ -402,6 +406,13 @@ def main(recreate_dataset=False,
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
+            print("Computing confusion matrix on training data.")
+            _, _, train_confusion_matrix = evaluate(graph_convolutional_network,
+                                                    loss_function_testing,
+                                                    softmax_function,
+                                                    train_loader,
+                                                    training_set_size)
+            display_confusion_matrix(train_confusion_matrix)
             if save_parameters_on_exit:
                 print("Saving parameters before quiting ...", flush=True)
                 save_model_parameters(graph_convolutional_network,
@@ -409,6 +420,14 @@ def main(recreate_dataset=False,
                                       str(softmax_function.__class__()).partition('(')[0],
                                       initial_learning_rate, epoch, training_loss, test_loss, device)
             exit(0)
+
+    print("Computing confusion matrix on training data.")
+    _, _, train_confusion_matrix = evaluate(graph_convolutional_network,
+                                            loss_function_testing,
+                                            softmax_function,
+                                            train_loader,
+                                            training_set_size)
+    display_confusion_matrix(train_confusion_matrix)
 
     if save_parameters_on_exit:
         save_model_parameters(graph_convolutional_network,
