@@ -44,7 +44,6 @@ def make_training_step(graph_convolutional_network, loss_function, softmax_funct
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        scheduler.step(loss)
 
         return loss.detach().item()
 
@@ -402,7 +401,9 @@ def main(recreate_dataset=False,
                 loss = train_step(graph_batch, label_batch)
                 running_loss += loss
 
-            training_loss.append(running_loss / len(train_loader))
+            epoch_loss = running_loss / len(train_loader)
+            scheduler.step(epoch_loss)
+            training_loss.append(epoch_loss)
 
         except KeyboardInterrupt:
             print("Received keyboard interrupt.")
