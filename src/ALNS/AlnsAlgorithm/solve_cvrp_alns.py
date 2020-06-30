@@ -163,11 +163,11 @@ if __name__ == '__main__':
     #                        capacity=CAPACITY)
     # main_initial_solution = generate_initial_solution(void_state)
     # main_initial_solution.draw()
-    total = 10
+    total = 5
     for i in range(total):
         seed = rnd.randint(1, 1e6)
-        print("\n\n{} / {} New cvrp problem seed {}".format(i, total, seed))
-        solve_cvrp_with_alns(seed=seed, size=30, iterations=50, collect_statistics=True, draw=False,
+        print("\n\n{} / {} New cvrp problem seed {}".format(i + 1, total, seed))
+        solve_cvrp_with_alns(seed=seed, size=30, iterations=30, collect_statistics=True, draw=False,
                              display_proportion_objective_difference=True)
-        solve_cvrp_with_alns(seed=seed, size=30, iterations=500, collect_statistics=True, draw=False,
+        solve_cvrp_with_alns(seed=seed, size=30, iterations=50, collect_statistics=True, draw=False,
                              display_proportion_objective_difference=True)
