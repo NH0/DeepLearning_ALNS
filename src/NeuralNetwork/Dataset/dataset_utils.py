@@ -1,4 +1,5 @@
 import torch
+import random
 
 import src.NeuralNetwork.parameters as parameters
 
@@ -46,6 +47,34 @@ def create_cvrp_state(size, number_of_depots, capacity, seed):
     make_complete_nx_graph(initial_state.instance)
 
     return initial_state
+
+
+def remove_class_1_elements(alns_instance_statistics, epsilon=EPSILON):
+    number_of_iterations = len(alns_instance_statistics)
+    number_of_class_1_elements = 0
+    for iteration in alns_instance_statistics['Statistics']:
+        if abs(iteration['objective_difference']) <= epsilon:
+            number_of_class_1_elements += 1
+    number_of_class_1_to_remove = int((3 * number_of_class_1_elements - number_of_iterations) / 2)
+    if number_of_class_1_to_remove <= 0:
+
+        return 0
+
+    new_statistics = []
+    # To avoid removing only first iterations, which may lead to a bias in the dataset, we first shuffle the iterations
+    random.shuffle(alns_instance_statistics)
+    number_of_class_1_removed = 0
+    for iteration in alns_instance_statistics['Statistics']:
+        if abs(iteration['objective_difference']) > epsilon:
+            new_statistics.append(iteration)
+        elif number_of_class_1_removed < number_of_class_1_to_remove:
+            new_statistics.append(iteration)
+            number_of_class_1_removed += 1
+        else:
+            continue
+    alns_instance_statistics['Statistics'] = new_statistics
+
+    return number_of_class_1_to_remove
 
 
 def generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device):
@@ -118,6 +147,9 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device=DEVICE, eps
 def generate_inputs_and_labels_for_single_instance(single_instance_statistics, device=DEVICE, epsilon=EPSILON):
     step = 1
     print("\t{} Retrieved one instance's statistics".format(step))
+    step += 1
+    number_of_class_1_removed = remove_class_1_elements(single_instance_statistics, epsilon=epsilon)
+    print("\t{} Removed {} class 1 elements (delta = 0) from iterations.".format(step, number_of_class_1_removed))
     step += 1
 
     """
