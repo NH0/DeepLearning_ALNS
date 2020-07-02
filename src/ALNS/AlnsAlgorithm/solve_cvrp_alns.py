@@ -166,8 +166,6 @@ if __name__ == '__main__':
     total = 5
     for i in range(total):
         seed = rnd.randint(1, 1e6)
-        print("\n\n{} / {} New cvrp problem seed {}".format(i + 1, total, seed))
+        print("{} / {} New cvrp problem seed {}".format(i + 1, total, seed))
         solve_cvrp_with_alns(seed=seed, size=30, iterations=30, collect_statistics=True, draw=False,
-                             display_proportion_objective_difference=True)
-        solve_cvrp_with_alns(seed=seed, size=30, iterations=50, collect_statistics=True, draw=False,
                              display_proportion_objective_difference=True)
