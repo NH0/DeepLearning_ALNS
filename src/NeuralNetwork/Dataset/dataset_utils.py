@@ -62,7 +62,7 @@ def remove_class_1_elements(alns_instance_statistics, epsilon=EPSILON):
 
     new_statistics = []
     # To avoid removing only first iterations, which may lead to a bias in the dataset, we first shuffle the iterations
-    random.shuffle(alns_instance_statistics)
+    random.shuffle(alns_instance_statistics['Statistics'])
     number_of_class_1_removed = 0
     for iteration in alns_instance_statistics['Statistics']:
         if abs(iteration['objective_difference']) > epsilon:
