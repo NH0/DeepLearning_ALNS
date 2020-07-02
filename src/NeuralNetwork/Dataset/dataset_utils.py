@@ -50,7 +50,7 @@ def create_cvrp_state(size, number_of_depots, capacity, seed):
 
 
 def remove_class_1_elements(alns_instance_statistics, epsilon=EPSILON):
-    number_of_iterations = len(alns_instance_statistics)
+    number_of_iterations = len(alns_instance_statistics['Statistics'])
     number_of_class_1_elements = 0
     for iteration in alns_instance_statistics['Statistics']:
         if abs(iteration['objective_difference']) <= epsilon:
