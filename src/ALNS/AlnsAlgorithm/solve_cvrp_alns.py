@@ -133,7 +133,7 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
                 0: 0, 1: 0, 2: 0
             }
             for stat in solution_statistics:
-                if stat['objective_difference'] > 0:
+                if stat['objective_difference'] > EPSILON:
                     stat_class = 0
                 elif abs(stat['objective_difference']) < EPSILON:
                     stat_class = 1

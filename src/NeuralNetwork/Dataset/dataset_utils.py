@@ -106,7 +106,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device=DEVICE, eps
     -------
     labels
     """
-    labels = torch.tensor([0 if iteration['objective_difference'] > 0
+    labels = torch.tensor([0 if iteration['objective_difference'] > epsilon
                            else 1 if abs(iteration['objective_difference']) <= epsilon
                            else 2
                            for iteration in alns_instance_statistics['Statistics']],
