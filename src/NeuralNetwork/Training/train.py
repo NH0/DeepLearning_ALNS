@@ -438,10 +438,10 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    recreate = 0
+    recreate = 1
     if recreate:
         main(recreate_dataset=True,
-             alns_statistics_file='stats_1000iter.pickle',
+             alns_statistics_file='stats_30it50in.pickle',
              pickle_dataset=True,
              save_parameters_on_exit=False,
              network=NETWORK_GATEDGCN,
