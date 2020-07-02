@@ -8,7 +8,7 @@ import time
 
 from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
 from src.ALNS.AlnsAlgorithm.removal_heuristics import removal_heuristic
-from src.ALNS.AlnsAlgorithm.ml_removal_heuristics import define_ml_removal_heuristic
+# from src.ALNS.AlnsAlgorithm.ml_removal_heuristics import define_ml_removal_heuristic
 from src.ALNS.AlnsAlgorithm.repair_heuristics import greedy_insertion
 from src.ALNS.AlnsStatistics.pickle_stats import pickle_alns_solution_stats
 from src.ALNS.CVRP.CVRP import CvrpState, generate_initial_solution
@@ -87,8 +87,8 @@ def solve_cvrp_with_alns(seed=SEED, size=SIZE, capacity=CAPACITY, number_of_depo
     alns = ALNS(random_state)
     # ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
     #                                                    NETWORK_PARAMS_FILE, NETWORK_GCN)
-    ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
-                                                       'GatedGCN_ep71.pkl', NETWORK_GATEDGCN)
+    # ml_removal_heuristic = define_ml_removal_heuristic(number_of_node_features, number_of_edge_features,
+    #                                                    'GatedGCN_ep71.pkl', NETWORK_GATEDGCN)
     alns.add_destroy_operator(removal_heuristic)
     alns.add_repair_operator(greedy_insertion)
 
