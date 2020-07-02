@@ -28,21 +28,19 @@ def parse_result(result_file_path):
             elif line.startswith("# Hidden linear dimension"):
                 hidden_linear_dimension = re.search(r"(\[(\d+, )*\d+\]|\d+)$", line).group()
             elif line.startswith("Epoch"):
-                if not has_display_every_n_epoch:
-                    search = re.search(r"Epoch (\d+),", line)
-                    if search is not None:
+                search = re.search(r"Epoch (\d+),", line)
+                if search is not None:
+                    if not has_display_every_n_epoch:
                         epoch = int(search.group(1))
-                    else:
-                        continue
-                    if start_epoch == -1:
-                        start_epoch = epoch
-                    else:
-                        display_every_n_epoch = epoch - start_epoch
-                        has_display_every_n_epoch = True
-                loss.append(float(re.search(r"loss (-?[0-9]+\.[0-9]+)", line).group(1)))
-                test_loss_epoch = re.search(r"test_loss (-?[0-9]+\.[0-9]+)", line).group(1)
-                if test_loss_epoch is not None:
-                    test_loss.append(float(test_loss_epoch))
+                        if start_epoch == -1:
+                            start_epoch = epoch
+                        else:
+                            display_every_n_epoch = epoch - start_epoch
+                            has_display_every_n_epoch = True
+                    loss.append(float(re.search(r"loss (-?[0-9]+\.[0-9]+)", line).group(1)))
+                    test_loss_epoch = re.search(r"test_loss (-?[0-9]+\.[0-9]+)", line).group(1)
+                    if test_loss_epoch is not None:
+                        test_loss.append(float(test_loss_epoch))
 
     return {'loss': loss,
             'test_loss': test_loss,
