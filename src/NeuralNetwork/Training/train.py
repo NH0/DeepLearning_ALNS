@@ -407,7 +407,8 @@ def main(recreate_dataset=False,
                 running_loss += loss
 
             epoch_loss = running_loss / len(train_loader)
-            scheduler.step(epoch_loss)
+            if epoch > 1000:
+                scheduler.step(epoch_loss)
             training_loss.append(epoch_loss)
 
         except KeyboardInterrupt:
