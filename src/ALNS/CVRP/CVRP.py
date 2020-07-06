@@ -4,6 +4,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from src.ALNS.AlnsAlgorithm.compute_distances import compute_single_route_distance, compute_adjacency_matrix
+from src.ALNS.CVRP.from_nx_to_dgl import make_complete_nx_graph, generate_dgl_graph, initialize_dgl_features, \
+    edge_ends_to_edge_index
+
+
+def initialize_dgl_graph(state):
+    nx_graph = state.instance
+    nx_complete_graph = nx_graph.copy()
+    make_complete_nx_graph(nx_complete_graph)
+    dgl_graph = generate_dgl_graph(nx_complete_graph)
+    node_snorm, edge_snorm = initialize_dgl_features(state, dgl_graph, [], nx.to_edgelist(nx_graph), 'cpu')
+
+    return dgl_graph, node_snorm, edge_snorm
 
 
 class CvrpState(State):
@@ -55,6 +67,8 @@ class CvrpState(State):
             self.capacity = - demands[0]
 
         self.distances = compute_adjacency_matrix(self)
+
+        self.dgl_graph, self.node_snorm, self.edge_snorm = initialize_dgl_graph(self)
 
         self.collect_alns_statistics = collect_alns_statistics
 
@@ -114,11 +128,14 @@ def generate_initial_solution(cvrp_state):
     """
     cvrp_state.instance = nx.create_empty_copy(cvrp_state.instance)
     edges = []
+    for edge_index in range(cvrp_state.dgl_graph.number_of_edges()):
+        cvrp_state.dgl_graph.edata['e_feat'][edge_index][1] = 0
 
     # List of the indexes of unvisited nodes, updated each time a node is added to a route
     unvisited_nodes = [i + cvrp_state.number_of_depots for i in range(cvrp_state.size)]
     first_node = 0
 
+    number_of_nodes = cvrp_state.instance.number_of_nodes()
     # Add every node in a route
     while len(unvisited_nodes) > 0:
         route_demand = 0
@@ -128,6 +145,9 @@ def generate_initial_solution(cvrp_state):
             # Ensure the node can be added to the route
             if route_demand + cvrp_state.instance.nodes[closest_node]['demand'] < cvrp_state.capacity:
                 edges.append((first_node, closest_node))
+                cvrp_state.dgl_graph.edata['e_feat'][edge_ends_to_edge_index(first_node,
+                                                                             closest_node,
+                                                                             number_of_nodes)][1] = 1
                 unvisited_nodes.remove(closest_node)
                 route_demand += cvrp_state.instance.nodes[closest_node]['demand']
             # Start a new route
@@ -136,6 +156,7 @@ def generate_initial_solution(cvrp_state):
             first_node = closest_node
         # Close the previous route be connecting the last node and the first depot
         edges.append((first_node, 0))
+        cvrp_state.dgl_graph.edata['e_feat'][edge_ends_to_edge_index(first_node, 0, number_of_nodes)][1] = 1
         # Start again from the first depot
         first_node = 0
 

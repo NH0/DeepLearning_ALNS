@@ -26,24 +26,25 @@ def retrieve_alns_stats(file):
 
 def create_evenly_distributed_alns_stats(input_pickle_path, output_pickle_path, epsilon=EPSILON):
     statistics = retrieve_alns_stats(input_pickle_path)
-    if len(statistics) != 1:
-        print("Error : statistics contain more than one alns execution ! Using only the first execution.")
-    statistics = statistics[0]
-    number_of_nonnull_values = 0
-    for iteration in statistics['Statistics']:
-        if abs(iteration['objective_difference']) > epsilon:
-            number_of_nonnull_values += 1
+    if len(statistics) == 0:
+        print("Error : No statistics in {}.".format(input_pickle_path))
+        exit(1)
+    for single_instance_stats in statistics:
+        number_of_nonnull_values = 0
+        for iteration in single_instance_stats['Statistics']:
+            if abs(iteration['objective_difference']) > epsilon:
+                number_of_nonnull_values += 1
 
-    dataset = copy.deepcopy(statistics)
-    dataset['Statistics'].clear()
-    for iteration in statistics['Statistics']:
-        if abs(iteration['objective_difference']) > epsilon:
-            dataset['Statistics'].append(iteration)
-        elif abs(iteration['objective_difference']) <= epsilon and number_of_nonnull_values > 0:
-            dataset['Statistics'].append(iteration)
-            number_of_nonnull_values -= 1
+        dataset = copy.deepcopy(single_instance_stats)
+        dataset['Statistics'].clear()
+        for iteration in single_instance_stats['Statistics']:
+            if abs(iteration['objective_difference']) > epsilon:
+                dataset['Statistics'].append(iteration)
+            elif abs(iteration['objective_difference']) <= epsilon and number_of_nonnull_values > 0:
+                dataset['Statistics'].append(iteration)
+                number_of_nonnull_values -= 1
 
-    pickle_alns_solution_stats(dataset, output_pickle_path)
+        pickle_alns_solution_stats(result=dataset, file_path=output_pickle_path, file_mode='ab')
 
 
 if __name__ == '__main__':

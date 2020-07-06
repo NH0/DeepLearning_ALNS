@@ -1,19 +1,19 @@
-import dgl
 import torch
-import pickle
+import random
 
 import src.NeuralNetwork.parameters as parameters
 
-from torch.utils.data import DataLoader
+from dgl import batch as dgl_batch
 from torch.utils.data.dataset import random_split
 from src.ALNS.CVRP.CVRP import CvrpState
 from src.ALNS.CVRP.generate_cvrp_graph import generate_cvrp_instance
+from src.ALNS.CVRP.from_nx_to_dgl import make_complete_nx_graph, generate_dgl_graph, initialize_dgl_features
 from src.NeuralNetwork.Dataset.retrieve_alns_stats import retrieve_alns_stats
 from src.NeuralNetwork.Dataset.dataset import CVRPDataSet
 
 STATISTICS_DATA_PATH = parameters.STATISTICS_DATA_PATH
 ALNS_STATISTICS_FILE = parameters.ALNS_STATISTICS_FILE
-DATASET_PATH = parameters.DATASET_PATH
+INPUTS_LABELS_PATH = parameters.INPUTS_LABELS_PATH
 MODEL_PARAMETERS_PATH = parameters.MODEL_PARAMETERS_PATH
 
 EPSILON = parameters.EPSILON
@@ -21,36 +21,7 @@ EPSILON = parameters.EPSILON
 MASK_SEED = parameters.MASK_SEED
 BATCH_SIZE = parameters.BATCH_SIZE
 
-
-def collate(sample):
-    graphs, labels = map(list, zip(*sample))
-    graph_batch = dgl.batch(graphs)
-    return graph_batch, torch.tensor(labels, device=labels[0].device)
-
-
-def make_complete_graph(initial_state):
-    """
-    Make the instance of a CVRP state complete (each node connected to every other node).
-    Nodes aren't connected to themselves.
-    The modification is in place.
-
-    Necessary in order to have the distance information included in the graph (weight of each edge).
-
-    Parameters
-    ----------
-    initial_state : a CVRP state containing all the characteristics of the CVRP problem. Called initial because it is
-                    obtained when creating a CVRP state.
-
-    Returns
-    -------
-    None
-    """
-    number_of_nodes = initial_state.instance.number_of_nodes()
-    # Create a list containing all possible edges
-    edges_in_complete_graph = [(u, v) for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
-    for u, v in edges_in_complete_graph:
-        # Networkx will not add the edge if it already exists
-        initial_state.instance.add_edge(u, v, weight=initial_state.distances[u][v])
+DEVICE = parameters.DEVICE
 
 
 def create_cvrp_state(size, number_of_depots, capacity, seed):
@@ -73,77 +44,38 @@ def create_cvrp_state(size, number_of_depots, capacity, seed):
     initial_state = CvrpState(cvrp_instance, size=size, capacity=capacity, number_of_depots=number_of_depots,
                               collect_alns_statistics=False, seed=seed)
     # initial_solution = generate_initial_solution(initial_state)
-    make_complete_graph(initial_state)
+    make_complete_nx_graph(initial_state.instance)
 
     return initial_state
 
 
-def generate_cvrp_graph(nx_graph):
-    """
-    Convert a networkx graph to a DGL graph.
+def remove_class_1_elements(alns_instance_statistics, epsilon=EPSILON):
+    number_of_iterations = len(alns_instance_statistics['Statistics'])
+    number_of_class_1_elements = 0
+    for iteration in alns_instance_statistics['Statistics']:
+        if abs(iteration['objective_difference']) <= epsilon:
+            number_of_class_1_elements += 1
+    number_of_class_1_to_remove = int((3 * number_of_class_1_elements - number_of_iterations) / 2)
+    if number_of_class_1_to_remove <= 0:
 
-    Parameters
-    ----------
-    nx_graph : a networkx graph
+        return 0
 
-    Returns
-    -------
-    dgl_graph the nx_graph converted to DGL
-    """
-    dgl_graph = dgl.DGLGraph()
-    dgl_graph.from_networkx(nx_graph=nx_graph)
-    dgl_graph.set_n_initializer(dgl.init.zero_initializer)
+    number_of_class_1_to_keep = number_of_class_1_elements - number_of_class_1_to_remove
+    new_statistics = []
+    # To avoid removing only first iterations, which may lead to a bias in the dataset, we first shuffle the iterations
+    random.shuffle(alns_instance_statistics['Statistics'])
+    number_of_class_1_kept = 0
+    for iteration in alns_instance_statistics['Statistics']:
+        if abs(iteration['objective_difference']) > epsilon:
+            new_statistics.append(iteration)
+        elif number_of_class_1_kept < number_of_class_1_to_keep:
+            new_statistics.append(iteration)
+            number_of_class_1_kept += 1
+        else:
+            continue
+    alns_instance_statistics['Statistics'] = new_statistics
 
-    return dgl_graph
-
-
-def generate_graph_features_from_statistics(graph, graph_index, cvrp_state, alns_instance_statistics, device):
-    """
-    Add node and edge features to a DGL graph representing a CVRP instance.
-
-    The node features are :
-    -> capacity - demand : (float) where capacity is the capacity of the delivery vehicle and demand is the demand of
-                            the node
-    -> isDepot : (boolean 0 or 1) 1 is the node is a depot
-    -> isDestroyed : (boolean 0 or 1) 1 if the node is part of the destroyed node during the current ALNS iteration
-
-    The edge features are :
-    -> weight : (float) the distance between two nodes (= the cost of using this edge in a CVRP solution)
-    -> isUsed : (boolean 0 or 1) 1 if the edge is used in the current CVRP solution
-
-    Parameters
-    ----------
-    graph : the DGL graph, representing an iteration during the ALNS execution. It doesn't contain any information yet.
-            It is simply the complete graph corresponding to the CVRP instance.
-    graph_index : the index of the graph, corresponding to the index of the iteration in the statistics. The destroyed
-                    nodes and the edges in the solution depend on this index as the solution evolves during the
-                    consecutive iterations.
-    cvrp_state : the cvrp state corresponding to the CVRP problem. It contains all the information on the CVRP problem
-                 currently studied.
-    alns_instance_statistics : the statistics saved during the execution of the ALNS algorithm. It contains the
-                               destroyed nodes, the edges of the solution and the difference in the total cost (not used
-                               in this function).
-    device:  CPU or CUDA depending on the device used for execution
-
-    Returns
-    -------
-    None
-    """
-    nx_graph = cvrp_state.instance
-    number_of_nodes = nx_graph.number_of_nodes()
-
-    node_features = [[cvrp_state.capacity - nx_graph.nodes[node]['demand'],
-                      1 if nx_graph.nodes[node]['isDepot'] else 0,
-                      1 if node in alns_instance_statistics['Statistics'][graph_index]['destroyed_nodes'] else 0]
-                     for node in range(number_of_nodes)]
-    edge_features = [[nx_graph.edges[u, v]['weight'],
-                      1 if (u, v) in alns_instance_statistics['Statistics'][graph_index]['list_of_edges'] else 0]
-                     for u in range(number_of_nodes) for v in range(number_of_nodes) if u != v]
-
-    node_features_tensor = torch.tensor(node_features, dtype=torch.float, device=device)
-    edge_features_tensor = torch.tensor(edge_features, dtype=torch.float, device=device)
-    graph.ndata['n_feat'] = node_features_tensor
-    graph.edata['e_feat'] = edge_features_tensor
+    return number_of_class_1_to_remove
 
 
 def generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device):
@@ -168,20 +100,24 @@ def generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device
     """
     nx_graph = cvrp_state.instance
     list_of_dgl_graphs = \
-        [generate_cvrp_graph(nx_graph) for _ in alns_instance_statistics['Statistics']]
+        [generate_dgl_graph(nx_graph) for _ in alns_instance_statistics['Statistics']]
     # All graphs must have the same number of node
     # They actually represent the same CVRP problem with different solution
     # The data is the CVRP state at different iterations of the ALNS heuristic
 
     for i, graph in enumerate(list_of_dgl_graphs):
-        generate_graph_features_from_statistics(graph, i, cvrp_state, alns_instance_statistics, device)
+        initialize_dgl_features(cvrp_state,
+                                graph,
+                                alns_instance_statistics['Statistics'][i]['destroyed_nodes'],
+                                alns_instance_statistics['Statistics'][i]['list_of_edges'],
+                                device)
 
     inputs = list_of_dgl_graphs
 
     return inputs
 
 
-def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EPSILON):
+def generate_labels_from_cvrp_state(alns_instance_statistics, device=DEVICE, epsilon=EPSILON):
     """
     Generate the labels for each ALNS iteration. The labels can be one in 3 values :
     - (1,0,0) : if the iteration worsens the current cost
@@ -200,7 +136,7 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     -------
     labels
     """
-    labels = torch.tensor([0 if iteration['objective_difference'] > 0
+    labels = torch.tensor([0 if iteration['objective_difference'] > epsilon
                            else 1 if abs(iteration['objective_difference']) <= epsilon
                            else 2
                            for iteration in alns_instance_statistics['Statistics']],
@@ -209,66 +145,70 @@ def generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon=EP
     return labels
 
 
-def create_dataset_from_statistics(alns_statistics_file,
-                                   device,
-                                   batch_size=BATCH_SIZE,
-                                   epsilon=EPSILON):
+def generate_inputs_and_labels_for_single_instance(single_instance_statistics, device=DEVICE, epsilon=EPSILON):
     step = 1
-    """
-    Retrieve the statistics saved during the ALNS execution.
-    """
-    alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
-    # Warning : can be a list of dictionaries, here considered to be a single dictionary
-    alns_instance_statistics = retrieve_alns_stats(alns_statistics_path)
-    if len(alns_instance_statistics) != 1:
-        print("Error, the stats file contains different CVRP instances.\nUsing only first instance.")
-    alns_instance_statistics = alns_instance_statistics[0]
-    print("\t{} Retrieved alns statistics".format(step))
+    print("\t{} Retrieved one instance's statistics".format(step))
+    step += 1
+    number_of_class_1_removed = remove_class_1_elements(single_instance_statistics, epsilon=epsilon)
+    print("{:^13}\t{} Removed {} class 1 elements (delta = 0) from iterations.".format('', step,
+                                                                                       number_of_class_1_removed))
     step += 1
 
     """
     Create the CVRP state using the given parameters.
     """
-    cvrp_state = create_cvrp_state(size=alns_instance_statistics['Size'],
-                                   number_of_depots=alns_instance_statistics['Number_of_depots'],
-                                   capacity=alns_instance_statistics['Capacity'],
-                                   seed=alns_instance_statistics['Seed'])
-    print("\t{} Created new cvrp state".format(step))
+    cvrp_state = create_cvrp_state(size=single_instance_statistics['Size'],
+                                   number_of_depots=single_instance_statistics['Number_of_depots'],
+                                   capacity=single_instance_statistics['Capacity'],
+                                   seed=single_instance_statistics['Seed'])
+    print("{:^13}\t{} Created new cvrp state".format('', step))
     step += 1
-    print("\t{} Creating inputs and labels ... ".format(step), end='', flush=True)
-    inputs = generate_inputs_from_cvrp_state(cvrp_state, alns_instance_statistics, device)
+    print("{:^13}\t{} Creating inputs and labels ... ".format('', step), end='', flush=True)
+    inputs = generate_inputs_from_cvrp_state(cvrp_state, single_instance_statistics, device)
     print("created inputs, ", end='', flush=True)
-    labels = generate_labels_from_cvrp_state(alns_instance_statistics, device, epsilon)
+    labels = generate_labels_from_cvrp_state(single_instance_statistics, device, epsilon)
     print("and created labels", flush=True)
 
+    return inputs, labels
+
+
+def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
+    inputs = []
+    labels = []
+    """
+    Retrieve the statistics saved during the ALNS execution.
+    """
+    alns_statistics_path = STATISTICS_DATA_PATH + alns_statistics_file
+    alns_instances_statistics = retrieve_alns_stats(alns_statistics_path)
+    number_of_instances = len(alns_instances_statistics)
+    print("{} instances in the statistics file.".format(number_of_instances))
+    for i, single_instance_statistics in enumerate(alns_instances_statistics):
+        print("{:^5} / {:^5} ".format(i + 1, number_of_instances), end='')
+        single_instance_inputs, single_instance_labels = \
+            generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
+        inputs += single_instance_inputs
+        labels += single_instance_labels
+        print("\t" + "-" * 15)
+
+    return inputs, labels
+
+
+def create_dataset(inputs, labels, validation_set=False):
     dataset = CVRPDataSet(inputs, labels)
     dataset_size = len(dataset)
-    train_size = int(0.8 * dataset_size)
+    train_and_val_size = int(0.8 * dataset_size)
+    train_size = int(0.8 * train_and_val_size)
     torch.manual_seed(MASK_SEED)
-    train_set, test_set = random_split(dataset, [train_size, dataset_size - train_size])
-    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, collate_fn=collate)
-    test_loader = DataLoader(dataset=test_set, batch_size=1, collate_fn=collate)
+    train_and_val_set, test_set = random_split(dataset, [train_and_val_size, dataset_size - train_and_val_size])
+    if validation_set:
+        train_set, val_set = random_split(train_and_val_set, [train_size, train_and_val_size - train_size])
 
-    return train_loader, test_loader
+        return train_set, val_set, test_set
 
-
-def pickle_dataset(dataset_name, train_loader, test_loader):
-    with open(DATASET_PATH + dataset_name, 'wb') as dataset_file:
-        try:
-            pickle.dump({'train_loader': train_loader,
-                         'test_loader': test_loader}, dataset_file)
-        except pickle.PicklingError:
-            print("Unable to pickle data...\nExiting now.")
-            exit(1)
-        print("Successfully saved the data in {}".format(DATASET_PATH + dataset_name))
+    return train_and_val_set, test_set
 
 
-def unpickle_dataset(dataset_name):
-    with open(DATASET_PATH + dataset_name, 'rb') as dataset_file:
-        try:
-            dataset = pickle.load(dataset_file)
-        except pickle.UnpicklingError:
-            print("Error, couldn't unpickle the dataset.\nExiting now.")
-            exit(2)
-
-    return dataset['train_loader'], dataset['test_loader']
+def collate(sample):
+    graphs, labels = map(list, zip(*sample))
+    graph_batch = dgl_batch(graphs)
+    return graph_batch, torch.tensor(labels, device=labels[0].device)

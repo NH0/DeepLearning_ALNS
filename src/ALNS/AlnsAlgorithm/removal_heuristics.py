@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import networkx as nx
 
@@ -42,14 +44,6 @@ def compute_number_of_clients_to_remove(state):
     return number_of_clients_to_remove
 
 
-# def select_random_nodes(state, random_state):
-#     # We create a list containing the indexes of the client nodes
-#     # Their indexes start after their indexes of the depots by construction
-#     list_of_nodes = np.arange(state.size) + state.number_of_depots
-#
-#     return random_state.choice(list_of_nodes, compute_number_of_clients_to_remove(state), replace=False)
-
-
 def select_related_nodes(state, random_state):
     # We create a list containing the indexes of the client nodes
     # Their indexes start after their indexes of the depots by construction
@@ -74,27 +68,31 @@ def select_related_nodes(state, random_state):
     return selected_nodes
 
 
-def removal_heuristic(state, random_state):
-    # We choose the clients we want to remove from the instance
-    nodes_to_destroy = select_related_nodes(state, random_state)
-
-    destroyed = state.copy()
+def remove_nodes(state, nodes_to_destroy):
+    destroyed_state = state.copy()  # deepcopy
     # The removal of a node N_i consists in removing the edge (N_i-1, N_i) and (N_i, N_i+1)
     # and adding the edge (N_i-1, N_i+1)
     for node in nodes_to_destroy:
         # We find the neighboring nodes
-        next_node = next(destroyed.instance.neighbors(node))
-        previous_node = next(destroyed.instance.predecessors(node))
-        destroyed.instance.remove_edge(previous_node, node)
-        destroyed.instance.remove_edge(node, next_node)
+        next_node = next(destroyed_state.instance.neighbors(node))
+        previous_node = next(destroyed_state.instance.predecessors(node))
+        destroyed_state.instance.remove_edge(previous_node, node)
+        destroyed_state.instance.remove_edge(node, next_node)
         # Avoiding useless routes
         if next_node != previous_node:
-            destroyed.instance.add_edge(previous_node, next_node)
+            destroyed_state.instance.add_edge(previous_node, next_node)
 
     # We collect the value of the objective function and the existing edges in case we want stats
     if state.collect_alns_statistics:
         state.statistics['destroyed_nodes'].append(nodes_to_destroy)
-        list_of_edges = nx.to_edgelist(destroyed.instance)
+        list_of_edges = nx.to_edgelist(destroyed_state.instance)
         state.statistics['list_of_edges'].append(list_of_edges)
 
-    return destroyed
+    return destroyed_state
+
+
+def removal_heuristic(state, random_state):
+    # We choose the clients we want to remove from the instance
+    nodes_to_destroy = select_related_nodes(state, random_state)
+
+    return remove_nodes(state, nodes_to_destroy)
