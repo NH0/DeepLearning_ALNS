@@ -150,7 +150,8 @@ def generate_inputs_and_labels_for_single_instance(single_instance_statistics, d
     print("\t{} Retrieved one instance's statistics".format(step))
     step += 1
     number_of_class_1_removed = remove_class_1_elements(single_instance_statistics, epsilon=epsilon)
-    print("\t{} Removed {} class 1 elements (delta = 0) from iterations.".format(step, number_of_class_1_removed))
+    print("{:^13}\t{} Removed {} class 1 elements (delta = 0) from iterations.".format('', step,
+                                                                                       number_of_class_1_removed))
     step += 1
 
     """
@@ -160,9 +161,9 @@ def generate_inputs_and_labels_for_single_instance(single_instance_statistics, d
                                    number_of_depots=single_instance_statistics['Number_of_depots'],
                                    capacity=single_instance_statistics['Capacity'],
                                    seed=single_instance_statistics['Seed'])
-    print("\t{} Created new cvrp state".format(step))
+    print("{:^13}\t{} Created new cvrp state".format('', step))
     step += 1
-    print("\t{} Creating inputs and labels ... ".format(step), end='', flush=True)
+    print("{:^13}\t{} Creating inputs and labels ... ".format('', step), end='', flush=True)
     inputs = generate_inputs_from_cvrp_state(cvrp_state, single_instance_statistics, device)
     print("created inputs, ", end='', flush=True)
     labels = generate_labels_from_cvrp_state(single_instance_statistics, device, epsilon)
@@ -182,7 +183,7 @@ def generate_all_inputs_and_labels(alns_statistics_file, device=DEVICE):
     number_of_instances = len(alns_instances_statistics)
     print("{} instances in the statistics file.".format(number_of_instances))
     for i, single_instance_statistics in enumerate(alns_instances_statistics):
-        print("{} / {} ".format(i + 1, number_of_instances), end='')
+        print("{:^5} / {:^5} ".format(i + 1, number_of_instances), end='')
         single_instance_inputs, single_instance_labels = \
             generate_inputs_and_labels_for_single_instance(single_instance_statistics, device)
         inputs += single_instance_inputs
