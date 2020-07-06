@@ -35,7 +35,7 @@ NETWORK_GCN = parameters.NETWORK_GCN
 NETWORK_GATEDGCN = parameters.NETWORK_GATEDGCN
 
 
-def make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer, scheduler):
+def make_training_step(graph_convolutional_network, loss_function, softmax_function, optimizer):
     def train_step(graph_batch, label_batch):
         logits = graph_convolutional_network(graph_batch, graph_batch.ndata['n_feat'], graph_batch.edata['e_feat'],
                                              0, 0)
@@ -336,7 +336,7 @@ def main(recreate_dataset=False,
         loss_function_testing = nn.CrossEntropyLoss()
     softmax_function = nn.LogSoftmax(dim=1)
     train_step = make_training_step(graph_convolutional_network,
-                                    loss_function_training, softmax_function, optimizer, scheduler)
+                                    loss_function_training, softmax_function, optimizer)
 
     print("#" * 50)
     print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
