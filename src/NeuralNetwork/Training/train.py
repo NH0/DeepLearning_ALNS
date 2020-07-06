@@ -209,6 +209,7 @@ def save_model_parameters(graph_convolutional_network,
 def main(recreate_dataset=False,
          batch_size=BATCH_SIZE,
          test_batch_size=BATCH_SIZE,
+         weight_loss=False,
          network=NETWORK_GCN,
          hidden_node_dimensions=None,
          hidden_edge_dimensions=None,
@@ -327,8 +328,12 @@ def main(recreate_dataset=False,
                                                            factor=learning_rate_decrease_factor,
                                                            min_lr=min_learning_rate,
                                                            verbose=True)
-    loss_function_training = nn.CrossEntropyLoss(weight=train_weights)
-    loss_function_testing = nn.CrossEntropyLoss(weight=test_weights)
+    if weight_loss:
+        loss_function_training = nn.CrossEntropyLoss(weight=train_weights)
+        loss_function_testing = nn.CrossEntropyLoss(weight=test_weights)
+    else:
+        loss_function_training = nn.CrossEntropyLoss()
+        loss_function_testing = nn.CrossEntropyLoss()
     softmax_function = nn.LogSoftmax(dim=1)
     train_step = make_training_step(graph_convolutional_network,
                                     loss_function_training, softmax_function, optimizer, scheduler)
