@@ -405,11 +405,8 @@ def main(recreate_dataset=False,
                                                                          test_set_size)
                 test_loss.append(test_loss_element)
                 random_accuracy = evaluate_random(test_loader, test_set_size)
-                guessing_null_iteration_accuracy = evaluate_with_null_iteration(test_loader, test_set_size)
-                print("Epoch {:d}, loss {:.6f}, test_loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}, "
-                      "always guessing null iterations {:.4f}"
-                      .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy,
-                              guessing_null_iteration_accuracy))
+                print("Epoch {:d}, loss {:.6f}, test_loss {:.6f}, accuracy {:.4f}, random accuracy {:.4f}"
+                      .format(epoch, training_loss[-1], test_loss[-1], accuracy, random_accuracy))
                 display_confusion_matrix(confusion_matrix)
 
             for graph_batch, label_batch in train_loader:
