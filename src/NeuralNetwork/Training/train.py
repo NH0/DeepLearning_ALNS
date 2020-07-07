@@ -135,13 +135,13 @@ def compute_classes_weights(train_loader, test_loader, device, beta):
         for label in labels:
             number_of_elements_test_set[label.item()] += 1
             test_set_size += 1
-    print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
+    print("{:<20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
         'Training set',
         round(number_of_elements_train_set[0] / training_set_size, 4),
         round(number_of_elements_train_set[1] / training_set_size, 4),
         round(number_of_elements_train_set[2] / training_set_size, 4),
     ))
-    print("{:^20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
+    print("{:<20}{:^7.2%}{:^7.2%}{:^7.2%}".format(
         'Test set',
         round(number_of_elements_test_set[0] / test_set_size, 4),
         round(number_of_elements_test_set[1] / test_set_size, 4),
@@ -173,7 +173,7 @@ def compute_classes_weights(train_loader, test_loader, device, beta):
             if j != i:
                 numerator *= 1 - beta ** number_of_elements_train_set[j]
         effective_train_weights.append(numerator / denominator)
-    print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
+    print("{:<20}{:^7.2}{:^7.2}{:^7.2}".format(
         'Training weights',
         round(effective_train_weights[0], 4),
         round(effective_train_weights[1], 4),
