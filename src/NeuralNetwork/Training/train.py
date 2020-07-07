@@ -29,6 +29,8 @@ MIN_LEARNING_RATE = parameters.MIN_LEARNING_RATE
 LEARNING_RATE_DECREASE_FACTOR = parameters.LEARNING_RATE_DECREASE_FACTOR
 PATIENCE = parameters.PATIENCE
 
+BETA = parameters.BETA
+
 DISPLAY_EVERY_N_EPOCH = parameters.DISPLAY_EVERY_N_EPOCH
 
 NETWORK_GCN = parameters.NETWORK_GCN
@@ -116,7 +118,7 @@ def evaluate_with_null_iteration(test_loader, test_set_size):
     return correct / test_set_size
 
 
-def compute_classes_weights(train_loader, test_loader, device):
+def compute_classes_weights(train_loader, test_loader, device, beta):
     training_set_size = 0
     test_set_size = 0
     number_of_elements_train_set = {
@@ -152,36 +154,33 @@ def compute_classes_weights(train_loader, test_loader, device):
     #     1 - number_of_elements_train_set[1] / training_set_size,
     #     1 - number_of_elements_train_set[2] / training_set_size,
     # ]
-    # test_weights = [
-    #     1 - number_of_elements_test_set[0] / test_set_size,
-    #     1 - number_of_elements_test_set[1] / test_set_size,
-    #     1 - number_of_elements_test_set[2] / test_set_size,
+    # train_weights = [
+    #     1 / number_of_elements_train_set[0],
+    #     1 / number_of_elements_train_set[1],
+    #     1 / number_of_elements_train_set[2],
     # ]
-    train_weights = [
-        1 / number_of_elements_train_set[0],
-        1 / number_of_elements_train_set[1],
-        1 / number_of_elements_train_set[2],
-    ]
-    test_weights = [
-        1 / number_of_elements_test_set[0],
-        1 / number_of_elements_test_set[1],
-        1 / number_of_elements_test_set[2],
-    ]
+    effective_train_weights = []
+    denominator = 0
+    for i in range(3):
+        temp = 1
+        for j in range(3):
+            if j != i:
+                temp *= 1 - beta ** number_of_elements_train_set[j]
+        denominator += temp
+    for i in range(3):
+        numerator = 1
+        for j in range(3):
+            if j != i:
+                numerator *= 1 - beta ** number_of_elements_train_set[j]
+        effective_train_weights.append(numerator / denominator)
     print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
         'Training weights',
-        round(train_weights[0], 4),
-        round(train_weights[1], 4),
-        round(train_weights[2], 4),
-    ))
-    print("{:^20}{:^7.2}{:^7.2}{:^7.2}".format(
-        'Test weights',
-        round(test_weights[0], 4),
-        round(test_weights[1], 4),
-        round(test_weights[2], 4),
+        round(effective_train_weights[0], 4),
+        round(effective_train_weights[1], 4),
+        round(effective_train_weights[2], 4),
     ))
 
-    return torch.tensor(train_weights, device=device), torch.tensor(test_weights, device=device), \
-           training_set_size, test_set_size
+    return torch.tensor(effective_train_weights, device=device), training_set_size, test_set_size
 
 
 def display_confusion_matrix(confusion_matrix):
@@ -292,9 +291,11 @@ def main(recreate_dataset=False,
     """
     Display the proportion of null iterations (iterations that do not change the cost value of the CVRP solution.
     """
-    train_weights, test_weights, training_set_size, test_set_size = compute_classes_weights(train_loader,
-                                                                                            test_loader,
-                                                                                            device)
+    if 'beta' in keywords_args:
+        beta = keywords_args['beta']
+    else:
+        beta = BETA
+    train_weights, training_set_size, test_set_size = compute_classes_weights(train_loader, test_loader, device, beta)
 
     """
     Create the gated graph convolutional network
@@ -340,10 +341,9 @@ def main(recreate_dataset=False,
                                                            verbose=True)
     if weight_loss:
         loss_function_training = nn.CrossEntropyLoss(weight=train_weights)
-        loss_function_testing = nn.CrossEntropyLoss(weight=test_weights)
     else:
         loss_function_training = nn.CrossEntropyLoss()
-        loss_function_testing = nn.CrossEntropyLoss()
+    loss_function_testing = nn.CrossEntropyLoss()
     softmax_function = nn.LogSoftmax(dim=1)
     train_step = make_training_step(graph_convolutional_network,
                                     loss_function_training, softmax_function, optimizer)
@@ -454,7 +454,7 @@ def main(recreate_dataset=False,
 
 
 if __name__ == '__main__':
-    recreate = 1
+    recreate = 0
     if recreate:
         main(recreate_dataset=True,
              alns_statistics_file='stats_30it50in.pickle',
@@ -464,8 +464,8 @@ if __name__ == '__main__':
              max_epoch=20)
     else:
         main(inputs_labels_name='inputs_labels_'
-                                'stats_1'
-                                '000iter.pickle',
+                                'stats_30it'
+                                '50in.pickle',
              network=NETWORK_GATEDGCN,
              save_parameters_on_exit=False,
-             max_epoch=99)
+             max_epoch=25)
