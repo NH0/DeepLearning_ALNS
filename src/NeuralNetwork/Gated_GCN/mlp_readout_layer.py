@@ -4,10 +4,10 @@ import torch.nn.functional as F
 
 class MLPReadout(nn.Module):
 
-    def __init__(self, input_dim, output_dim, L=2):  # L=nb_hidden_layers
+    def __init__(self, input_dim, output_dim, L=3):  # L=nb_hidden_layers
         super().__init__()
         list_FC_layers = [nn.Linear(input_dim // 2 ** layer, input_dim // 2 ** (layer + 1), bias=True)
-                          for layer in range(L)]
+                          for layer in range(L - 1)]
         list_FC_layers.append(nn.Linear(input_dim // 2 ** L, output_dim, bias=True))
         self.FC_layers = nn.ModuleList(list_FC_layers)
         self.L = L

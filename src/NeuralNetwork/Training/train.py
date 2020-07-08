@@ -300,15 +300,19 @@ def main(recreate_dataset=False,
     """
     Create the gated graph convolutional network
     """
+    print("#" * 50)
+    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
+    print("# Using {}".format(NETWORK_GATEDGCN))
     if network == NETWORK_GATEDGCN:
         net_params = {
             'in_dim': number_of_node_features,
             'in_dim_edge': number_of_edge_features,
             'hidden_dim': hidden_node_dimensions[0],
             'out_dim': hidden_node_dimensions[-1],
-            'n_classes': OUTPUT_SIZE,
+            'n_classes': output_size,
             'dropout': dropout_probability,
-            'L': len(HIDDEN_NODE_DIMENSIONS),
+            'L': len(hidden_node_dimensions),
+            'L_linear': len(hidden_linear_dimensions),
             'readout': 'mean',
             'graph_norm': False,
             'batch_norm': False,
@@ -317,6 +321,10 @@ def main(recreate_dataset=False,
             'device': device
         }
         graph_convolutional_network = GatedGCNNet(net_params)
+
+        print("# Hidden dimensions : {}".format(net_params['hidden_dim']))
+        print("# Number of convolutions layers : {}".format(net_params['L']))
+        print("# Number of linear layers : {}".format(net_params['L_linear']))
     else:
         graph_convolutional_network = GCNNet(input_node_features=number_of_node_features,
                                              hidden_node_dimension_list=hidden_node_dimensions,
@@ -326,8 +334,11 @@ def main(recreate_dataset=False,
                                              output_feature=output_size,
                                              dropout_probability=dropout_probability,
                                              device=device)
+
+        print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
+        print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
+        print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
     graph_convolutional_network = graph_convolutional_network.to(device)
-    print("Created GCNNet", flush=True)
 
     """
     Define the optimizer, the learning rate scheduler and the loss function.
@@ -348,12 +359,6 @@ def main(recreate_dataset=False,
     train_step = make_training_step(graph_convolutional_network,
                                     loss_function_training, softmax_function, optimizer)
 
-    print("#" * 50)
-    print("# Date : {0:%y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}".format(datetime.datetime.now()))
-    print("# Using {}".format(NETWORK_GATEDGCN))
-    print("# Hidden node dimensions : {}".format(hidden_node_dimensions))
-    print("# Hidden edge dimensions : {}".format(hidden_edge_dimensions))
-    print("# Hidden linear dimensions : {}".format(hidden_linear_dimensions))
     print("# Dropout probability : {}".format(dropout_probability))
     print("# Max epoch : {}".format(max_epoch))
     print("# Initial learning rate : {}".format(initial_learning_rate))

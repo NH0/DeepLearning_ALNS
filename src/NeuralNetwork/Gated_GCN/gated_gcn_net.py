@@ -23,6 +23,7 @@ class GatedGCNNet(nn.Module):
         n_classes = net_params['n_classes']
         dropout = net_params['dropout']
         n_layers = net_params['L']
+        n_linear_layers = net_params['L_linear']
         self.readout = net_params['readout']
         self.graph_norm = net_params['graph_norm']
         self.batch_norm = net_params['batch_norm']
@@ -36,7 +37,7 @@ class GatedGCNNet(nn.Module):
                                                    self.graph_norm, self.batch_norm, self.residual) for _ in
                                      range(n_layers - 1)])
         self.layers.append(GatedGCNLayer(hidden_dim, out_dim, dropout, self.graph_norm, self.batch_norm, self.residual))
-        self.MLP_layer = MLPReadout(out_dim, n_classes)
+        self.MLP_layer = MLPReadout(out_dim, n_classes, L=n_linear_layers)
 
     def forward(self, g, h, e, snorm_n, snorm_e):
 
