@@ -362,7 +362,7 @@ def main(recreate_dataset=False,
     print("# Dropout probability : {}".format(dropout_probability))
     print("# Max epoch : {}".format(max_epoch))
     print("# Initial learning rate : {}".format(initial_learning_rate))
-    print("# Min learning rate : {}".format(min_learning_rate))
+    print("# Min learning rate : {}".format(round(min_learning_rate, 6)))
     print("# Patience : {}".format(patience))
     print("# Device : {}".format(device))
     print("# Training batch size : {}".format(batch_size))
