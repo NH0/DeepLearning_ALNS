@@ -14,8 +14,8 @@ class MLPReadout(nn.Module):
 
     def forward(self, x):
         y = x
-        for layer in range(self.L):
+        for layer in range(self.L - 1):
             y = self.FC_layers[layer](y)
             y = F.relu(y)
-        y = self.FC_layers[self.L](y)
+        y = self.FC_layers[self.L - 1](y)
         return y
