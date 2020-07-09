@@ -8,7 +8,7 @@ class MLPReadout(nn.Module):
         super().__init__()
         list_FC_layers = [nn.Linear(input_dim // 2 ** layer, input_dim // 2 ** (layer + 1), bias=True)
                           for layer in range(L - 1)]
-        list_FC_layers.append(nn.Linear(input_dim // 2 ** L, output_dim, bias=True))
+        list_FC_layers.append(nn.Linear(input_dim // 2 ** (L - 1), output_dim, bias=True))
         self.FC_layers = nn.ModuleList(list_FC_layers)
         self.L = L
 
