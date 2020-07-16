@@ -1,0 +1,45 @@
+nohup: les entrées sont ignorées
+Using backend: pytorch
+Retrieving dataset inputs_labels_stats_30it50000in.pickle ... Done !
+Training set        11.03% 34.88% 54.09% 
+Test set            11.04% 34.62% 54.34% 
+Dataset size : 554178
+Training set size : 443342
+Training weights     0.34   0.33   0.33  
+##################################################
+# Date : 20-07-13_11-40
+# Using GatedGCNNet
+# Hidden dimensions : 100
+# Number of convolutions layers : 5
+# Number of linear layers : 5
+# Dropout probability : 0.0
+# Max epoch : 5000
+# Initial learning rate : 0.001
+# Min learning rate : 5e-06
+# Patience : 15
+# Device : cuda
+# Training batch size : 64
+# Testing batch size : 64
+# Weight losses : True
+##################################################
+
+Starting training ⌛
+
+Traceback (most recent call last):
+  File "start_training.py", line 13, in <module>
+    main()
+  File "start_training.py", line 9, in main
+    train(inputs_labels_name='inputs_labels_stats_30it50000in.pickle', weight_loss=True, patience=15, network='GatedGCNNet', initial_learning_rate=0.001, save_parameters_on_exit=True)
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Training/train.py", line 427, in main
+    loss = train_step(graph_batch, label_batch)
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Training/train.py", line 43, in train_step
+    snorm, enorm)
+  File "/home/x86_64-unknown-linux_ol7-gnu/anaconda-2020.02/envs/pytorch-1.4.0/lib/python3.7/site-packages/torch/nn/modules/module.py", line 532, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Gated_GCN/gated_gcn_net.py", line 52, in forward
+    h, e = conv(g, h, e, snorm_n, snorm_e)
+  File "/home/x86_64-unknown-linux_ol7-gnu/anaconda-2020.02/envs/pytorch-1.4.0/lib/python3.7/site-packages/torch/nn/modules/module.py", line 532, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/scratch1/flethi/Code/src/NeuralNetwork/Gated_GCN/gated_gcn_layer.py", line 66, in forward
+    h = h * snorm_n  # normalize activation w.r.t. graph size
+RuntimeError: The size of tensor a (100) must match the size of tensor b (2) at non-singleton dimension 1
